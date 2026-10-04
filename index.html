@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Nova Wallet — Phase 1</title>
+<style>
+:root{
+  --bg:#000;--surface:#151515;--surface2:#202020;--surface3:#272727;
+  --text:#f5f5f5;--muted:#9a9a9f;--line:#282828;
+  --accent:#a995f5;--accent2:#8f7bea;--green:#35e875;--red:#ff5b5b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+body{min-height:100vh}
+button,input{font:inherit}
+button{cursor:pointer}
+.app{width:min(100%,760px);margin:auto;padding:18px 16px 92px}
+.top{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 18px}
+.brand{font-size:23px;font-weight:750;letter-spacing:-.5px}
+.badge{font-size:11px;font-weight:750;color:#b9abff;background:#24202f;border:1px solid #342d49;padding:7px 10px;border-radius:999px}
+.tabs{display:flex;gap:10px;margin-bottom:22px}
+.tab{border:0;background:#1b1b1b;color:#a8a8ad;border-radius:28px;padding:12px 19px;font-size:16px}
+.tab.active{background:var(--accent);color:#14121b}
+.hero{padding:8px 2px 24px}
+.label{color:#a1a1a6;font-size:14px;margin-bottom:8px}
+.balance{font-size:54px;line-height:1.02;font-weight:750;letter-spacing:-2px}
+.subline{margin-top:9px;color:var(--green);font-size:15px;font-weight:650}
+.card{background:var(--surface);border:1px solid #202020;border-radius:24px}
+.connect{padding:17px;margin-bottom:18px}
+.connectTitle{font-size:17px;font-weight:700;margin-bottom:11px}
+.addressRow{display:flex;gap:9px}
+.addressRow input{flex:1;min-width:0;background:var(--surface2);border:1px solid #303030;color:#eee;border-radius:15px;padding:14px 13px;outline:none}
+.addressRow input::placeholder{color:#77777d}
+.primary{border:0;border-radius:15px;background:var(--accent);color:#17131f;font-weight:750;padding:0 18px;min-height:48px}
+.primary:disabled{opacity:.55}
+.message{font-size:13px;margin-top:10px;color:var(--red);line-height:1.45}
+.sectionTitle{font-size:27px;letter-spacing:-.8px;font-weight:720;margin:25px 2px 13px}
+.sectionTitle span{font-size:15px;color:#85858a;font-weight:600;margin-left:6px}
+.asset{display:flex;align-items:center;justify-content:space-between;padding:17px 16px;border-bottom:1px solid var(--line)}
+.asset:first-child{border-radius:24px 24px 0 0}.asset:last-child{border-bottom:0;border-radius:0 0 24px 24px}
+.coin{display:flex;align-items:center;gap:12px;min-width:0}
+.coinIcon{width:46px;height:46px;border-radius:50%;background:#080808;display:grid;place-items:center;font-weight:800;font-size:18px;border:1px solid #292929}
+.coinName{font-size:17px;font-weight:700}.coinQty{color:#99999e;font-size:14px;margin-top:3px}
+.value{text-align:right}.valueMain{font-size:17px;font-weight:700}.valueSub{font-size:13px;color:var(--green);margin-top:3px}
+.activity{padding:16px;border-bottom:1px solid var(--line)}.activity:last-child{border-bottom:0}
+.activityTop{display:flex;justify-content:space-between;gap:10px}.activityName{font-weight:700}.activityAmount{font-weight:700}
+.activityMeta{font-size:13px;color:#8d8d92;margin-top:5px}.status{font-size:12px;color:var(--green);font-weight:700}
+.empty{padding:28px 18px;text-align:center;color:#85858a;font-size:14px;line-height:1.5}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.action{border:0;border-radius:17px;background:var(--surface2);color:#f1f1f1;padding:15px;font-weight:700;border:1px solid #292929}
+.action small{display:block;color:#85858a;font-weight:500;margin-top:4px}
+.action.disabled{opacity:.55}
+.walletInfo{padding:17px}.walletLine{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}.walletLine:last-child{border-bottom:0}.walletKey{color:#8d8d92;font-size:13px}.walletVal{text-align:right;font-weight:650;word-break:break-all}
+.notice{margin-top:18px;padding:16px;border-radius:18px;background:#171421;border:1px solid #2e2742;color:#aaa1c5;font-size:13px;line-height:1.5}
+.footer{text-align:center;color:#5f5f64;font-size:11px;margin-top:24px}
+@media(max-width:560px){.app{padding:14px 12px 90px}.brand{font-size:21px}.balance{font-size:48px}.addressRow{flex-direction:column}.primary{min-height:48px}.sectionTitle{font-size:25px}}
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="top">
+    <div class="brand">Nova Wallet</div>
+    <div class="badge">PHASE 1 · VIEW ONLY</div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active">Home</button>
+    <button class="tab">Activity</button>
+    <button class="tab">Explore</button>
+  </nav>
+
+  <section class="hero">
+    <div class="label">Total balance</div>
+    <div id="total" class="balance">$—</div>
+    <div id="change" class="subline">Connect a public wallet to begin</div>
+  </section>
+
+  <section class="card connect">
+    <div class="connectTitle">Watch a wallet</div>
+    <div class="addressRow">
+      <input id="address" placeholder="Paste Solana public address" autocomplete="off" spellcheck="false">
+      <button id="connect" class="primary">View</button>
+    </div>
+    <div id="message" class="message"></div>
+  </section>
+
+  <section>
+    <div class="sectionTitle">My Assets <span id="assetCount"></span></div>
+    <div id="assets" class="card"><div class="empty">No wallet connected yet.</div></div>
+  </section>
+
+  <div class="actions">
+    <button class="action disabled">Add Funds<small>Phase 2</small></button>
+    <button class="action disabled">Sell Crypto<small>Phase 2</small></button>
+  </div>
+
+  <section>
+    <div class="sectionTitle">Activity</div>
+    <div id="activity" class="card"><div class="empty">Recent wallet activity will appear here.</div></div>
+  </section>
+
+  <section>
+    <div class="sectionTitle">Wallet</div>
+    <div class="card walletInfo">
+      <div class="walletLine"><div class="walletKey">Network</div><div class="walletVal">Solana Mainnet</div></div>
+      <div class="walletLine"><div class="walletKey">Access</div><div class="walletVal">View only</div></div>
+      <div class="walletLine"><div class="walletKey">Address</div><div id="walletAddress" class="walletVal">Not connected</div></div>
+    </div>
+    <div class="notice"><strong>Self-custody wallet — Coming Soon</strong><br>
+      Phase 1 never asks for a seed phrase or private key. It only reads public blockchain information.</div>
+  </section>
+
+  <div class="footer">Nova Wallet · Development build · Public blockchain data</div>
+</main>
+
+<script>
+const RPC="https://api.mainnet.solana.com";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+const short=a=>a?a.slice(6,0)+"…"+a.slice(-6):"";
+const usd=n=>"$"+Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+
+async function rpc(method,params=[]){
+  const res=await fetch(RPC,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({jsonrpc:"2.0",id:1,method,params})
+  });
+  if(!res.ok) throw new Error("Solana RPC returned HTTP "+res.status);
+  const json=await res.json();
+  if(json.error) throw new Error(json.error.message||"Solana RPC error");
+  return json.result;
+}
+
+async function load(){
+  const address=$("address").value.trim();
+  $("message").textContent="";
+  if(!address){$("message").textContent="Paste a public Solana address first.";return}
+  $("connect").disabled=true;$("connect").textContent="Loading";
+  $("total").textContent="$—";$("change").textContent="Reading live blockchain data…";
+  $("assets").innerHTML='<div class="empty">Reading Solana mainnet…</div>';
+  $("activity").innerHTML='<div class="empty">Loading recent activity…</div>';
+  try{
+    const [bal,tokens,sigs]=await Promise.all([
+      rpc("getBalance",[address,{commitment:"confirmed"}]),
+      rpc("getTokenAccountsByOwner",[address,{programId:"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"},{encoding:"jsonParsed",commitment:"confirmed"}]),
+      rpc("getSignaturesForAddress",[address,{limit:6,commitment:"confirmed"}])
+    ]);
+    const sol=bal.value/1e9;
+    const rows=[{name:"Solana",symbol:"SOL",qty:sol,icon:"S"}];
+    for(const item of tokens.value){
+      const info=item.account.data.parsed.info, ta=info.tokenAmount;
+      if(Number(ta.uiAmount||0)>0) rows.push({name:"SPL Token",symbol:info.mint.slice(0,6)+"…",qty:Number(ta.uiAmount),icon:"T"});
+    }
+    $("walletAddress").textContent=short(address);$("walletAddress").title=address;
+    $("assetCount").textContent="· "+rows.length;
+    $("assets").innerHTML=rows.map((a,i)=>`
+      <div class="asset">
+        <div class="coin"><div class="coinIcon">${a.icon}</div><div>
+          <div class="coinName">${esc(a.name)}</div><div class="coinQty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:9})} ${esc(a.symbol)}</div>
+        </div></div>
+        <div class="value"><div class="valueMain">${i===0?"SOL":"—"}</div><div class="valueSub">On-chain</div></div>
+      </div>`).join("");
+    $("total").textContent=sol.toLocaleString(undefined,{maximumFractionDigits:6})+" SOL";
+    $("change").textContent="Live balance · confirmed on Solana";
+    $("activity").innerHTML=sigs.length?sigs.map(s=>`
+      <div class="activity">
+        <div class="activityTop"><div class="activityName">Transaction</div><div class="status">${s.err?"Failed":"Confirmed"}</div></div>
+        <div class="activityMeta">${s.blockTime?new Date(s.blockTime*1000).toLocaleString():"Recent"} · ${esc(s.signature.slice(0,10))}…</div>
+      </div>`).join(""):'<div class="empty">No recent transactions found.</div>';
+  }catch(err){
+    $("assets").innerHTML='<div class="empty">Wallet could not be loaded.</div>';
+    $("activity").innerHTML='<div class="empty">No activity loaded.</div>';
+    $("change").textContent="Connection failed";
+    $("message").textContent=location.protocol==="file:" ?
+      "This HTML is being opened directly as a file. For live blockchain access, host it on GitHub Pages or run it from a local web server, then try again." :
+      (err.message||"Unable to reach the Solana RPC.");
+  }finally{$("connect").disabled=false;$("connect").textContent="View"}
+}
+$("connect").onclick=load;
+$("address").addEventListener("keydown",e=>{if(e.key==="Enter")load()});
+</script>
+</body>
+</html>
