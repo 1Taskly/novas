@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Nova Wallet Admin</title>
+<style>
+:root{--bg:#000;--s1:#151515;--s2:#202020;--text:#f5f5f5;--muted:#9a9a9f;--line:#282828;--accent:#a995f5;--green:#35e875;--red:#ff5b5b;--amber:#f5b942}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+button,input,select{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{width:min(100%,760px);margin:auto;padding:18px 16px 60px}
+h1{font-size:23px;letter-spacing:-.5px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+.card{background:var(--s1);border:1px solid #202020;border-radius:22px;padding:17px;margin-bottom:16px}
+.title{font-size:17px;font-weight:700;margin-bottom:12px}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px}
+input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;padding:13px;width:100%}
+.btn{border:0;border-radius:14px;background:var(--accent);color:#17131f;font-weight:750;padding:0 18px;min-height:46px;width:100%;margin-top:14px}
+.btn.ghost{background:var(--s2);color:var(--text);border:1px solid #303030}
+.btn:disabled{opacity:.45}
+.msg{font-size:13px;margin-top:10px;color:var(--green);min-height:1px}.msg.err{color:var(--red)}
+.hint{font-size:12px;color:#85858a;line-height:1.5;margin-top:6px}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0}
+.sw input{width:auto;transform:scale(1.4)}
+.ord{padding:14px 0;border-bottom:1px solid var(--line)}.ord:last-child{border-bottom:0}
+.ordTop{display:flex;justify-content:space-between;gap:10px;font-weight:700}
+.st{font-size:12px;font-weight:700;color:var(--amber)}.st.done{color:var(--green)}
+.meta{font-size:13px;color:#8d8d92;margin-top:5px;line-height:1.5}
+.empty{padding:20px;text-align:center;color:#85858a;font-size:14px}
+.warn{padding:13px;border-radius:14px;background:#2a2112;border:1px solid #4a3a1a;color:#e7c98a;font-size:12px;line-height:1.5;margin-bottom:16px}
+</style>
+</head>
+<body>
+<main class="app">
+
+<section id="gate" class="card" style="margin-top:60px"><h1>Page not found</h1></section>
+
+<section id="panel" style="display:none">
+  <h1>Nova Wallet Admin</h1>
+  <div class="sub">Changes here control the dashboard. They save in this browser for now; Supabase will make them global.</div>
+  <div class="warn">Temporary secret-link access: anyone who finds the link or reads this file's source can open this page. That is fine while settings only live in this browser, but real protection must come from Supabase login before this controls anything shared.</div>
+
+  <div class="card">
+    <div class="title">Settings</div>
+    <label for="net">Network</label>
+    <select id="net"><option value="devnet">Devnet (demo, no real money)</option><option value="mainnet">Mainnet (real)</option></select>
+    <label for="fee">Platform fee (GHS)</label>
+    <input id="fee" type="number" min="0" step="any" inputmode="decimal">
+    <label for="margin">Your margin (%)</label>
+    <input id="margin" type="number" min="0" max="50" step="any" inputmode="decimal">
+    <label for="rpcD">Devnet RPC URL (optional)</label>
+    <input id="rpcD" placeholder="https://…">
+    <label for="rpcM">Mainnet RPC URL (optional, recommended for real use)</label>
+    <input id="rpcM" placeholder="https://…">
+    <div class="hint">Leave blank to use the free public endpoints. Use a provider such as Helius or QuickNode for mainnet.</div>
+    <div class="sw"><span>Simulate fee payments<div class="hint">On: the Pay fee button succeeds instantly (testing). Off: users see "not available yet" until real payments are connected.</div></span><input id="sim" type="checkbox" aria-label="Simulate fee payments"></div>
+    <button id="save" class="btn">Save settings</button>
+    <div id="saveMsg" class="msg"></div>
+  </div>
+
+  <div class="card">
+    <div class="title">Devnet tools</div>
+    <label for="airAddr">Devnet wallet address</label>
+    <input id="airAddr" placeholder="Paste address" autocomplete="off" spellcheck="false">
+    <button id="air" class="btn ghost">Send 1 demo SOL</button>
+    <div id="airMsg" class="msg"></div>
+  </div>
+
+  <div class="card">
+    <div class="title">Orders</div>
+    <div id="orders"></div>
+  </div>
+</section>
+</main>
+
+<script>
+const KEY="change-me-key";  // open this page as admin.html#change-me-key  (temporary; replace with Supabase admin login)
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+const fmt=(n,d=2)=>Number(n||0).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+const STAGES=["Processing payout","Paid out"];
+let cfg={net:"devnet",feeGHS:15,marginPct:3,simulatePayments:true,rpcDevnet:"",rpcMainnet:""};
+try{Object.assign(cfg,JSON.parse(localStorage.getItem("nova_cfg")||"{}"))}catch(e){}
+let orders=[];
+const readOrders=()=>{try{orders=JSON.parse(localStorage.getItem("nova_orders")||"[]")}catch(e){orders=[]}};
+
+function show(){
+  $("gate").style.display="none";$("panel").style.display="block";
+  $("net").value=cfg.net;$("fee").value=cfg.feeGHS;$("margin").value=cfg.marginPct;
+  $("rpcD").value=cfg.rpcDevnet||"";$("rpcM").value=cfg.rpcMainnet||"";$("sim").checked=!!cfg.simulatePayments;
+  renderOrders();
+}
+if(location.hash.slice(1)===KEY)show();
+
+$("save").onclick=()=>{
+  const fee=Number($("fee").value),mar=Number($("margin").value);
+  if(!(fee>=0)||!(mar>=0&&mar<=50)){$("saveMsg").className="msg err";$("saveMsg").textContent="Check the fee and margin values.";return}
+  cfg={net:$("net").value,feeGHS:fee,marginPct:mar,simulatePayments:$("sim").checked,rpcDevnet:$("rpcD").value.trim(),rpcMainnet:$("rpcM").value.trim()};
+  try{localStorage.setItem("nova_cfg",JSON.stringify(cfg));$("saveMsg").className="msg";$("saveMsg").textContent="Saved. Reload the dashboard to apply."}
+  catch(e){$("saveMsg").className="msg err";$("saveMsg").textContent="Could not save in this browser."}
+};
+
+$("air").onclick=async()=>{
+  const a=$("airAddr").value.trim();$("airMsg").className="msg err";
+  if(!a){$("airMsg").textContent="Paste a devnet address first.";return}
+  $("air").disabled=true;
+  try{
+    const r=await fetch(cfg.rpcDevnet||"https://api.devnet.solana.com",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"requestAirdrop",params:[a,1e9]})});
+    const j=await r.json();
+    if(j.error)throw new Error(j.error.message);
+    $("airMsg").className="msg";$("airMsg").textContent="Sent. It can take a few seconds to show up."
+  }catch(e){$("airMsg").textContent="Airdrop failed (devnet limits requests): "+(e.message||"")}
+  finally{$("air").disabled=false}
+};
+
+function renderOrders(){
+  readOrders();
+  $("orders").innerHTML=orders.length?orders.map((o,i)=>`<div class="ord">
+    <div class="ordTop"><span>${esc(o.id)}</span><span class="st ${o.status>=1?"done":""}">${STAGES[Math.min(o.status,1)]}</span></div>
+    <div class="meta">${new Date(o.ts).toLocaleString()} · ${esc(o.net)}<br>${fmt(o.sol,4)} SOL → GHS ${fmt(o.ghs)}<br>${esc(o.method)} · ${esc(o.name)} · ${esc(o.acc)}</div>
+    ${o.status<1?`<button class="btn ghost" data-i="${i}" style="min-height:40px">Mark payout sent</button>`:""}
+  </div>`).join(""):'<div class="empty">No orders yet.</div>';
+  document.querySelectorAll("#orders [data-i]").forEach(b=>b.onclick=()=>{
+    readOrders();orders[b.dataset.i].status++;
+    try{localStorage.setItem("nova_orders",JSON.stringify(orders))}catch(e){}
+    renderOrders();
+  });
+}
+</script>
+</body>
+</html>

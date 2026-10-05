@@ -4,183 +4,228 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>Nova Wallet — Phase 1</title>
+<title>Nova Wallet</title>
 <style>
-:root{
-  --bg:#000;--surface:#151515;--surface2:#202020;--surface3:#272727;
-  --text:#f5f5f5;--muted:#9a9a9f;--line:#282828;
-  --accent:#a995f5;--accent2:#8f7bea;--green:#35e875;--red:#ff5b5b;
-}
+:root{--bg:#000;--s1:#151515;--s2:#202020;--text:#f5f5f5;--muted:#9a9a9f;--line:#282828;--accent:#a995f5;--green:#35e875;--red:#ff5b5b;--amber:#f5b942}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
 body{min-height:100vh}
-button,input{font:inherit}
-button{cursor:pointer}
-.app{width:min(100%,760px);margin:auto;padding:18px 16px 92px}
-.top{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 18px}
+button,input,select{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{width:min(100%,760px);margin:auto;padding:18px 16px 80px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .brand{font-size:23px;font-weight:750;letter-spacing:-.5px}
-.badge{font-size:11px;font-weight:750;color:#b9abff;background:#24202f;border:1px solid #342d49;padding:7px 10px;border-radius:999px}
-.tabs{display:flex;gap:10px;margin-bottom:22px}
-.tab{border:0;background:#1b1b1b;color:#a8a8ad;border-radius:28px;padding:12px 19px;font-size:16px}
-.tab.active{background:var(--accent);color:#14121b}
-.hero{padding:8px 2px 24px}
+.logout{background:var(--s2);border:1px solid #303030;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:700}
+.hero{padding:6px 2px 22px}
 .label{color:#a1a1a6;font-size:14px;margin-bottom:8px}
-.balance{font-size:54px;line-height:1.02;font-weight:750;letter-spacing:-2px}
-.subline{margin-top:9px;color:var(--green);font-size:15px;font-weight:650}
-.card{background:var(--surface);border:1px solid #202020;border-radius:24px}
-.connect{padding:17px;margin-bottom:18px}
-.connectTitle{font-size:17px;font-weight:700;margin-bottom:11px}
-.addressRow{display:flex;gap:9px}
-.addressRow input{flex:1;min-width:0;background:var(--surface2);border:1px solid #303030;color:#eee;border-radius:15px;padding:14px 13px;outline:none}
-.addressRow input::placeholder{color:#77777d}
-.primary{border:0;border-radius:15px;background:var(--accent);color:#17131f;font-weight:750;padding:0 18px;min-height:48px}
-.primary:disabled{opacity:.55}
-.message{font-size:13px;margin-top:10px;color:var(--red);line-height:1.45}
-.sectionTitle{font-size:27px;letter-spacing:-.8px;font-weight:720;margin:25px 2px 13px}
-.sectionTitle span{font-size:15px;color:#85858a;font-weight:600;margin-left:6px}
-.asset{display:flex;align-items:center;justify-content:space-between;padding:17px 16px;border-bottom:1px solid var(--line)}
-.asset:first-child{border-radius:24px 24px 0 0}.asset:last-child{border-bottom:0;border-radius:0 0 24px 24px}
-.coin{display:flex;align-items:center;gap:12px;min-width:0}
-.coinIcon{width:46px;height:46px;border-radius:50%;background:#080808;display:grid;place-items:center;font-weight:800;font-size:18px;border:1px solid #292929}
-.coinName{font-size:17px;font-weight:700}.coinQty{color:#99999e;font-size:14px;margin-top:3px}
-.value{text-align:right}.valueMain{font-size:17px;font-weight:700}.valueSub{font-size:13px;color:var(--green);margin-top:3px}
-.activity{padding:16px;border-bottom:1px solid var(--line)}.activity:last-child{border-bottom:0}
-.activityTop{display:flex;justify-content:space-between;gap:10px}.activityName{font-weight:700}.activityAmount{font-weight:700}
-.activityMeta{font-size:13px;color:#8d8d92;margin-top:5px}.status{font-size:12px;color:var(--green);font-weight:700}
-.empty{padding:28px 18px;text-align:center;color:#85858a;font-size:14px;line-height:1.5}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
-.action{border:0;border-radius:17px;background:var(--surface2);color:#f1f1f1;padding:15px;font-weight:700;border:1px solid #292929}
-.action small{display:block;color:#85858a;font-weight:500;margin-top:4px}
-.action.disabled{opacity:.55}
-.walletInfo{padding:17px}.walletLine{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}.walletLine:last-child{border-bottom:0}.walletKey{color:#8d8d92;font-size:13px}.walletVal{text-align:right;font-weight:650;word-break:break-all}
-.notice{margin-top:18px;padding:16px;border-radius:18px;background:#171421;border:1px solid #2e2742;color:#aaa1c5;font-size:13px;line-height:1.5}
-.footer{text-align:center;color:#5f5f64;font-size:11px;margin-top:24px}
-@media(max-width:560px){.app{padding:14px 12px 90px}.brand{font-size:21px}.balance{font-size:48px}.addressRow{flex-direction:column}.primary{min-height:48px}.sectionTitle{font-size:25px}}
+.balance{font-size:52px;line-height:1.02;font-weight:750;letter-spacing:-2px}
+.card{background:var(--s1);border:1px solid #202020;border-radius:22px;padding:17px;margin-bottom:16px}
+.title{font-size:17px;font-weight:700;margin-bottom:11px}
+.row{display:flex;gap:9px}
+input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;padding:13px;width:100%}
+input::placeholder{color:#77777d}
+.row input{flex:1;min-width:0}
+.btn{border:0;border-radius:14px;background:var(--accent);color:#17131f;font-weight:750;padding:0 18px;min-height:48px}
+.btn.ghost{background:var(--s2);color:var(--text);border:1px solid #303030}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.msg{font-size:13px;margin-top:10px;color:var(--red);line-height:1.45}
+.h2{font-size:25px;letter-spacing:-.6px;font-weight:720;margin:22px 2px 12px}
+.asset{display:flex;justify-content:space-between;align-items:center;padding:15px 0;border-bottom:1px solid var(--line)}
+.asset:first-child{padding-top:0}.asset:last-child{border-bottom:0;padding-bottom:0}
+.ico{width:42px;height:42px;border-radius:50%;background:#080808;border:1px solid #292929;display:grid;place-items:center;font-weight:800;margin-right:12px}
+.l{display:flex;align-items:center;min-width:0}.nm{font-weight:700}.qty{color:#99999e;font-size:13px;margin-top:3px}
+.r{text-align:right}.sub{font-size:13px;color:var(--muted);margin-top:3px}
+.empty{padding:14px 8px;text-align:center;color:#85858a;font-size:14px;line-height:1.5}
+dialog{background:var(--s1);color:var(--text);border:1px solid #2a2a2a;border-radius:22px;width:min(94vw,520px);max-height:92vh;padding:18px;overflow:auto}
+dialog::backdrop{background:rgba(0,0,0,.72)}
+.dHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:20px;font-weight:720}
+.x{background:var(--s2);border:1px solid #303030;border-radius:50%;width:36px;height:36px}
+.step{border:1px solid var(--line);border-radius:18px;padding:15px;margin-bottom:12px;background:#111}
+.stepHead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;font-weight:700}
+.pill{font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px;background:var(--s2);color:var(--muted)}
+.pill.ok{background:#12301f;color:var(--green)}
+.lockable.locked{opacity:.38;filter:grayscale(1);pointer-events:none;user-select:none}
+.est{margin-top:12px;padding:13px;border-radius:14px;background:#171421;border:1px solid #2e2742;font-size:14px;line-height:1.6}
+.est b{font-size:20px;color:#fff}
+.small{font-size:12px;color:#85858a;line-height:1.5;margin-top:8px}
+.ord{padding:14px 0;border-bottom:1px solid var(--line)}.ord:last-child{border-bottom:0;padding-bottom:0}.ord:first-child{padding-top:0}
+.ordTop{display:flex;justify-content:space-between;gap:10px;font-weight:700}
+.st{font-size:12px;font-weight:700;color:var(--amber)}.st.done{color:var(--green)}
+.meta{font-size:13px;color:#8d8d92;margin-top:5px;line-height:1.5}
+.done{text-align:center;padding:10px 0}.done .big{font-size:30px;font-weight:750;margin:10px 0}
+@media(max-width:560px){.app{padding:14px 12px 80px}.balance{font-size:46px}.row{flex-direction:column}}
+@media(prefers-reduced-motion:no-preference){.lockable{transition:opacity .25s,filter .25s}}
 </style>
 </head>
 <body>
 <main class="app">
-  <header class="top">
-    <div class="brand">Nova Wallet</div>
-    <div class="badge">PHASE 1 · VIEW ONLY</div>
-  </header>
+  <header class="top"><div class="brand">Nova Wallet</div><button id="logout" class="logout">Log out</button></header>
 
-  <nav class="tabs">
-    <button class="tab active">Home</button>
-    <button class="tab">Activity</button>
-    <button class="tab">Explore</button>
-  </nav>
+  <section class="hero"><div class="label">Balance</div><div id="total" class="balance">$0.00</div></section>
 
-  <section class="hero">
-    <div class="label">Total balance</div>
-    <div id="total" class="balance">$—</div>
-    <div id="change" class="subline">Connect a public wallet to begin</div>
-  </section>
-
-  <section class="card connect">
-    <div class="connectTitle">Watch a wallet</div>
-    <div class="addressRow">
-      <input id="address" placeholder="Paste Solana public address" autocomplete="off" spellcheck="false">
-      <button id="connect" class="primary">View</button>
+  <section class="card">
+    <div class="title">Deposit crypto</div>
+    <div class="row">
+      <input id="address" placeholder="Paste your wallet address" autocomplete="off" spellcheck="false" aria-label="Wallet address">
+      <button id="deposit" class="btn" disabled>Deposit</button>
     </div>
-    <div id="message" class="message"></div>
+    <div id="msg" class="msg" role="status"></div>
   </section>
 
-  <section>
-    <div class="sectionTitle">My Assets <span id="assetCount"></span></div>
-    <div id="assets" class="card"><div class="empty">No wallet connected yet.</div></div>
-  </section>
+  <div class="h2">Assets</div>
+  <div id="assets" class="card"><div class="empty">Deposit to see your assets.</div></div>
+  <button id="sellBtn" class="btn" style="width:100%" disabled>Sell crypto</button>
 
-  <div class="actions">
-    <button class="action disabled">Add Funds<small>Phase 2</small></button>
-    <button class="action disabled">Sell Crypto<small>Phase 2</small></button>
-  </div>
-
-  <section>
-    <div class="sectionTitle">Activity</div>
-    <div id="activity" class="card"><div class="empty">Recent wallet activity will appear here.</div></div>
-  </section>
-
-  <section>
-    <div class="sectionTitle">Wallet</div>
-    <div class="card walletInfo">
-      <div class="walletLine"><div class="walletKey">Network</div><div class="walletVal">Solana Mainnet</div></div>
-      <div class="walletLine"><div class="walletKey">Access</div><div class="walletVal">View only</div></div>
-      <div class="walletLine"><div class="walletKey">Address</div><div id="walletAddress" class="walletVal">Not connected</div></div>
-    </div>
-    <div class="notice"><strong>Self-custody wallet — Coming Soon</strong><br>
-      Phase 1 never asks for a seed phrase or private key. It only reads public blockchain information.</div>
-  </section>
-
-  <div class="footer">Nova Wallet · Development build · Public blockchain data</div>
+  <section id="ordSec" style="display:none"><div class="h2">Orders</div><div id="ordList" class="card"></div></section>
 </main>
 
+<dialog id="dlg" aria-labelledby="dTitle">
+  <div class="dHead"><span id="dTitle">Sell crypto</span><button id="close" class="x" aria-label="Close">✕</button></div>
+  <div id="sellFlow">
+    <div class="step">
+      <div class="stepHead"><span>1. Amount to sell</span><span id="avail" class="pill"></span></div>
+      <div class="row" style="flex-direction:row"><input id="amt" type="number" min="0" step="any" placeholder="Amount in SOL" inputmode="decimal" aria-label="Amount in SOL"><button id="max" class="btn ghost" style="min-height:46px">Max</button></div>
+      <div class="est" id="est"></div>
+      <div class="small" id="rateInfo"></div>
+    </div>
+    <div class="step">
+      <div class="stepHead"><span>2. Platform fee</span><span id="feePill" class="pill">Unpaid</span></div>
+      <div id="feeTxt" class="small" style="margin:0 0 10px"></div>
+      <button id="payFee" class="btn" style="width:100%" disabled>Pay platform fee</button>
+    </div>
+    <div id="payout" class="step lockable locked" aria-disabled="true">
+      <div class="stepHead"><span>3. Get paid</span><span id="payPill" class="pill">Locked until fee is paid</span></div>
+      <div style="display:grid;gap:9px">
+        <select id="method" aria-label="Payout method"><option value="">Choose payout method</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option><option>Bank transfer</option></select>
+        <input id="accName" placeholder="Account name" aria-label="Account name">
+        <input id="accNum" placeholder="Mobile money number or bank account" inputmode="numeric" aria-label="Account number">
+        <button id="confirm" class="btn" disabled>Confirm withdrawal</button>
+      </div>
+    </div>
+    <div id="sellMsg" class="msg"></div>
+  </div>
+  <div id="doneView" class="done" style="display:none">
+    <div class="label">Order placed</div><div id="doneAmt" class="big"></div>
+    <div id="doneInfo" class="meta"></div>
+    <button id="doneClose" class="btn" style="width:100%;margin-top:16px">Done</button>
+  </div>
+</dialog>
+
 <script>
-const RPC="https://api.mainnet.solana.com";
+const CFG={feeGHS:15,marginPct:3,fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:""}; // admin.html overrides these
+const RPCS={devnet:"https://api.devnet.solana.com",mainnet:"https://api.mainnet.solana.com"};
+try{Object.assign(CFG,JSON.parse(localStorage.getItem("nova_cfg")||"{}"))}catch(e){}
+const TOKEN_PROGRAMS=["TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA","TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"];
+const STAGES=["Processing payout","Paid out"];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-const short=a=>a?a.slice(6,0)+"…"+a.slice(-6):"";
-const usd=n=>"$"+Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt=(n,d=2)=>Number(n||0).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+const usd=n=>"$"+fmt(n), ghs=n=>"GHS "+fmt(n);
+const S={sol:0,tokens:[],px:{sol:CFG.fallbackSolUsd,fx:CFG.fallbackUsdGhs,live:false},feePaid:false};
+let orders=[];
+try{orders=JSON.parse(localStorage.getItem("nova_orders")||"[]")}catch(e){}
+const saveOrders=()=>{try{localStorage.setItem("nova_orders",JSON.stringify(orders))}catch(e){}};
 
 async function rpc(method,params=[]){
-  const res=await fetch(RPC,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({jsonrpc:"2.0",id:1,method,params})
-  });
-  if(!res.ok) throw new Error("Solana RPC returned HTTP "+res.status);
-  const json=await res.json();
-  if(json.error) throw new Error(json.error.message||"Solana RPC error");
-  return json.result;
+  const url=(CFG.net==="mainnet"?CFG.rpcMainnet:CFG.rpcDevnet)||RPCS[CFG.net]||RPCS.devnet;
+  const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method,params})});
+  if(!res.ok) throw new Error("Network error ("+res.status+")");
+  const j=await res.json();
+  if(j.error) throw new Error(j.error.message||"Request failed");
+  return j.result;
+}
+async function loadRates(){
+  let n=0;
+  try{const j=await (await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd")).json();if(j.solana&&j.solana.usd){S.px.sol=j.solana.usd;n++}}catch(e){}
+  try{const j=await (await fetch("https://open.er-api.com/v6/latest/USD")).json();if(j.rates&&j.rates.GHS){S.px.fx=j.rates.GHS;n++}}catch(e){}
+  S.px.live=n===2;renderAssets();renderEst();
 }
 
-async function load(){
-  const address=$("address").value.trim();
-  $("message").textContent="";
-  if(!address){$("message").textContent="Paste a public Solana address first.";return}
-  $("connect").disabled=true;$("connect").textContent="Loading";
-  $("total").textContent="$—";$("change").textContent="Reading live blockchain data…";
-  $("assets").innerHTML='<div class="empty">Reading Solana mainnet…</div>';
-  $("activity").innerHTML='<div class="empty">Loading recent activity…</div>';
+// ---- Deposit & assets ----
+const validAddr=a=>/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a);
+$("address").addEventListener("input",()=>{$("deposit").disabled=!validAddr($("address").value.trim())});
+$("address").addEventListener("keydown",e=>{if(e.key==="Enter"&&!$("deposit").disabled)deposit()});
+$("deposit").onclick=deposit;
+async function deposit(){
+  const a=$("address").value.trim();$("msg").textContent="";
+  $("deposit").disabled=true;$("deposit").textContent="Depositing…";
   try{
-    const [bal,tokens,sigs]=await Promise.all([
-      rpc("getBalance",[address,{commitment:"confirmed"}]),
-      rpc("getTokenAccountsByOwner",[address,{programId:"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"},{encoding:"jsonParsed",commitment:"confirmed"}]),
-      rpc("getSignaturesForAddress",[address,{limit:6,commitment:"confirmed"}])
+    const [bal,tok]=await Promise.all([
+      rpc("getBalance",[a,{commitment:"confirmed"}]),
+      Promise.all(TOKEN_PROGRAMS.map(p=>rpc("getTokenAccountsByOwner",[a,{programId:p},{encoding:"jsonParsed",commitment:"confirmed"}])))
     ]);
-    const sol=bal.value/1e9;
-    const rows=[{name:"Solana",symbol:"SOL",qty:sol,icon:"S"}];
-    for(const item of tokens.value){
-      const info=item.account.data.parsed.info, ta=info.tokenAmount;
-      if(Number(ta.uiAmount||0)>0) rows.push({name:"SPL Token",symbol:info.mint.slice(0,6)+"…",qty:Number(ta.uiAmount),icon:"T"});
-    }
-    $("walletAddress").textContent=short(address);$("walletAddress").title=address;
-    $("assetCount").textContent="· "+rows.length;
-    $("assets").innerHTML=rows.map((a,i)=>`
-      <div class="asset">
-        <div class="coin"><div class="coinIcon">${a.icon}</div><div>
-          <div class="coinName">${esc(a.name)}</div><div class="coinQty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:9})} ${esc(a.symbol)}</div>
-        </div></div>
-        <div class="value"><div class="valueMain">${i===0?"SOL":"—"}</div><div class="valueSub">On-chain</div></div>
-      </div>`).join("");
-    $("total").textContent=sol.toLocaleString(undefined,{maximumFractionDigits:6})+" SOL";
-    $("change").textContent="Live balance · confirmed on Solana";
-    $("activity").innerHTML=sigs.length?sigs.map(s=>`
-      <div class="activity">
-        <div class="activityTop"><div class="activityName">Transaction</div><div class="status">${s.err?"Failed":"Confirmed"}</div></div>
-        <div class="activityMeta">${s.blockTime?new Date(s.blockTime*1000).toLocaleString():"Recent"} · ${esc(s.signature.slice(0,10))}…</div>
-      </div>`).join(""):'<div class="empty">No recent transactions found.</div>';
+    S.sol=bal.value/1e9;S.tokens=[];
+    tok.forEach(t=>t.value.forEach(it=>{const i=it.account.data.parsed.info,q=Number(i.tokenAmount.uiAmount||0);if(q>0)S.tokens.push({sym:i.mint.slice(0,6)+"…",qty:q})}));
+    if(!S.sol&&!S.tokens.length)$("msg").textContent="No crypto found at this address.";
+    renderAssets();
   }catch(err){
-    $("assets").innerHTML='<div class="empty">Wallet could not be loaded.</div>';
-    $("activity").innerHTML='<div class="empty">No activity loaded.</div>';
-    $("change").textContent="Connection failed";
-    $("message").textContent=location.protocol==="file:" ?
-      "This HTML is being opened directly as a file. For live blockchain access, host it on GitHub Pages or run it from a local web server, then try again." :
-      (err.message||"Unable to reach the Solana RPC.");
-  }finally{$("connect").disabled=false;$("connect").textContent="View"}
+    $("msg").textContent=location.protocol==="file:"?"Open this page from a web server (not as a file) to reach the network.":(err.message||"Could not complete the deposit. Try again.");
+  }finally{$("deposit").textContent="Deposit";$("deposit").disabled=!validAddr($("address").value.trim())}
 }
-$("connect").onclick=load;
-$("address").addEventListener("keydown",e=>{if(e.key==="Enter")load()});
+function renderAssets(){
+  const rows=[];
+  if(S.sol>0)rows.push({name:"Solana",sym:"SOL",qty:S.sol,icon:"S",val:S.sol*S.px.sol});
+  S.tokens.forEach(t=>rows.push({name:"Token",sym:t.sym,qty:t.qty,icon:"T",val:null}));
+  $("total").textContent=usd(S.sol*S.px.sol);
+  $("assets").innerHTML=rows.length?rows.map(a=>`<div class="asset"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:9})} ${esc(a.sym)}</div></div></div><div class="r"><div class="nm">${a.val===null?"—":usd(a.val)}</div><div class="sub">${a.val===null?"No price yet":ghs(a.val*S.px.fx)}</div></div></div>`).join(""):'<div class="empty">Deposit to see your assets.</div>';
+  $("sellBtn").disabled=!(S.sol>0);
+}
+
+// ---- Sell window ----
+const dlg=$("dlg");
+function calc(){const sol=Number($("amt").value)||0,gross=sol*S.px.sol*S.px.fx;return{sol,usd:sol*S.px.sol,net:gross*(1-CFG.marginPct/100)}}
+const amtOk=()=>{const c=calc();return c.sol>0&&c.sol<=S.sol};
+function renderEst(){
+  const c=calc();
+  $("avail").textContent=fmt(S.sol,4)+" SOL";
+  $("rateInfo").textContent=`1 SOL = ${usd(S.px.sol)} · $1 = ${ghs(S.px.fx)} · ${CFG.marginPct}% margin applied`+(S.px.live?"":" · estimated rates");
+  $("feeTxt").textContent=`Pay ${ghs(CFG.feeGHS)} before choosing how you get paid.`;
+  if(!c.sol)$("est").textContent="Enter an amount to see what you get.";
+  else if(c.sol>S.sol)$("est").innerHTML='<span style="color:var(--red)">That is more than your balance.</span>';
+  else $("est").innerHTML=`${usd(c.usd)} in crypto<br>You get <b>${ghs(c.net)}</b>`;
+  $("payFee").disabled=!amtOk()||S.feePaid;validate();
+}
+function setLock(){
+  const p=$("payout");p.classList.toggle("locked",!S.feePaid);p.setAttribute("aria-disabled",String(!S.feePaid));
+  $("payPill").textContent=S.feePaid?"Unlocked":"Locked until fee is paid";$("payPill").classList.toggle("ok",S.feePaid);
+  $("feePill").textContent=S.feePaid?"Paid":"Unpaid";$("feePill").classList.toggle("ok",S.feePaid);
+  $("payFee").textContent=S.feePaid?"Fee paid":"Pay platform fee";
+  $("amt").disabled=S.feePaid;$("max").disabled=S.feePaid;
+}
+function validate(){$("confirm").disabled=!(S.feePaid&&amtOk()&&$("method").value&&$("accName").value.trim().length>1&&$("accNum").value.trim().length>=6)}
+function resetFlow(){S.feePaid=false;$("amt").value="";["method","accName","accNum"].forEach(i=>$(i).value="");$("sellMsg").textContent="";setLock();renderEst()}
+$("sellBtn").onclick=()=>{resetFlow();$("sellFlow").style.display="";$("doneView").style.display="none";dlg.showModal()};
+$("close").onclick=$("doneClose").onclick=()=>dlg.close();
+$("amt").oninput=renderEst;
+$("max").onclick=()=>{$("amt").value=S.sol>0?S.sol:"";renderEst()};
+["method","accName","accNum"].forEach(i=>$(i).addEventListener("input",validate));
+$("payFee").onclick=()=>{
+  if(!amtOk())return;
+  if(!CFG.simulatePayments){$("sellMsg").textContent="Payments are not available yet. Please try again later.";return}
+  S.feePaid=true;setLock();renderEst();
+};
+$("confirm").onclick=()=>{
+  const c=calc(),o={id:"NW"+Date.now().toString(36).toUpperCase(),ts:Date.now(),net:CFG.net,sol:c.sol,usd:c.usd,ghs:c.net,fee:CFG.feeGHS,method:$("method").value,acc:$("accNum").value.trim(),name:$("accName").value.trim(),status:0};
+  orders.unshift(o);saveOrders();S.sol=Math.max(0,S.sol-c.sol);
+  renderAssets();renderOrders();
+  $("doneAmt").textContent=ghs(o.ghs);
+  $("doneInfo").innerHTML=`Order ${esc(o.id)}<br>Paying to ${esc(o.method)} · ${esc(o.acc)}<br>Status: ${STAGES[0]}`;
+  $("sellFlow").style.display="none";$("doneView").style.display="";
+};
+
+// ---- Orders ----
+function renderOrders(){
+  $("ordSec").style.display=orders.length?"":"none";
+  $("ordList").innerHTML=orders.map(o=>`<div class="ord"><div class="ordTop"><span>${esc(o.id)}</span><span class="st ${o.status>=1?"done":""}">${STAGES[Math.min(o.status,1)]}</span></div><div class="meta">${new Date(o.ts).toLocaleString()}<br>${fmt(o.sol,4)} SOL → <b style="color:#fff">${ghs(o.ghs)}</b><br>${esc(o.method)} · ${esc(o.acc)}</div></div>`).join("");
+}
+window.addEventListener("storage",e=>{if(e.key==="nova_orders"){try{orders=JSON.parse(e.newValue||"[]")}catch(x){}renderOrders()}});
+
+$("logout").onclick=()=>{
+  if(confirm("Log out? Real accounts arrive with Supabase. For now this clears this session.")){
+    S.sol=0;S.tokens=[];$("address").value="";$("deposit").disabled=true;$("msg").textContent="";renderAssets();
+  }
+};
+renderOrders();renderAssets();loadRates();
 </script>
 </body>
 </html>
