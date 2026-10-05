@@ -64,7 +64,8 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <header class="top"><div class="brand">Nova Wallet</div><button id="logout" class="logout">Log out</button></header>
 
   <section class="hero"><div class="label">Balance</div><div id="total" class="balance">$0.00</div>
-    <div id="chg" class="chg"></div></section>
+    <div id="chg" class="chg"></div>
+    <div id="liveTag" class="small" style="margin-top:6px"></div></section>
 
   <section class="card">
     <div class="title">Deposit crypto</div>
@@ -137,12 +138,23 @@ async function rpc(method,params=[]){
   if(j.error) throw new Error(j.error.message||"Request failed");
   return j.result;
 }
+let okSol=false,okFx=false,lastFx=0,pulling=false;
 async function loadRates(){
-  let n=0;
-  try{const j=await (await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd&include_24hr_change=true")).json();if(j.solana&&j.solana.usd){S.px.sol=j.solana.usd;S.px.chg=Number(j.solana.usd_24h_change)||0;n++}}catch(e){}
-  try{const j=await (await fetch("https://open.er-api.com/v6/latest/USD")).json();if(j.rates&&j.rates.GHS){S.px.fx=j.rates.GHS;n++}}catch(e){}
-  S.px.live=n===2;renderAssets();renderEst();
+  if(pulling)return;pulling=true;
+  try{
+    try{const j=await (await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd&include_24hr_change=true")).json();if(j.solana&&j.solana.usd){S.px.sol=j.solana.usd;S.px.chg=Number(j.solana.usd_24h_change)||0;okSol=true}}catch(e){}
+    if(!okFx||Date.now()-lastFx>600000){ // exchange rate barely moves, refresh every 10 min
+      try{const j=await (await fetch("https://open.er-api.com/v6/latest/USD")).json();if(j.rates&&j.rates.GHS){S.px.fx=j.rates.GHS;okFx=true;lastFx=Date.now()}}catch(e){}
+    }
+    S.px.live=okSol&&okFx;
+    $("liveTag").textContent=okSol?"● Live · updated "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"}):"Prices estimated";
+    $("liveTag").style.color=okSol?"var(--green)":"";
+    renderAssets();renderEst();
+  }finally{pulling=false}
 }
+let rateTimer=null;
+function startRates(){clearInterval(rateTimer);rateTimer=setInterval(loadRates,30000)}
+document.addEventListener("visibilitychange",()=>{if(document.hidden)clearInterval(rateTimer);else{loadRates();startRates()}});
 
 // ---- Deposit & assets ----
 const validAddr=a=>/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a);
@@ -175,7 +187,7 @@ function renderAssets(){
   const tc=change(total),up=tc.pct>=0;
   $("chg").className="chg "+(up?"up":"down");
   $("chg").innerHTML=total>0?`<span>${sgn(tc.amt)}$${fmt(Math.abs(tc.amt),dec(tc.amt))}</span><span class="chip">${sgn(tc.pct)}${fmt(Math.abs(tc.pct))}%</span>`:"";
-  $("assets").innerHTML=rows.length?rows.map(a=>{const c=change(a.val*S.px.fx);return `<div class="asset"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:9})} ${esc(a.sym)}</div></div></div><div class="r"><div class="nm">${usd(a.val)}</div><div class="sub ${c.pct>=0?"up":"down"}">${sgn(c.amt)}GHS ${fmt(Math.abs(c.amt),dec(c.amt))}</div></div></div>`}).join(""):'<div class="empty">Deposit to see your assets.</div>';
+  $("assets").innerHTML=rows.length?rows.map(a=>{return `<div class="asset"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:9})} ${esc(a.sym)}</div></div></div><div class="r"><div class="nm">${usd(a.val)}</div><div class="sub up">${ghs(a.val*S.px.fx)}</div></div></div>`}).join(""):'<div class="empty">Deposit to see your assets.</div>';
   $("sellBtn").disabled=!(S.sol>0);
 }
 
@@ -233,7 +245,7 @@ $("logout").onclick=()=>{
     S.sol=0;S.tokens=[];$("address").value="";$("deposit").disabled=true;$("msg").textContent="";renderAssets();
   }
 };
-renderOrders();renderAssets();loadRates();
+renderOrders();renderAssets();loadRates();startRates();
 </script>
 </body>
 </html>
