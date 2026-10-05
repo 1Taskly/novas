@@ -112,10 +112,9 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 </dialog>
 
 <script>
-const CFG={feeGHS:15,marginPct:3,fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:""}; // admin.html overrides these
-const RPCS={devnet:"https://api.devnet.solana.com",mainnet:"https://api.mainnet.solana.com"};
+const CFG={feeGHS:15,marginPct:3,fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:"",demoCapSol:20}; // admin.html overrides these
+const RPCS={devnet:"https://api.devnet.solana.com",mainnet:"https://api.mainnet-beta.solana.com"};
 try{Object.assign(CFG,JSON.parse(localStorage.getItem("nova_cfg")||"{}"))}catch(e){}
-const TOKEN_PROGRAMS=["TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA","TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"];
 const STAGES=["Processing payout","Paid out"];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
@@ -150,13 +149,11 @@ async function deposit(){
   const a=$("address").value.trim();$("msg").textContent="";
   $("deposit").disabled=true;$("deposit").textContent="Depositing…";
   try{
-    const [bal,tok]=await Promise.all([
-      rpc("getBalance",[a,{commitment:"confirmed"}]),
-      Promise.all(TOKEN_PROGRAMS.map(p=>rpc("getTokenAccountsByOwner",[a,{programId:p},{encoding:"jsonParsed",commitment:"confirmed"}])))
-    ]);
-    S.sol=bal.value/1e9;S.tokens=[];
-    tok.forEach(t=>t.value.forEach(it=>{const i=it.account.data.parsed.info,q=Number(i.tokenAmount.uiAmount||0);if(q>0)S.tokens.push({sym:i.mint.slice(0,6)+"…",qty:q})}));
-    if(!S.sol&&!S.tokens.length)$("msg").textContent="No crypto found at this address.";
+    const bal=await rpc("getBalance",[a,{commitment:"confirmed"}]);
+    let sol=bal.value/1e9;
+    if(CFG.net==="devnet"&&CFG.demoCapSol>0)sol=Math.min(sol,CFG.demoCapSol);
+    S.sol=sol;S.tokens=[];
+    if(!S.sol)$("msg").textContent="No SOL found at this address.";
     renderAssets();
   }catch(err){
     $("msg").textContent=location.protocol==="file:"?"Open this page from a web server (not as a file) to reach the network.":(err.message||"Could not complete the deposit. Try again.");

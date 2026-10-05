@@ -51,6 +51,9 @@ input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;pa
     <input id="fee" type="number" min="0" step="any" inputmode="decimal">
     <label for="margin">Your margin (%)</label>
     <input id="margin" type="number" min="0" max="50" step="any" inputmode="decimal">
+    <label for="cap">Devnet demo balance cap (SOL)</label>
+    <input id="cap" type="number" min="0" step="any" inputmode="decimal">
+    <div class="hint">Devnet only. The dashboard never shows more SOL than this. Set 0 for no cap. About 7 SOL is $1,000 and 67 SOL is $10,000 at $150 per SOL.</div>
     <label for="rpcD">Devnet RPC URL (optional)</label>
     <input id="rpcD" placeholder="https://…">
     <label for="rpcM">Mainnet RPC URL (optional, recommended for real use)</label>
@@ -82,7 +85,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const fmt=(n,d=2)=>Number(n||0).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
 const STAGES=["Processing payout","Paid out"];
-let cfg={net:"devnet",feeGHS:15,marginPct:3,simulatePayments:true,rpcDevnet:"",rpcMainnet:""};
+let cfg={net:"devnet",feeGHS:15,marginPct:3,simulatePayments:true,rpcDevnet:"",rpcMainnet:"",demoCapSol:20};
 try{Object.assign(cfg,JSON.parse(localStorage.getItem("nova_cfg")||"{}"))}catch(e){}
 let orders=[];
 const readOrders=()=>{try{orders=JSON.parse(localStorage.getItem("nova_orders")||"[]")}catch(e){orders=[]}};
@@ -90,15 +93,15 @@ const readOrders=()=>{try{orders=JSON.parse(localStorage.getItem("nova_orders")|
 function show(){
   $("gate").style.display="none";$("panel").style.display="block";
   $("net").value=cfg.net;$("fee").value=cfg.feeGHS;$("margin").value=cfg.marginPct;
-  $("rpcD").value=cfg.rpcDevnet||"";$("rpcM").value=cfg.rpcMainnet||"";$("sim").checked=!!cfg.simulatePayments;
+  $("cap").value=cfg.demoCapSol;$("rpcD").value=cfg.rpcDevnet||"";$("rpcM").value=cfg.rpcMainnet||"";$("sim").checked=!!cfg.simulatePayments;
   renderOrders();
 }
 if(location.hash.slice(1)===KEY)show();
 
 $("save").onclick=()=>{
-  const fee=Number($("fee").value),mar=Number($("margin").value);
-  if(!(fee>=0)||!(mar>=0&&mar<=50)){$("saveMsg").className="msg err";$("saveMsg").textContent="Check the fee and margin values.";return}
-  cfg={net:$("net").value,feeGHS:fee,marginPct:mar,simulatePayments:$("sim").checked,rpcDevnet:$("rpcD").value.trim(),rpcMainnet:$("rpcM").value.trim()};
+  const fee=Number($("fee").value),mar=Number($("margin").value),cap=Number($("cap").value);
+  if(!(fee>=0)||!(mar>=0&&mar<=50)||!(cap>=0)){$("saveMsg").className="msg err";$("saveMsg").textContent="Check the fee, margin and cap values.";return}
+  cfg={net:$("net").value,feeGHS:fee,marginPct:mar,simulatePayments:$("sim").checked,demoCapSol:cap,rpcDevnet:$("rpcD").value.trim(),rpcMainnet:$("rpcM").value.trim()};
   try{localStorage.setItem("nova_cfg",JSON.stringify(cfg));$("saveMsg").className="msg";$("saveMsg").textContent="Saved. Reload the dashboard to apply."}
   catch(e){$("saveMsg").className="msg err";$("saveMsg").textContent="Could not save in this browser."}
 };
