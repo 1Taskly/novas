@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <title>Nova Wallet</title>
+<script>try{if(!localStorage.getItem("nova_user"))location.replace("landing.html")}catch(e){}</script>
 <style>
 :root{--bg:#000;--s1:#151515;--s2:#202020;--text:#f5f5f5;--muted:#9a9a9f;--line:#282828;--accent:#a995f5;--green:#35e875;--red:#ff5b5b;--amber:#f5b942}
 *{box-sizing:border-box}
@@ -241,8 +242,9 @@ function renderOrders(){
 window.addEventListener("storage",e=>{if(e.key==="nova_orders"){try{orders=JSON.parse(e.newValue||"[]")}catch(x){}renderOrders()}});
 
 $("logout").onclick=()=>{
-  if(confirm("Log out? Real accounts arrive with Supabase. For now this clears this session.")){
-    S.sol=0;S.tokens=[];$("address").value="";$("deposit").disabled=true;$("msg").textContent="";renderAssets();
+  if(confirm("Log out of Nova Wallet?")){
+    try{localStorage.removeItem("nova_user")}catch(e){}
+    location.href="landing.html";
   }
 };
 renderOrders();renderAssets();loadRates();startRates();
