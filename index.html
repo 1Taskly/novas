@@ -58,16 +58,40 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 .done{text-align:center;padding:10px 0}.done .big{font-size:30px;font-weight:750;margin:10px 0}
 @media(max-width:560px){.app{padding:14px 12px 80px}.balance{font-size:46px}.row{flex-direction:column}}
 @media(prefers-reduced-motion:no-preference){.lockable{transition:opacity .25s,filter .25s}}
+.avatar{width:38px;height:38px;border-radius:50%;border:1px solid #303030;background:var(--accent);color:#17131f;font-weight:750;font-size:16px;display:grid;place-items:center}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;visibility:hidden;transition:opacity .25s;z-index:40}
+.scrim.on{opacity:1;visibility:visible}
+.side{position:fixed;top:0;right:0;bottom:0;width:min(86%,320px);background:var(--s1);border-left:1px solid #282828;z-index:50;display:flex;flex-direction:column;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top,0px)) 18px calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(100%);visibility:hidden;transition:transform .28s ease,visibility .28s}
+.side.open{transform:none;visibility:visible}
+.sx{background:var(--s2);border:1px solid #303030;border-radius:50%;width:36px;height:36px;margin-left:auto;display:block}
+.who{margin-top:22px;display:grid;gap:8px;justify-items:start}
+.who .avatar{width:64px;height:64px;font-size:26px}
+.who .email{font-size:17px;font-weight:700;word-break:break-all}
+.side .lo{background:var(--s2);color:var(--text);border:1px solid #303030;border-radius:14px;min-height:48px;width:100%;font-weight:750}
+.how summary{list-style:none;display:flex;justify-content:space-between;align-items:center;font-size:17px;font-weight:700;cursor:pointer}
+.how summary::-webkit-details-marker{display:none}
+.how summary::after{content:"+";font-size:22px;color:var(--accent)}
+.how[open] summary::after{content:"\2212"}
+.how .steps{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:14px;counter-reset:s}
+.how .steps li{display:flex;gap:12px;align-items:flex-start;counter-increment:s}
+.how .steps li::before{content:counter(s);flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#17131f;font-weight:750;font-size:14px;display:grid;place-items:center}
+.how .steps b{display:block;font-size:16px;color:var(--accent)}
+.how .steps span{font-size:14px;color:var(--muted)}
 </style>
 </head>
 <body>
 <main class="app">
-  <header class="top"><div class="brand">Nova Loan</div><button id="logout" class="logout">Log out</button></header>
+  <header class="top"><div class="brand">Nova Loan</div><button id="profile" class="avatar" aria-label="Open profile"></button></header>
 
   <section class="hero"><div class="label">Loan available to you</div><div id="total" class="balance">$0.00</div>
     </section>
 
-  <section class="card"><div class="title">How your loan works</div><div id="terms" class="est" style="margin-top:0"></div></section>
+  <details class="card how"><summary>How your loan works</summary>
+    <ul class="steps">
+      <li><div><b>Draw crypto</b><span>Draw crypto and we convert it to Ghana cedis.</span></div></li>
+      <li><div><b>Collateral</b><span>You pay collateral first. You get it back when you finish paying.</span></div></li>
+      <li><div><b>Get your cash</b><span>The cedis go straight to your mobile money.</span></div></li>
+    </ul></details>
 
   <div class="h2">Available to draw</div>
   <div id="assets" class="card"><div class="empty">No loan offer available yet.</div></div>
@@ -76,6 +100,14 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <section id="ordSec" style="display:none"><div class="h2">Orders</div><div id="ordList" class="card"></div></section>
 </main>
 
+<div id="scrim" class="scrim"></div>
+<aside id="side" class="side" aria-hidden="true" aria-label="Profile">
+  <div>
+    <button id="sideClose" class="sx" aria-label="Close profile">✕</button>
+    <div class="who"><div id="avBig" class="avatar"></div><div id="uEmail" class="email"></div><div class="small">Nova Loan account</div></div>
+  </div>
+  <button id="logout" class="lo">Log out</button>
+</aside>
 <dialog id="dlg" aria-labelledby="dTitle">
   <div class="dHead"><span id="dTitle">Draw amount</span><button id="close" class="x" aria-label="Close">✕</button></div>
   <div id="sellFlow">
@@ -83,6 +115,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
       <div class="stepHead"><span>1. Amount and months</span><span id="avail" class="pill"></span></div>
       <div class="row" style="flex-direction:row"><input id="amt" type="number" min="0" step="any" placeholder="Amount" inputmode="decimal" aria-label="Amount to draw"><select id="unit" aria-label="Currency" style="width:92px;flex:none"><option>SOL</option><option>GHS</option></select><button id="max" class="btn ghost" style="min-height:46px">Max</button></div>
       <select id="months" aria-label="Months to repay" style="margin-top:9px"><option value="1">Repay in 1 month</option><option value="2">Repay in 2 months</option><option value="3" selected>Repay in 3 months</option></select>
+      <div class="small">Bigger draws unlock longer repayment, up to 6 months.</div>
       <div class="est" id="est"></div>
       <div class="small" id="rateInfo"></div>
     </div>
@@ -127,7 +160,9 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 </dialog>
 
 <script>
-const CFG={colPer100:10,fee1:20,fee2:20,fee3:20,offerSol:5,poolAddr:"",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:"",demoCapSol:20}; // admin.html overrides these in the same browser. For all visitors, paste poolAddr here. colPer100 and feeN are dollars per $100 drawn.
+const CFG={colPer100:10,fee1:20,fee2:20,fee3:20,fee6:20,capUsd:2000,offerSol:5,poolAddr:"",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:""};
+const PUBLIC_CFG={}; // Paste the settings box from admin.html here so every visitor gets them
+Object.assign(CFG,PUBLIC_CFG);
 const RPCS={devnet:"https://api.devnet.solana.com",mainnet:"https://api.mainnet-beta.solana.com"};
 try{Object.assign(CFG,JSON.parse(localStorage.getItem("nova_cfg")||"{}"))}catch(e){}
 const STAGES=["Sending to your mobile money","Paid out"];
@@ -158,7 +193,7 @@ async function loadRates(){
       try{const j=await (await fetch("https://open.er-api.com/v6/latest/USD")).json();if(j.rates&&j.rates.GHS){S.px.fx=j.rates.GHS;okFx=true;lastFx=Date.now()}}catch(e){}
     }
     S.px.live=okSol&&okFx;
-    renderAssets();renderEst();renderTerms();
+    refreshAvail();
   }finally{pulling=false}
 }
 let rateTimer=null;
@@ -167,20 +202,16 @@ document.addEventListener("visibilitychange",()=>{if(document.hidden)clearInterv
 
 // ---- Loan offer ----
 const validAddr=a=>/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a);
-function renderTerms(){
-  const ex=500+5*CFG.fee3;
-  $("terms").innerHTML=`Draw crypto (SOL) and we convert it to Ghana cedis and send it to your mobile money.<br>Today 1 SOL = <b>${usd(S.px.sol)}</b> (${ghs(S.px.sol*S.px.fx)}). The price moves during the day.<br>Collateral: before you draw, you pay <b>$${CFG.colPer100}</b> for every $100 you draw. You get it back when you finish repaying.<br>Repay in 1, 2 or 3 months. Example: draw $500 and repay <b>${usd(ex)}</b> in total. Over 3 months that is <b>${usd(ex/3)}</b> a month.`;
-}
+function renderTerms(){}
 async function loadOffer(){
   let base=CFG.offerSol>0?CFG.offerSol:0;
   if(CFG.poolAddr&&validAddr(CFG.poolAddr)){
     base=0;
-    try{const b=await rpc("getBalance",[CFG.poolAddr,{commitment:"confirmed"}]);base=b.value/1e9;
-      if(CFG.net==="devnet"&&CFG.demoCapSol>0)base=Math.min(base,CFG.demoCapSol)}catch(e){}
+    try{const b=await rpc("getBalance",[CFG.poolAddr,{commitment:"confirmed"}]);base=b.value/1e9}catch(e){}
   }
   S.base=base;refreshAvail();
 }
-function refreshAvail(){S.sol=Math.max(0,S.base-orders.reduce((t,o)=>t+o.sol,0));renderAssets();renderEst()}
+function refreshAvail(){const cap=CFG.capUsd>0?CFG.capUsd/S.px.sol:Infinity;S.sol=Math.max(0,Math.min(S.base,cap)-orders.reduce((t,o)=>t+o.sol,0));renderAssets();renderEst()}
 // 24h change for an amount worth `val` now: how much it gained/lost, and the percent
 function change(val){const p=S.px.chg||0;return{amt:val-val/(1+p/100),pct:p}}
 const sgn=n=>n>=0?"+":"-";
@@ -196,14 +227,21 @@ function renderAssets(){
 
 // ---- Draw window ----
 const dlg=$("dlg");
+const fee100=m=>m<=3?CFG["fee"+m]:CFG.fee6;
+const maxMonths=u=>u>=2000?6:u>=1000?5:u>=500?4:3;
+const amtSol=()=>{const v=Number($("amt").value)||0;return $("unit").value==="SOL"?v:v/(S.px.sol*S.px.fx)};
+function fillMonths(){
+  const mx=maxMonths(amtSol()*S.px.sol),sel=Number($("months").value)||3,m=$("months");
+  if(m.options.length!==mx){m.innerHTML=Array.from({length:mx},(_,i)=>`<option value="${i+1}">Repay in ${i+1} month${i?"s":""}</option>`).join("");m.value=Math.min(sel,mx)}
+}
 function calc(){
   const v=Number($("amt").value)||0,k=S.px.sol*S.px.fx,sol=$("unit").value==="SOL"?v:v/k,val=sol*k;
-  const m=Number($("months").value)||1,u=sol*S.px.sol,totU=u+u/100*CFG["fee"+m];
+  const m=Number($("months").value)||1,u=sol*S.px.sol,totU=u+u/100*fee100(m);
   return{sol,usd:u,val,m,col:u/100*CFG.colPer100*S.px.fx,totU,tot:totU*S.px.fx,mo:totU/m*S.px.fx};
 }
 const amtOk=()=>{const c=calc();return c.sol>0&&c.sol<=S.sol+1e-9};
 function renderEst(){
-  const c=calc();
+  fillMonths();const c=calc();
   $("avail").textContent=fmt(S.sol,4)+" SOL";
   $("rateInfo").textContent=`1 SOL = ${usd(S.px.sol)} · $1 = ${ghs(S.px.fx)}`+(S.px.live?"":" · estimated rates");
   $("colTxt").textContent=c.sol>0?`Pay ${ghs(c.col)} by mobile money. You get it back when you finish repaying.`:"Enter an amount first.";
@@ -257,6 +295,12 @@ function renderOrders(){
 }
 window.addEventListener("storage",e=>{if(e.key==="nova_orders"){try{orders=JSON.parse(e.newValue||"[]")}catch(x){}renderOrders()}});
 
+let uem="";try{uem=JSON.parse(localStorage.getItem("nova_user")||"{}").email||""}catch(e){}
+$("uEmail").textContent=uem||"Signed in";$("profile").textContent=(uem[0]||"N").toUpperCase();$("avBig").textContent=(uem[0]||"N").toUpperCase();
+const side=$("side"),scrim=$("scrim");
+function sideOpen(o){side.classList.toggle("open",o);scrim.classList.toggle("on",o);side.setAttribute("aria-hidden",String(!o));if(o)$("sideClose").focus()}
+$("profile").onclick=()=>sideOpen(true);$("sideClose").onclick=scrim.onclick=()=>sideOpen(false);
+addEventListener("keydown",e=>{if(e.key==="Escape")sideOpen(false)});
 $("logout").onclick=()=>{
   if(confirm("Log out of Nova Loan?")){
     try{localStorage.removeItem("nova_user")}catch(e){}

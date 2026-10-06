@@ -55,16 +55,20 @@ input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;pa
     <input id="f2" type="number" min="0" step="any" inputmode="decimal">
     <label for="f3">Fee per $100 drawn, 3 months ($)</label>
     <input id="f3" type="number" min="0" step="any" inputmode="decimal">
+    <label for="f6">Fee per $100 drawn, 4 to 6 months ($)</label>
+    <input id="f6" type="number" min="0" step="any" inputmode="decimal">
     <div class="hint">Borrowers only see money, never percentages. Example: a fee of $20 per $100 means a $500 draw is repaid as $600, split across the months they choose.</div>
     <label for="pool">Loan wallet address (private)</label>
     <input id="pool" placeholder="Paste the wallet holding the SOL" autocomplete="off" spellcheck="false">
     <div class="hint">Borrowers never see this address. Their dashboard shows this wallet's balance as the loan available. Leave blank to use the demo amount below.</div>
+    <button id="chk" class="btn ghost" type="button">Check wallet balance</button>
+    <div id="chkMsg" class="msg"></div>
     <label for="offer">Demo amount (SOL)</label>
     <input id="offer" type="number" min="0" step="any" inputmode="decimal">
-    <label for="cap">Devnet demo balance cap (SOL)</label>
+    <label for="cap">Max loan shown to each visitor ($)</label>
     <input id="cap" type="number" min="0" step="any" inputmode="decimal">
-    <div class="hint">Devnet only. The dashboard never shows more SOL than this. Set 0 for no cap. About 7 SOL is $1,000 and 67 SOL is $10,000 at $150 per SOL.</div>
-    <label for="rpcD">Devnet RPC URL (optional)</label>
+    <div class="hint">Everyone who opens the page sees at most this much, even if your wallet holds more. Set 0 for no limit.</div>
+        <label for="rpcD">Devnet RPC URL (optional)</label>
     <input id="rpcD" placeholder="https://…">
     <label for="rpcM">Mainnet RPC URL (optional, recommended for real use)</label>
     <input id="rpcM" placeholder="https://…">
@@ -72,6 +76,13 @@ input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;pa
     <div class="sw"><span>Simulate collateral payments<div class="hint">On: the Pay collateral button succeeds instantly (testing). Off: users see "not available yet" until real payments are connected.</div></span><input id="sim" type="checkbox" aria-label="Simulate collateral payments"></div>
     <button id="save" class="btn">Save settings</button>
     <div id="saveMsg" class="msg"></div>
+  </div>
+
+  <div class="card">
+    <div class="title">Make it live for everyone</div>
+    <div class="hint" style="margin:0 0 8px">Settings saved above only apply in this browser. To show them to every visitor, copy this line, open index.html, and replace the line that starts with <b>const PUBLIC_CFG=</b>. If your RPC URLs contain a key, that key becomes visible to anyone who views the page.</div>
+    <input id="pub" readonly aria-label="Settings line for index.html">
+    <button id="copyPub" class="btn ghost" type="button">Copy line</button>
   </div>
 
   <div class="card">
@@ -95,7 +106,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const fmt=(n,d=2)=>Number(n||0).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
 const STAGES=["Send cash to borrower","Paid out"];
-let cfg={net:"devnet",colPer100:10,fee1:20,fee2:20,fee3:20,poolAddr:"",offerSol:5,simulatePayments:true,rpcDevnet:"",rpcMainnet:"",demoCapSol:20};
+let cfg={net:"devnet",colPer100:10,fee1:20,fee2:20,fee3:20,poolAddr:"",offerSol:5,simulatePayments:true,rpcDevnet:"",rpcMainnet:"",capUsd:2000,fee6:20};
 try{Object.assign(cfg,JSON.parse(localStorage.getItem("nova_cfg")||"{}"))}catch(e){}
 let orders=[];
 const readOrders=()=>{try{orders=JSON.parse(localStorage.getItem("nova_orders")||"[]")}catch(e){orders=[]}};
@@ -103,16 +114,16 @@ const readOrders=()=>{try{orders=JSON.parse(localStorage.getItem("nova_orders")|
 function show(){
   $("gate").style.display="none";$("panel").style.display="block";
   $("net").value=cfg.net;$("col").value=cfg.colPer100;$("f1").value=cfg.fee1;$("f2").value=cfg.fee2;$("f3").value=cfg.fee3;$("pool").value=cfg.poolAddr||"";$("offer").value=cfg.offerSol;
-  $("cap").value=cfg.demoCapSol;$("rpcD").value=cfg.rpcDevnet||"";$("rpcM").value=cfg.rpcMainnet||"";$("sim").checked=!!cfg.simulatePayments;
-  renderOrders();
+  $("cap").value=cfg.capUsd;$("f6").value=cfg.fee6;$("rpcD").value=cfg.rpcDevnet||"";$("rpcM").value=cfg.rpcMainnet||"";$("sim").checked=!!cfg.simulatePayments;
+  renderOrders();showPub();
 }
 if(location.hash.slice(1)===KEY)show();
 
 $("save").onclick=()=>{
-  const co=Number($("col").value),a=Number($("f1").value),b=Number($("f2").value),c=Number($("f3").value),cap=Number($("cap").value),pool=$("pool").value.trim(),off=Number($("offer").value);
-  if(!(co>=0)||!(a>=0)||!(b>=0)||!(c>=0)||!(cap>=0)||!(off>=0)||(pool&&!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(pool))){$("saveMsg").className="msg err";$("saveMsg").textContent="Check the collateral, fee, amount and wallet address values.";return}
-  cfg={net:$("net").value,colPer100:co,fee1:a,fee2:b,fee3:c,poolAddr:pool,offerSol:off,simulatePayments:$("sim").checked,demoCapSol:cap,rpcDevnet:$("rpcD").value.trim(),rpcMainnet:$("rpcM").value.trim()};
-  try{localStorage.setItem("nova_cfg",JSON.stringify(cfg));$("saveMsg").className="msg";$("saveMsg").textContent="Saved. Reload the dashboard to apply."}
+  const co=Number($("col").value),a=Number($("f1").value),b=Number($("f2").value),c=Number($("f3").value),f6=Number($("f6").value),cap=Number($("cap").value),pool=$("pool").value.trim(),off=Number($("offer").value);
+  if(!(co>=0)||!(a>=0)||!(b>=0)||!(c>=0)||!(f6>=0)||!(cap>=0)||!(off>=0)||(pool&&!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(pool))){$("saveMsg").className="msg err";$("saveMsg").textContent="Check the collateral, fee, amount and wallet address values.";return}
+  cfg={net:$("net").value,colPer100:co,fee1:a,fee2:b,fee3:c,poolAddr:pool,offerSol:off,simulatePayments:$("sim").checked,capUsd:cap,fee6:f6,rpcDevnet:$("rpcD").value.trim(),rpcMainnet:$("rpcM").value.trim()};
+  try{localStorage.setItem("nova_cfg",JSON.stringify(cfg));$("saveMsg").className="msg";$("saveMsg").textContent="Saved in this browser. Copy the line below into index.html to show it to everyone.";showPub()}
   catch(e){$("saveMsg").className="msg err";$("saveMsg").textContent="Could not save in this browser."}
 };
 
@@ -129,6 +140,23 @@ $("air").onclick=async()=>{
   finally{$("air").disabled=false}
 };
 
+function showPub(){
+  const p={net:cfg.net,colPer100:cfg.colPer100,fee1:cfg.fee1,fee2:cfg.fee2,fee3:cfg.fee3,fee6:cfg.fee6,capUsd:cfg.capUsd,poolAddr:cfg.poolAddr||"",offerSol:cfg.offerSol,simulatePayments:!!cfg.simulatePayments,rpcDevnet:cfg.rpcDevnet||"",rpcMainnet:cfg.rpcMainnet||""};
+  $("pub").value="const PUBLIC_CFG="+JSON.stringify(p)+";";
+}
+$("copyPub").onclick=async()=>{try{await navigator.clipboard.writeText($("pub").value);$("copyPub").textContent="Copied"}catch(e){$("pub").select();$("copyPub").textContent="Select and copy"}setTimeout(()=>$("copyPub").textContent="Copy line",1800)};
+$("chk").onclick=async()=>{
+  const a=$("pool").value.trim(),m=$("chkMsg");m.className="msg err";
+  if(!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a)){m.textContent="Paste a valid Solana address first.";return}
+  const net=$("net").value,url=(net==="mainnet"?$("rpcM").value.trim():$("rpcD").value.trim())||(net==="mainnet"?"https://api.mainnet-beta.solana.com":"https://api.devnet.solana.com");
+  $("chk").disabled=true;m.textContent="Checking…";
+  try{
+    const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"getBalance",params:[a]})});
+    const j=await r.json();if(j.error)throw new Error(j.error.message);
+    m.className="msg";m.textContent="Balance on "+net+": "+fmt(j.result.value/1e9,4)+" SOL"+(j.result.value===0?". It is empty on this network, so check the Network setting above.":"");
+  }catch(e){m.textContent="Could not read the balance ("+(e.message||"network error")+"). For mainnet, add a Helius or QuickNode RPC URL below."}
+  finally{$("chk").disabled=false}
+};
 function renderOrders(){
   readOrders();
   $("orders").innerHTML=orders.length?orders.map((o,i)=>`<div class="ord">
