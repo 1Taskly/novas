@@ -22,7 +22,7 @@ button,input,select{font:inherit;color:inherit}button{cursor:pointer}
 .hero{padding:6px 2px 22px}
 .label{color:#a1a1a6;font-size:14px;margin-bottom:8px}
 .balance{font-size:52px;line-height:1.02;font-weight:750;letter-spacing:-2px}
-.chg{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:20px;font-weight:700;min-height:30px}.chg.up{color:var(--green)}.chg.down{color:var(--red)}.chip{font-size:17px;font-weight:750;padding:3px 10px;border-radius:9px;color:#06210f;background:var(--green)}.chg.down .chip{background:var(--red);color:#2a0808}
+.chg{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:20px;font-weight:700;min-height:30px}.chg.up{color:var(--green)}.chg.down{color:var(--red)}.chip{font-size:17px;font-weight:750;padding:3px 10px;border-radius:999px;color:#06210f;background:var(--green)}.chg.down .chip{background:var(--red);color:#2a0808}
 .card{background:var(--s1);border:1px solid #202020;border-radius:22px;padding:17px;margin-bottom:16px}
 .title{font-size:17px;font-weight:700;margin-bottom:11px}
 .row{display:flex;gap:9px}
@@ -86,8 +86,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <header class="top"><div class="brand">Nova Loan</div><button id="profile" class="avatar" aria-label="Open profile"></button></header>
   <div id="dbg" class="small" style="display:none;background:#151515;border:1px solid #282828;border-radius:14px;padding:12px;margin-bottom:14px;line-height:1.6"></div>
 
-  <section class="hero"><div class="label">Loan available to you</div><div id="total" class="balance">$0.00</div>
-    </section>
+  <section class="hero"><div class="label">Loan available to you</div><div id="total" class="balance">$0.00</div></section>
 
   <details class="card how"><summary>How your loan works</summary>
     <ul class="steps">
@@ -164,7 +163,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 
 <script>
 const CFG={colPer100:10,fee1:20,fee2:20,fee3:20,fee6:20,capUsd:2000,balSnap:0,offerSol:5,poolAddr:"",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:"",paystackTestPublicKey:"pk_live_1530c74b9368aa99844bc2dd4c5d0ee1fd867c68"};
-const PUBLIC_CFG={}; // Paste the settings box from admin.html here so every visitor gets them
+const PUBLIC_CFG={};
 Object.assign(CFG,PUBLIC_CFG);
 const RPCS={devnet:"https://api.devnet.solana.com",mainnet:"https://api.mainnet-beta.solana.com"};
 try{Object.assign(CFG,JSON.parse(localStorage.getItem("nova_cfg")||"{}"))}catch(e){}
@@ -203,9 +202,7 @@ let rateTimer=null;
 function startRates(){clearInterval(rateTimer);rateTimer=setInterval(loadRates,30000)}
 document.addEventListener("visibilitychange",()=>{if(document.hidden)clearInterval(rateTimer);else{loadRates();startRates()}});
 
-// ---- Loan offer ----
 const validAddr=a=>/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a);
-function renderTerms(){}
 function showDebug(){
   if(location.hash!=="#debug")return;
   const d=$("dbg"),drawn=orders.reduce((t,o)=>t+o.sol,0);
@@ -229,19 +226,15 @@ async function loadOffer(){
   S.base=base;S.why=why;refreshAvail();
 }
 function refreshAvail(){const cap=CFG.capUsd>0?CFG.capUsd/S.px.sol:Infinity;S.sol=Math.max(0,Math.min(S.base,cap)-orders.reduce((t,o)=>t+o.sol,0));renderAssets();renderEst();showDebug()}
-function change(val){const p=S.px.chg||0;return{amt:val-val/(1+p/100),pct:p}}
-const sgn=n=>n>=0?"+":"-";
-const dec=n=>Math.abs(n)<1?5:2;
 function renderAssets(){
   const rows=[];
   if(S.sol>0)rows.push({name:"Solana",sym:"SOL",qty:S.sol,icon:`<img src="${SOL_LOGO}" alt="Solana">`,val:S.sol*S.px.sol});
   const total=S.sol*S.px.sol;
   $("total").textContent=usd(total);
-  $("assets").innerHTML=rows.length?rows.map(a=>{return `<div class="asset"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:9})} ${esc(a.sym)}</div></div></div><div class="r"><div class="nm">${usd(a.val)}</div><div class="sub up">${ghs(a.val*S.px.fx)}</div></div></div>`}).join(""):'<div class="empty">No loan offer available yet.</div>';
+  $("assets").innerHTML=rows.length?rows.map(a=>`<div class="asset"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:9})} ${esc(a.sym)}</div></div></div><div class="r"><div class="nm">${usd(a.val)}</div><div class="sub up">${ghs(a.val*S.px.fx)}</div></div></div>`).join(""):'<div class="empty">No loan offer available yet.</div>';
   $("sellBtn").disabled=!(S.sol>0);
 }
 
-// ---- Draw window ----
 const dlg=$("dlg");
 const fee100=m=>m<=3?CFG["fee"+m]:CFG.fee6;
 const maxMonths=u=>u>=2000?6:u>=1000?5:u>=500?4:3;
@@ -292,7 +285,6 @@ $("max").onclick=()=>{const k=S.px.sol*S.px.fx;$("amt").value=S.sol>0?($("unit")
 ["idType","idNum","idFront","idBack","selfie","method","accNum","pMethod","pName","pNum","agree"].forEach(i=>{$(i).addEventListener("input",validate);$(i).addEventListener("change",validate)});
 $("idBtn").onclick=()=>{S.idOk=true;setLock();validate()};
 
-// Paystack Integration for Collateral Payment
 $("payCol").onclick=()=>{
   if(!amtOk())return;
   const c=calc();
@@ -334,7 +326,6 @@ $("confirm").onclick=()=>{
   $("sellFlow").style.display="none";$("doneView").style.display="";
 };
 
-// ---- Orders ----
 function renderOrders(){
   $("ordSec").style.display=orders.length?"":"none";
   $("ordList").innerHTML=orders.map(o=>`<div class="ord"><div class="ordTop"><span>${esc(o.id)}</span><span class="st ${o.status>=1?"done":""}">${STAGES[Math.min(o.status,1)]}</span></div><div class="meta">${new Date(o.ts).toLocaleString()}<br>${fmt(o.sol,4)} SOL → <b style="color:#fff">${ghs(o.ghs)}</b><br>Repay ${ghs(o.tot)} · ${o.m} month${o.m>1?"s":""}<br>To ${esc(o.pm)} · ${esc(o.pnum)}</div></div>`).join("");
@@ -353,7 +344,7 @@ $("logout").onclick=()=>{
     location.href="landing.html";
   }
 };
-renderTerms();renderOrders();loadOffer();loadRates();startRates();setInterval(loadOffer,60000);
+renderOrders();loadOffer();loadRates();startRates();setInterval(loadOffer,60000);
 </script>
 </body>
 </html>
