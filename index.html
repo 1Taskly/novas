@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>Nova Wallet</title>
+<title>Nova Loan</title>
 <script>try{if(!localStorage.getItem("nova_user"))location.replace("landing.html")}catch(e){}</script>
 <style>
 :root{--bg:#000;--s1:#151515;--s2:#202020;--text:#f5f5f5;--muted:#9a9a9f;--line:#282828;--accent:#a995f5;--green:#35e875;--red:#ff5b5b;--amber:#f5b942}
@@ -62,71 +62,81 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 </head>
 <body>
 <main class="app">
-  <header class="top"><div class="brand">Nova Wallet</div><button id="logout" class="logout">Log out</button></header>
+  <header class="top"><div class="brand">Nova Loan</div><button id="logout" class="logout">Log out</button></header>
 
-  <section class="hero"><div class="label">Balance</div><div id="total" class="balance">$0.00</div>
-    <div id="chg" class="chg"></div>
-    <div id="liveTag" class="small" style="margin-top:6px"></div></section>
+  <section class="hero"><div class="label">Loan available to you</div><div id="total" class="balance">$0.00</div>
+    </section>
 
-  <section class="card">
-    <div class="title">Deposit crypto</div>
-    <div class="row">
-      <input id="address" placeholder="Paste your wallet address" autocomplete="off" spellcheck="false" aria-label="Wallet address">
-      <button id="deposit" class="btn" disabled>Deposit</button>
-    </div>
-    <div id="msg" class="msg" role="status"></div>
-  </section>
+  <section class="card"><div class="title">How your loan works</div><div id="terms" class="est" style="margin-top:0"></div></section>
 
-  <div class="h2">Assets</div>
-  <div id="assets" class="card"><div class="empty">Deposit to see your assets.</div></div>
-  <button id="sellBtn" class="btn" style="width:100%" disabled>Sell crypto</button>
+  <div class="h2">Available to draw</div>
+  <div id="assets" class="card"><div class="empty">No loan offer available yet.</div></div>
+  <button id="sellBtn" class="btn" style="width:100%" disabled>Draw amount</button>
 
   <section id="ordSec" style="display:none"><div class="h2">Orders</div><div id="ordList" class="card"></div></section>
 </main>
 
 <dialog id="dlg" aria-labelledby="dTitle">
-  <div class="dHead"><span id="dTitle">Sell crypto</span><button id="close" class="x" aria-label="Close">✕</button></div>
+  <div class="dHead"><span id="dTitle">Draw amount</span><button id="close" class="x" aria-label="Close">✕</button></div>
   <div id="sellFlow">
     <div class="step">
-      <div class="stepHead"><span>1. Amount to sell</span><span id="avail" class="pill"></span></div>
-      <div class="row" style="flex-direction:row"><input id="amt" type="number" min="0" step="any" placeholder="Amount in SOL" inputmode="decimal" aria-label="Amount in SOL"><button id="max" class="btn ghost" style="min-height:46px">Max</button></div>
+      <div class="stepHead"><span>1. Amount and months</span><span id="avail" class="pill"></span></div>
+      <div class="row" style="flex-direction:row"><input id="amt" type="number" min="0" step="any" placeholder="Amount" inputmode="decimal" aria-label="Amount to draw"><select id="unit" aria-label="Currency" style="width:92px;flex:none"><option>SOL</option><option>GHS</option></select><button id="max" class="btn ghost" style="min-height:46px">Max</button></div>
+      <select id="months" aria-label="Months to repay" style="margin-top:9px"><option value="1">Repay in 1 month</option><option value="2">Repay in 2 months</option><option value="3" selected>Repay in 3 months</option></select>
       <div class="est" id="est"></div>
       <div class="small" id="rateInfo"></div>
     </div>
     <div class="step">
-      <div class="stepHead"><span>2. Platform fee</span><span id="feePill" class="pill">Unpaid</span></div>
-      <div id="feeTxt" class="small" style="margin:0 0 10px"></div>
-      <button id="payFee" class="btn" style="width:100%" disabled>Pay platform fee</button>
-    </div>
-    <div id="payout" class="step lockable locked" aria-disabled="true">
-      <div class="stepHead"><span>3. Get paid</span><span id="payPill" class="pill">Locked until fee is paid</span></div>
+      <div class="stepHead"><span>2. Verify your ID</span><span id="idPill" class="pill">Not verified</span></div>
       <div style="display:grid;gap:9px">
-        <select id="method" aria-label="Payout method"><option value="">Choose payout method</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option><option>Bank transfer</option></select>
-        <input id="accName" placeholder="Account name" aria-label="Account name">
-        <input id="accNum" placeholder="Mobile money number or bank account" inputmode="numeric" aria-label="Account number">
-        <button id="confirm" class="btn" disabled>Confirm withdrawal</button>
+        <select id="idType" aria-label="ID type"><option>Ghana Card</option><option>Driver's license</option><option>Passport</option><option>Voter ID</option></select>
+        <input id="idNum" placeholder="ID number" aria-label="ID number" autocomplete="off">
+        <div class="small" style="margin:0">Front of your ID</div><input id="idFront" type="file" accept="image/*" aria-label="Front of ID">
+        <div class="small" style="margin:0">Back of your ID</div><input id="idBack" type="file" accept="image/*" aria-label="Back of ID">
+        <div class="small" style="margin:0">Your photo (selfie)</div><input id="selfie" type="file" accept="image/*" capture="user" aria-label="Selfie">
+        <button id="idBtn" class="btn" disabled>Submit ID</button>
+      </div>
+      <div class="small">Use a clear photo of both sides. We check your ID before any money is sent.</div>
+    </div>
+    <div id="colStep" class="step lockable locked" aria-disabled="true">
+      <div class="stepHead"><span>3. Pay collateral</span><span id="colPill" class="pill">Locked until ID is verified</span></div>
+      <div id="colTxt" class="small" style="margin:0 0 10px"></div>
+      <div style="display:grid;gap:9px">
+        <select id="method" aria-label="Mobile money network"><option value="">Pay from which network?</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option></select>
+        <input id="accNum" placeholder="Mobile money number you pay from" inputmode="numeric" aria-label="Mobile money number you pay from">
+        <button id="payCol" class="btn" disabled>Pay collateral</button>
+      </div>
+    </div>
+    <div id="recvStep" class="step lockable locked" aria-disabled="true">
+      <div class="stepHead"><span>4. Where to send your cash</span><span id="recvPill" class="pill">Locked until collateral is paid</span></div>
+      <div style="display:grid;gap:9px">
+        <select id="pMethod" aria-label="Payout network"><option value="">Choose mobile money network</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option></select>
+        <input id="pName" placeholder="Account name" aria-label="Account name">
+        <input id="pNum" placeholder="Mobile money number" inputmode="numeric" aria-label="Payout number">
+        <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--muted);margin:0"><input id="agree" type="checkbox" style="width:auto;margin-top:3px"><span id="agreeTxt"></span></label>
+        <button id="confirm" class="btn" disabled>Confirm draw</button>
       </div>
     </div>
     <div id="sellMsg" class="msg"></div>
   </div>
   <div id="doneView" class="done" style="display:none">
-    <div class="label">Order placed</div><div id="doneAmt" class="big"></div>
+    <div class="label">Draw requested</div><div id="doneAmt" class="big"></div>
     <div id="doneInfo" class="meta"></div>
     <button id="doneClose" class="btn" style="width:100%;margin-top:16px">Done</button>
   </div>
 </dialog>
 
 <script>
-const CFG={feeGHS:15,marginPct:3,fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:"",demoCapSol:20}; // admin.html overrides these
+const CFG={colPer100:10,fee1:20,fee2:20,fee3:20,offerSol:5,poolAddr:"",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:"",demoCapSol:20}; // admin.html overrides these in the same browser. For all visitors, paste poolAddr here. colPer100 and feeN are dollars per $100 drawn.
 const RPCS={devnet:"https://api.devnet.solana.com",mainnet:"https://api.mainnet-beta.solana.com"};
 try{Object.assign(CFG,JSON.parse(localStorage.getItem("nova_cfg")||"{}"))}catch(e){}
-const STAGES=["Processing payout","Paid out"];
+const STAGES=["Sending to your mobile money","Paid out"];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const fmt=(n,d=2)=>Number(n||0).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
 const usd=n=>"$"+fmt(n), ghs=n=>"GHS "+fmt(n);
 const SOL_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAIAAABt+uBvAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAAYQklEQVR42tV9W49tWXXe940x177U7XT34TQH6AuhGwIYO5CARRsnlpV2YlkBITvGfjG5vCR+iPMSKT8iL4kiCzk4lhXZIAsilJCbHAS2sINETBus4NgWMjHuC5zu5lyq6uzLmnN8eZhrr9q1q2rX5VSf7p46Xb32rrVWzfmtcZvfGHMuXrt2DfelkZR09MuVg771Jx971dEvX6GWcL9aRHDR6seIkCQpIlaAqOeYWT3fzMysnlPPPwro6xugOshSStu2ZanV0Z4kDvUqkr7UUkruXpF63QNUn3MpZT6ft22bc66Cs+bkZbWSVEoBkHOu31dRSik1TTMYDNz9WB28RDW8TIAk1UHWzkmazWaz2axt25NAOdborNfTiMg5T6dTM2uaZjgcDgaDqonLd7gs+UqXLjKScs6z2Ww6ndbnf1nPduXCiKgPwN1Ho9FwOHR3kpdroXxzc/OyZMfMcs6TyWR3d3c+n/cCdYmSf+wNI6Jt2+l0KsnMer27FJjuFaDaj9rLyWSyt7c3n8/xKrW2bWezmSR3773ePcJ0rwBVdKbT6e7ubu3cWR77JXqAow+sbdv5fE6yaZpXQYKWnwnJUsqdO3cmk0mF5r6FJ+tRk1T9ZtM0VeOOdv6VAmgZndlstru72/vg11qr4UUNnS4syxdRsWpo9/b29vb27lvIf2ETOZvNIqJpmmqVXlk33wd+e3t7s9kMr5M2mUwiYmtra01geVKzC8jt7du3X0fo1DabzW7fvn1sXHZpAJHMOd++fXuN0XmNGOljW9/5c3XSzoXOnTt31pvkV90kre9AP4SzY2SnPorqGk+VnSO3tfshL8B5JXZZjno01+Blpz6KGuzs7u6eR4EFiOcYCPtzTjn18K8FaO35x96tH86yEFxQxeot9vb22rY9l6QDOueTvq/Gq23bvb29sxjN0xXhwh59CaEAYi1cAuIwpieAp2PO0pkf1IpfqxhdEKBqemaz2WQyuQcTseZLviI26TwnTSaT2Wy2nmBYZ6RrQHgPzpt1Mltp0wPh6R5rJ0idPWd/wKNmRWcMIwhYnT874FxrlHrrsWyMzgdQb5gv6rxFYkEe11nissiLrL0kQBMXgMJIgxnIpQHVg55dWW49t1/vCkACCQONPEnn6qCqwT4doBU+uDIY98LsLOA4OKhsVgWlfrlMvB90QAKkTsbY/WN3gP6ypXaIz+3uWaACUjoqdKsPez6fT6fTFUXrr7IVP1fRKaXs7+/fYzjL/pNZ96n/K1x9SpIWJ9UREFw9bX3QLAmCGaziWL/h8pl2kpXa39+vinY0GZeO/cMrdPJ5eVJBEAyEIIe7FxbSABKCjIzO5FAQQgAR6im4hfD1aHXfYEVluDTgTtCEANiWrh9dtzsFXRxrZVCllOl0urm5eXSYaSUy7HnlC0wgFgYFoDppIYBo5wEHaCAhIvXdLQfd1oqxOe5hr3GAsfSTAEEtgdFdEMtIrQxqMpkMh8OUUlXYXjzTUYmdTqcnpq4OjwWL4FfVNMKoKskZMMDFwJuu//BHPjy4cqV1ySDBB6nKjphlQQIW0emT1A/Pqy72QENEQOyGvPi+qpGMJFXGPuT397/yy5+afXeP5EKp49TAKCKm0+nW1taK5h5SMTNr2/bsgY/V5CeVq1GFADNaEeENi+HN15/+pX/2lve97+7AYuzZAgY44GRiIIeJjnDJJUWVOBhpAiWEm2Jhs0gEJSlKwFEoKYykAMFgIx9cnVv69o2v/eZ/mn13T9CxccFJCjGZTEajUdM0y/KRVlA8iXhfcQD9czH1KiJ0jG+hNVSja2/84D/8J1ff+8HvzCczicmyFyWIEsXCQhUFSFFgCctVfIICRRYywBCkKpkOCTIUi+hMuKpvswIWbc1TulV+/5d/Ze+F75lTAeoUS3+UflzmsFcBkjSdTs87n8gVnR5kOeExuvKBj3388fc+9eLd0OaGvBSxqAkVRchMQiCKmWShIlHyQAQEZ3QREWiszsgIAGEKArSwiM5IC1ITeED24Iy/+29+7eXP/R4zI2D1dzhHmDudTsfj8bLYHbJB8/n8XJyb2DmsJYgdHMbgygd+9h+8+2/+3RfnYvJ2OscQhoDTwsPEQCQWkoKMJShZoWg0t5JFhJKRUA4RZFThpMmEep0T1Wc19Cthj8zta5/41Mv/8UvWeuQgpegMpKwTeDtt7lbLK4bDYa9GB6Q9yRp3nyfecQhGX5h4B0bA+K/91M+//yd/5vvZpjCZyQQFJAuwGmXUqyRYvQlIM1+Ktd2NYHfr7uYLoYrqpmVGpsCOmsfnzTOf+K3n//3neCsQ5MKfHdhGnTJ3XVaj0Wh0jATVooDz0ncO7w7pxmHExnv/9t//4ad/Znc+4LDxNouRYIYmog0GnCzCwBVKgyQUUXKwUITcTVQEDC5TdDoURi28MwWjKAph89hhup6bP/jEp5//1c/wdtEcQOljpAtkumsJyqqbr8Hhee9VDSVVe5RCo/f92E9/8Cd+bn82Kkij4XieJ4EgLEUJL8UQDpMJiCCgZoico94oQtXBk6BkIpygKjrspqIhShBDDXyQ4zGO/+Q3Pv/8Jz/Lm0VBGFC6aYoW0dDRMOVUUz0ejysaadkALc+M1oC1FNyJlMkKCTTv+htPP/XjH5m2qSRommexCwatYBYcMjVhSYWKhmg8GqiUyMU8SsOcAJclhKExwYJGgCJKgig3quonBChRD6XmYdv41mf+x5/+69/gy5mRlAsqlsfMqtQRBThsNY/MFmpWdmNj4xBAtd7rvJQLwZCMCJXtnYd+8qc+wtFGZI2G1jKzSXNDa7Rm6ANZ04SV7IhENincgtNgltQGc0gGCMkhExmsRtiYDYWAqQaDQBiCeb4zxbNf+PL/+Ve/ajfuKlK12jVwJENdbFAlL3p0zpja6jmQ1GcslgE6UXxqGKsDqCRkBeGzyf7vfOHz2w8+2srhkoUNmlaRTUxGUygKCswikcnhFOeFc4GRKBfMkIJWCkVKRjBIqyZHC64HEBQJmL/40rP/9Uvl+TuUo0SUgMmM0LL4q5v5nCcdUgFqmkYSr127ZmZ3797d3d09q/zo4IAgYQKFBAxgG0AC5p0tscWptriKAgyuOk6wdL+gYAQCLKAWZ3aa0c0V+oFKMGLW4m4wiOhiHdXyNvEQw3sEoDjdlWF7e3tjYyMiUs8bXYRw5oJVqAEjMzSB7KB/XBlhT4EczL1gVSjQRYSMOqXtLqya0kXE1Y318TEZpAQwagVXvcdi/LyHHF3PFKZa+3SBnCwOak3qsYSo3YZACmSEOlNOqOMXAQOiDpEAWOp/oNjNXKpIxdIkk7YIaSpvRigkcfEJl52vLKVUZ59qBHRWgA73Q9HTNgYRSELDjv86OJkwqQChKgXRp7MWeiGHSQsP36kBD4V3skUUSYiCG4TIIgxRjhZxLjNzFxClCpCZpb4i9V7yvRCB0dCubg4fLjlJpbJbQclgZkUKFlGBkJfKigUpA8iwQi8dhWYd+QyWBV6CEQawQBkWQEChyQQv3ca8IyOlzoX0iFgXMkI0AFToLIHQAXOrToLuESDSQ3ln89rHf+5fjJvH2tmoxrAyBCQnndkUVuCQKzwjGahwhitbwcCazSbXIMAVbkwiQw661UvCSBe8yAq9RGlt/+7v/tqnXvrSV6y1mLcIdcp8mERbPTzzJOEgDlrlvc99LwDe5nzrZvuGtz6+147cm6DJpGpuk5uX8FASG4QLSWiQDdkLG+VUZlZKirZRGSIawCWHGjBFayWnogGDUTxgObwUza+O3/Qj//Kff7GNvS9/ldGoLQTQTU8OaVnnD3ngGE9tff2/b25u1rLme6gbEOltzt/+f88++qa3P7D95nbu1FDRlEwpZaUSqcgjUilWiuUwRYqwLCvhkuewAs9iFkUvUCtlMpNz08w0g1qipYozk23jd9p5s7X5xA+887lvfSs/+6x5o8jLpLXYE9e9fT8rQAAqA+tbW1u1evac2UHDYedBYpZ3n/vL5x595PHtzQdV3OE8KEkgQUgWIqzS6VLUuQpFwCgj5BGuQsgXUwJ3ghQEhQME3Gg0Jt8r852Hrjz57nd9+4//b/7e92iOIgIHvG0nTj1Zfqbsa4ViOBw2TeNbW1tVgs4J0NHyhKBhf3b7xvMvPPnEO0bDncjJkCrfQQmSiQaoBEFVEy0iPGSAsZAhN5EBwCzBEIqgCmQm6+iLjhoSSOcktw9df8Nj7/yrf/5HfxS3bi1LCJfI7CWk7FQZuhSAjq13CafuTF6+8cJ33/roXxmNdnIL55BQjbWdqsKAkImCC4BMIQa8iJK5mUFQUB37A4QK1EdAUjctMwJw28+zB65de/Pb3vadP/5m3NlLlhYppIXNPvSDrwpAVesIFKLc3H/h5ZdefOtjTwybHWhgcEqG6jUJ1Xxxqn12mguuShVGMGSs0WbNCWCRU6bEmm4DQ7Au4maAU8S1xx69/ujj33nmG+WlXbov4tdji4rOo2Kbm5ullEspyuSikKVJfOnOCzdfvvOOJ39g5NvKNAwoJ82QICNTJQvr/7ooxyAok0jJ2NTPFMWa2iGChBFm9EIUEvAgYdYKN3f3Hnn7E1cevv7s178R+/sV4e7H8vT6zG00Grm7b25u1pTQZQDUe4kw8qU7N+aT8tbHnmx8TDCXGVEiqncKKYOZmCNmZGvMZAGLXKBMYSgJTEAyS86BsQlYKV7CQkSY4KKHBlSqS/NM73jyyatXr37nD79R7k7oWqVnztPG47G7d3TH5a4CjcjE3Ln3B3/yX6yJv/WBnx4PHhpYGFyGYpAxJSvM8mKGYFaKMCajGwIeJaSMHHCpMGfIQl6QYA0LlAuiBd2QEPM2K5QK8rzV/rve8+6vXNlub3wf5kvJVgDWTV90JkfWVRg8/PDDta7xYvPVIzaoZ+cINMJAGF/bfvLq9vVog3IaW5YA6VZUwrKRQoYJxuwMSsmqUw9mOsIoo1zBTAouOXOUoNxTsIS1BaUgm3FonN/cbb/1F9ifmniY2VoAFKcj5O5XrlxJKaV+qde9A7QcswbClMECTV/c/fqLu7RFklEHxrLPYmjJTPRf1qI8O6jKYAClK4MpAQg0oFQyAEAYcgYag9UAQocVK84eSdeaI0kJi4Wgl6Jci9mgUIn1ynoqSKtpqgVfUWeU0ZNvrHmsLp1O9gl5FMHVJXxUp59SteDgSvVjEO4IoGhR66GaADncvTMBVDFJdfnZSr71vKzQcUvbuxQN4OSg477q0JaqUITS0SNdSUgcygoASyXXlXXzBXG4FNx0BQyVerZKqCmKSF2UKKpL8kopqUvKnQ2gI4zrKptbH5ETETISQcCJLWBUnW50yaJanBGHo5MApDorX2WeqnJGp1BcIicNQIYLEopgVM6gw1xaNTb1r+psANVn383mU0oXc2SrlWvVbLhHyZABg7G/8e3Xn9ocXgtIqqmbLsFQTMFgUFRXTchA/TJ5porX8DAyshxIKl6UIgygBUsQYYFGsgIDojVl7t99/n8/k/f3RaNCF9KJap0P6I6qZadmVnX0oCsIiu5pSlTkeQGTMNzgW/7OX/+Fp37o7yXuoGNk4bXMh2xNpeZIKTIIhEWpRIepdbUOGdBAA0YKJeWUS6OwYGNKaK1w6D62Flkpm8+3PTb29//tL/7S7d1b5oNFEV6VbvFsRqiicSgvdkaATk6T2YIZlXXlPRsDXX/6Bz/+o+/52Pz2MLfeeBIoMBCiQMuM1rqUhhggZcopwiMs5lbmHnKpIQYoKUoquWnmlrNpuO0x4JyMrGjb1rI4vTIuI9d//8xn9168YdYoDpUd8syFMBWNypGlnkAbDAbLydUzS6OxyyUwVBw0WMKG6+GnnvjZD/3gx7T70CgPCEeBuuxypbOFRBgkyRAIGMNhyFKxhIQMCxEllNtWEUDjzoHJrC1ttIiZw5NB2UFT3gz9/n/+3DOf+zznM8fJW16cpl+DwWC1iLMCdAEzpC7XGyIoN1qDDdMDP/LER59+/8cxedDK0NBQVIgysBI1UWWp5lRCrAUuEhgwMkIugQwUOIgGKCVHmIzmHEzbtktnFDikyeQtDw2/8YX/+cxvftpmeySkqBWjB8zH2YqpjgeoylVK6QK10YHoebEGm0lXf+iNP/H0+3+haR9mGZlY88YKVlqdpuraESBY6FSNMQlBctS6MlOtKAIzCpIRpagNJqqgcUIF0ZZp26RybdR884u//Xv/4dcxnRBi5OpsjYxzevp+85RVCSI5Ho8rQOcRJXViEXQ00tZ7Hv7xD3/onw6nj1hsRRRZACgkrVppBhf2XEDQOz6DCkQoOaJWKcjrI3e6GFFIiIaYCQOVaA0YeHCAnTT49te+/Du//u+w96KxIEqwVskQVB8LndEEjcdjLC0gT8veuq4yr7vWnBYJHYQWlfM1jEw777z6Yx/90V/cKo+UuxukJWeBgoFqn2sdcHe1JaJIUWBW08HmYCFIWv0MVYwMNMDJiKIIlVApTSIibzTxF3/41S9++pPYfRGcK8JQiSNINTQ9mACdGq+4e5eSP1oGXE8ajUZra+xX6TiSIhluGr5t530f/dA/2uL1Mqn1lvMQQgqULl3czSAOz8a6g4IwGbscdEAIskBhCpVwgxRWChBQGXixdr4x0o0//+aXfuuT85efo+XOvEVnHHWedE+VidFodHwZcL9IZDgc1kXUJxqcozkfKZTfsHHt5z/8j988fiRuzdOWQzlIM/dawcoluoghydSVPJsggzFCNKOSVbLHLWSSSZ6LFzSRHcUUjmCJpnhTbjz3Z7/92V+5e+NPm0YwyznHARVNrUzBzjD/Gg6HK+YlHc6yK6U0Go3u3r173mgo1P7ld//s5fL9lEeSASYQbmYmQwBiHPgRLsoXuoMQEAYBMiuIAGUR6AASi1jCAbKYCkoztsn05lf/13+7+dzXaaVt5+hWP3B5onIunzwajfoA+mBoK5u81VqhW7dunTWVWJdIBBM2BnhwiE2Dl67IhdFV4bIKvBYHS5FlnYkGuiQNYpFJj+4SBTKRC0pf00CAxhJ3gLtAAVrDQZnASVU/p4rPAw880AO0aqSX77giROs8GvtYSEWzOW9m3CIsaBUHLZYK6IBDl1ZLaA6sm/piB3S1HUSd8de7UKTRAETJpMgSNVzui2guOpFcEZ/jjXSfdR2Px7PZ7PTVdOrqkEkGcyCzq+rsi3kOSgkWdJpOKset3V3daQtdVTS75SDsqCCPfgmagmCcmQs7Rr7cfTweH7t11TGbm/Tb8q1JdfC4PAlgoNdiClm3OKFjzw4XnPLwv+VM5GIJ3erUWJVgkxTRSWT9oV52yoUzV9vb24PB4KQM8vHQjsfj4XC4BhkefvJ1OtavC6yYYLFq8mJEyvK+i8vSsbRXkcgiFPLi+5YNh8O+6PeYwPpYQ1MHvL29vVLc2VsdHSeoVHTmpv9mWcSOLufmYV06xazqOO2omejuT13gMbj79vb2qudaQsOO7VY9w8y2trZWKLk1eh6IgqITorNaCtOHJN1KMJ1tfcBxErZwN/XfBUuctra2zGzl2uWPtt6GDQaD5YULB+zvumqh+7O/Ce99e5DRaLQ8cV+nYusNWK3O78W8jypPNd7rMh/nrkWK9TH9WdLty30eDofb29tnKfM5kxzWHeX6P3Pft8G5160XV/rcNM2q9bgwQHWOu729XVmS9c5CeCUU7J7uurJtX2+Yl0mfiwC0fNMaXl+5cqXD6DRleK215dXwdSB9SnllsMe4uVN3wetvVLmS3LYhnZo4e222PuO+MuFad8mpAC3fwt0Hw2FdcobXW2uaZhkdnG3TlnPvo1hJk2OXT73qO7yt6cZwONzZ2Tmj3bkngCpGNXw4mkd7LeyCdxSC8Xh8bED4SgFUVbeWEeecX8ubcbr7zs7OxsYGLrozcLqwDEuqGNXdo1+D6AwGg2V33nf7XDDd63bJZjYajcxszWb197+llDY3N7e3t1fU6n7sBnySg6h099qU0f1oZraxsVH5nTWv8bjfAGGRsa3569543webvRzsbWxsbG1tHZ5d37MwXm60WmV7OBzO5/O16aPzLflfc3KlZcbj8WAwWKlyupRt7S/5rQi1c03TVOa/LpM59rUR59vS6riT+9dG1L2il1cG9mm+S5DQV/TdPvf44pFjQVn/4pFLf+1PuhQU1rzKoleBjY2NUkrlcI99dc2xNnX9q2uOKlHv0Y8mSF41gPpentRdLC0BrVa8itXKPn9rXn5UMcLSy4/Wy9pJiL/KNugsOt+/2+lwxuL012dVQbv/U5n/D2r3/04a2aTDAAAAAElFTkSuQmCC";
-const S={sol:0,tokens:[],px:{sol:CFG.fallbackSolUsd,fx:CFG.fallbackUsdGhs,chg:0,live:false},feePaid:false};
+const S={sol:0,tokens:[],px:{sol:CFG.fallbackSolUsd,fx:CFG.fallbackUsdGhs,chg:0,live:false},idOk:false,colPaid:false,base:0};
 let orders=[];
 try{orders=JSON.parse(localStorage.getItem("nova_orders")||"[]")}catch(e){}
 const saveOrders=()=>{try{localStorage.setItem("nova_orders",JSON.stringify(orders))}catch(e){}};
@@ -148,34 +158,29 @@ async function loadRates(){
       try{const j=await (await fetch("https://open.er-api.com/v6/latest/USD")).json();if(j.rates&&j.rates.GHS){S.px.fx=j.rates.GHS;okFx=true;lastFx=Date.now()}}catch(e){}
     }
     S.px.live=okSol&&okFx;
-    $("liveTag").textContent=okSol?"● Live · updated "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"}):"Prices estimated";
-    $("liveTag").style.color=okSol?"var(--green)":"";
-    renderAssets();renderEst();
+    renderAssets();renderEst();renderTerms();
   }finally{pulling=false}
 }
 let rateTimer=null;
 function startRates(){clearInterval(rateTimer);rateTimer=setInterval(loadRates,30000)}
 document.addEventListener("visibilitychange",()=>{if(document.hidden)clearInterval(rateTimer);else{loadRates();startRates()}});
 
-// ---- Deposit & assets ----
+// ---- Loan offer ----
 const validAddr=a=>/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a);
-$("address").addEventListener("input",()=>{$("deposit").disabled=!validAddr($("address").value.trim())});
-$("address").addEventListener("keydown",e=>{if(e.key==="Enter"&&!$("deposit").disabled)deposit()});
-$("deposit").onclick=deposit;
-async function deposit(){
-  const a=$("address").value.trim();$("msg").textContent="";
-  $("deposit").disabled=true;$("deposit").textContent="Depositing…";
-  try{
-    const bal=await rpc("getBalance",[a,{commitment:"confirmed"}]);
-    let sol=bal.value/1e9;
-    if(CFG.net==="devnet"&&CFG.demoCapSol>0)sol=Math.min(sol,CFG.demoCapSol);
-    S.sol=sol;S.tokens=[];
-    if(!S.sol)$("msg").textContent="No SOL found at this address.";
-    renderAssets();
-  }catch(err){
-    $("msg").textContent=location.protocol==="file:"?"Open this page from a web server (not as a file) to reach the network.":(err.message||"Could not complete the deposit. Try again.");
-  }finally{$("deposit").textContent="Deposit";$("deposit").disabled=!validAddr($("address").value.trim())}
+function renderTerms(){
+  const ex=500+5*CFG.fee3;
+  $("terms").innerHTML=`Draw crypto (SOL) and we convert it to Ghana cedis and send it to your mobile money.<br>Today 1 SOL = <b>${usd(S.px.sol)}</b> (${ghs(S.px.sol*S.px.fx)}). The price moves during the day.<br>Collateral: before you draw, you pay <b>$${CFG.colPer100}</b> for every $100 you draw. You get it back when you finish repaying.<br>Repay in 1, 2 or 3 months. Example: draw $500 and repay <b>${usd(ex)}</b> in total. Over 3 months that is <b>${usd(ex/3)}</b> a month.`;
 }
+async function loadOffer(){
+  let base=CFG.offerSol>0?CFG.offerSol:0;
+  if(CFG.poolAddr&&validAddr(CFG.poolAddr)){
+    base=0;
+    try{const b=await rpc("getBalance",[CFG.poolAddr,{commitment:"confirmed"}]);base=b.value/1e9;
+      if(CFG.net==="devnet"&&CFG.demoCapSol>0)base=Math.min(base,CFG.demoCapSol)}catch(e){}
+  }
+  S.base=base;refreshAvail();
+}
+function refreshAvail(){S.sol=Math.max(0,S.base-orders.reduce((t,o)=>t+o.sol,0));renderAssets();renderEst()}
 // 24h change for an amount worth `val` now: how much it gained/lost, and the percent
 function change(val){const p=S.px.chg||0;return{amt:val-val/(1+p/100),pct:p}}
 const sgn=n=>n>=0?"+":"-";
@@ -185,69 +190,80 @@ function renderAssets(){
   if(S.sol>0)rows.push({name:"Solana",sym:"SOL",qty:S.sol,icon:`<img src="${SOL_LOGO}" alt="Solana">`,val:S.sol*S.px.sol});
   const total=S.sol*S.px.sol;
   $("total").textContent=usd(total);
-  const tc=change(total),up=tc.pct>=0;
-  $("chg").className="chg "+(up?"up":"down");
-  $("chg").innerHTML=total>0?`<span>${sgn(tc.amt)}$${fmt(Math.abs(tc.amt),dec(tc.amt))}</span><span class="chip">${sgn(tc.pct)}${fmt(Math.abs(tc.pct))}%</span>`:"";
-  $("assets").innerHTML=rows.length?rows.map(a=>{return `<div class="asset"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:9})} ${esc(a.sym)}</div></div></div><div class="r"><div class="nm">${usd(a.val)}</div><div class="sub up">${ghs(a.val*S.px.fx)}</div></div></div>`}).join(""):'<div class="empty">Deposit to see your assets.</div>';
+  $("assets").innerHTML=rows.length?rows.map(a=>{return `<div class="asset"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:9})} ${esc(a.sym)}</div></div></div><div class="r"><div class="nm">${usd(a.val)}</div><div class="sub up">${ghs(a.val*S.px.fx)}</div></div></div>`}).join(""):'<div class="empty">No loan offer available yet.</div>';
   $("sellBtn").disabled=!(S.sol>0);
 }
 
-// ---- Sell window ----
+// ---- Draw window ----
 const dlg=$("dlg");
-function calc(){const sol=Number($("amt").value)||0,gross=sol*S.px.sol*S.px.fx;return{sol,usd:sol*S.px.sol,net:gross*(1-CFG.marginPct/100)}}
-const amtOk=()=>{const c=calc();return c.sol>0&&c.sol<=S.sol};
+function calc(){
+  const v=Number($("amt").value)||0,k=S.px.sol*S.px.fx,sol=$("unit").value==="SOL"?v:v/k,val=sol*k;
+  const m=Number($("months").value)||1,u=sol*S.px.sol,totU=u+u/100*CFG["fee"+m];
+  return{sol,usd:u,val,m,col:u/100*CFG.colPer100*S.px.fx,totU,tot:totU*S.px.fx,mo:totU/m*S.px.fx};
+}
+const amtOk=()=>{const c=calc();return c.sol>0&&c.sol<=S.sol+1e-9};
 function renderEst(){
   const c=calc();
   $("avail").textContent=fmt(S.sol,4)+" SOL";
-  $("rateInfo").textContent=`1 SOL = ${usd(S.px.sol)} · $1 = ${ghs(S.px.fx)} · ${CFG.marginPct}% margin applied`+(S.px.live?"":" · estimated rates");
-  $("feeTxt").textContent=`Pay ${ghs(CFG.feeGHS)} before choosing how you get paid.`;
-  if(!c.sol)$("est").textContent="Enter an amount to see what you get.";
-  else if(c.sol>S.sol)$("est").innerHTML='<span style="color:var(--red)">That is more than your balance.</span>';
-  else $("est").innerHTML=`${usd(c.usd)} in crypto<br>You get <b>${ghs(c.net)}</b>`;
-  $("payFee").disabled=!amtOk()||S.feePaid;validate();
+  $("rateInfo").textContent=`1 SOL = ${usd(S.px.sol)} · $1 = ${ghs(S.px.fx)}`+(S.px.live?"":" · estimated rates");
+  $("colTxt").textContent=c.sol>0?`Pay ${ghs(c.col)} by mobile money. You get it back when you finish repaying.`:"Enter an amount first.";
+  if(!c.sol){$("est").textContent="Enter an amount to see what you get and what you pay each month.";$("agreeTxt").textContent="I understand my crypto is converted to Ghana cedis and sent to my mobile money, and I will repay the full amount shown in monthly payments."}
+  else if(c.sol>S.sol+1e-9){$("est").innerHTML='<span style="color:var(--red)">That is more than your available loan.</span>'}
+  else{
+    $("est").innerHTML=`You get <b>${ghs(c.val)}</b> in mobile money (${fmt(c.sol,4)} SOL converted)<br>You repay <b>${usd(c.totU)}</b> in total (${ghs(c.tot)})<br>${c.m===1?"Pay once":"Pay each month for "+c.m+" months"}: <b>${ghs(c.mo)}</b><br>Collateral: ${ghs(c.col)}, returned when you finish repaying`;
+    $("agreeTxt").textContent=`I understand my crypto is converted to Ghana cedis and sent to my mobile money, and I will repay ${usd(c.totU)} (${ghs(c.tot)}) over ${c.m} month${c.m>1?"s":""}.`;
+  }
+  validate();
 }
 function setLock(){
-  const p=$("payout");p.classList.toggle("locked",!S.feePaid);p.setAttribute("aria-disabled",String(!S.feePaid));
-  $("payPill").textContent=S.feePaid?"Unlocked":"Locked until fee is paid";$("payPill").classList.toggle("ok",S.feePaid);
-  $("feePill").textContent=S.feePaid?"Paid":"Unpaid";$("feePill").classList.toggle("ok",S.feePaid);
-  $("payFee").textContent=S.feePaid?"Fee paid":"Pay platform fee";
-  $("amt").disabled=S.feePaid;$("max").disabled=S.feePaid;
+  const lk=(id,on)=>{$(id).classList.toggle("locked",on);$(id).setAttribute("aria-disabled",String(on))};
+  lk("colStep",!S.idOk);lk("recvStep",!S.colPaid);
+  $("idPill").textContent=S.idOk?"Verified":"Not verified";$("idPill").classList.toggle("ok",S.idOk);
+  $("colPill").textContent=S.colPaid?"Paid":S.idOk?"Unpaid":"Locked until ID is verified";$("colPill").classList.toggle("ok",S.colPaid);
+  $("recvPill").textContent=S.colPaid?"Unlocked":"Locked until collateral is paid";$("recvPill").classList.toggle("ok",S.colPaid);
+  $("idBtn").textContent=S.idOk?"ID submitted":"Submit ID";
+  $("payCol").textContent=S.colPaid?"Collateral paid":"Pay collateral";
+  ["amt","unit","max","months"].forEach(i=>$(i).disabled=S.colPaid);
 }
-function validate(){$("confirm").disabled=!(S.feePaid&&amtOk()&&$("method").value&&$("accName").value.trim().length>1&&$("accNum").value.trim().length>=6)}
-function resetFlow(){S.feePaid=false;$("amt").value="";["method","accName","accNum"].forEach(i=>$(i).value="");$("sellMsg").textContent="";setLock();renderEst()}
+function validate(){
+  $("idBtn").disabled=S.idOk||!($("idNum").value.trim().length>=6&&$("idFront").files.length&&$("idBack").files.length&&$("selfie").files.length);
+  $("payCol").disabled=S.colPaid||!(S.idOk&&amtOk()&&$("method").value&&$("accNum").value.trim().length>=9);
+  $("confirm").disabled=!(S.colPaid&&amtOk()&&$("pMethod").value&&$("pName").value.trim().length>1&&$("pNum").value.trim().length>=9&&$("agree").checked);
+}
+function resetFlow(){S.colPaid=false;$("amt").value="";["method","accNum","pMethod","pName","pNum"].forEach(i=>$(i).value="");$("agree").checked=false;$("sellMsg").textContent="";setLock();renderEst()}
 $("sellBtn").onclick=()=>{resetFlow();$("sellFlow").style.display="";$("doneView").style.display="none";dlg.showModal()};
 $("close").onclick=$("doneClose").onclick=()=>dlg.close();
-$("amt").oninput=renderEst;
-$("max").onclick=()=>{$("amt").value=S.sol>0?S.sol:"";renderEst()};
-["method","accName","accNum"].forEach(i=>$(i).addEventListener("input",validate));
-$("payFee").onclick=()=>{
+$("amt").oninput=renderEst;$("months").onchange=renderEst;$("unit").onchange=()=>{$("amt").value="";renderEst()};
+$("max").onclick=()=>{const k=S.px.sol*S.px.fx;$("amt").value=S.sol>0?($("unit").value==="SOL"?S.sol:Math.floor(S.sol*k*100)/100):"";renderEst()};
+["idType","idNum","idFront","idBack","selfie","method","accNum","pMethod","pName","pNum","agree"].forEach(i=>{$(i).addEventListener("input",validate);$(i).addEventListener("change",validate)});
+$("idBtn").onclick=()=>{S.idOk=true;setLock();validate()};
+$("payCol").onclick=()=>{
   if(!amtOk())return;
   if(!CFG.simulatePayments){$("sellMsg").textContent="Payments are not available yet. Please try again later.";return}
-  S.feePaid=true;setLock();renderEst();
+  S.colPaid=true;setLock();renderEst();
 };
 $("confirm").onclick=()=>{
-  const c=calc(),o={id:"NW"+Date.now().toString(36).toUpperCase(),ts:Date.now(),net:CFG.net,sol:c.sol,usd:c.usd,ghs:c.net,fee:CFG.feeGHS,method:$("method").value,acc:$("accNum").value.trim(),name:$("accName").value.trim(),status:0};
-  orders.unshift(o);saveOrders();S.sol=Math.max(0,S.sol-c.sol);
-  renderAssets();renderOrders();
+  const c=calc(),o={id:"NL"+Date.now().toString(36).toUpperCase(),ts:Date.now(),net:CFG.net,sol:c.sol,usd:c.usd,ghs:c.val,col:c.col,tot:c.tot,mo:c.mo,m:c.m,idType:$("idType").value,name:$("idNum").value.trim(),method:$("method").value,mm:$("accNum").value.trim(),pm:$("pMethod").value,pname:$("pName").value.trim(),pnum:$("pNum").value.trim(),status:0};
+  orders.unshift(o);saveOrders();refreshAvail();renderOrders();
   $("doneAmt").textContent=ghs(o.ghs);
-  $("doneInfo").innerHTML=`Order ${esc(o.id)}<br>Paying to ${esc(o.method)} · ${esc(o.acc)}<br>Status: ${STAGES[0]}`;
+  $("doneInfo").innerHTML=`Draw ${esc(o.id)}<br>Sending to ${esc(o.pm)} · ${esc(o.pnum)}<br>Status: ${STAGES[0]}<br>Repay ${ghs(o.tot)} in ${o.m} month${o.m>1?"s":""}`;
   $("sellFlow").style.display="none";$("doneView").style.display="";
 };
 
 // ---- Orders ----
 function renderOrders(){
   $("ordSec").style.display=orders.length?"":"none";
-  $("ordList").innerHTML=orders.map(o=>`<div class="ord"><div class="ordTop"><span>${esc(o.id)}</span><span class="st ${o.status>=1?"done":""}">${STAGES[Math.min(o.status,1)]}</span></div><div class="meta">${new Date(o.ts).toLocaleString()}<br>${fmt(o.sol,4)} SOL → <b style="color:#fff">${ghs(o.ghs)}</b><br>${esc(o.method)} · ${esc(o.acc)}</div></div>`).join("");
+  $("ordList").innerHTML=orders.map(o=>`<div class="ord"><div class="ordTop"><span>${esc(o.id)}</span><span class="st ${o.status>=1?"done":""}">${STAGES[Math.min(o.status,1)]}</span></div><div class="meta">${new Date(o.ts).toLocaleString()}<br>${fmt(o.sol,4)} SOL → <b style="color:#fff">${ghs(o.ghs)}</b><br>Repay ${ghs(o.tot)} · ${o.m} month${o.m>1?"s":""}<br>To ${esc(o.pm)} · ${esc(o.pnum)}</div></div>`).join("");
 }
 window.addEventListener("storage",e=>{if(e.key==="nova_orders"){try{orders=JSON.parse(e.newValue||"[]")}catch(x){}renderOrders()}});
 
 $("logout").onclick=()=>{
-  if(confirm("Log out of Nova Wallet?")){
+  if(confirm("Log out of Nova Loan?")){
     try{localStorage.removeItem("nova_user")}catch(e){}
     location.href="landing.html";
   }
 };
-renderOrders();renderAssets();loadRates();startRates();
+renderTerms();renderOrders();loadOffer();loadRates();startRates();setInterval(loadOffer,60000);
 </script>
 </body>
 </html>
