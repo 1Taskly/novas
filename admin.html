@@ -106,7 +106,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const fmt=(n,d=2)=>Number(n||0).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
 const STAGES=["Send cash to borrower","Paid out"];
-let cfg={net:"devnet",colPer100:10,fee1:20,fee2:20,fee3:20,poolAddr:"",offerSol:5,simulatePayments:true,rpcDevnet:"",rpcMainnet:"",capUsd:2000,fee6:20};
+let cfg={net:"devnet",colPer100:10,fee1:20,fee2:20,fee3:20,poolAddr:"",offerSol:5,simulatePayments:true,rpcDevnet:"",rpcMainnet:"",capUsd:2000,balSnap:0,fee6:20};
 try{Object.assign(cfg,JSON.parse(localStorage.getItem("nova_cfg")||"{}"))}catch(e){}
 let orders=[];
 const readOrders=()=>{try{orders=JSON.parse(localStorage.getItem("nova_orders")||"[]")}catch(e){orders=[]}};
@@ -122,7 +122,7 @@ if(location.hash.slice(1)===KEY)show();
 $("save").onclick=()=>{
   const co=Number($("col").value),a=Number($("f1").value),b=Number($("f2").value),c=Number($("f3").value),f6=Number($("f6").value),cap=Number($("cap").value),pool=$("pool").value.trim(),off=Number($("offer").value);
   if(!(co>=0)||!(a>=0)||!(b>=0)||!(c>=0)||!(f6>=0)||!(cap>=0)||!(off>=0)||(pool&&!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(pool))){$("saveMsg").className="msg err";$("saveMsg").textContent="Check the collateral, fee, amount and wallet address values.";return}
-  cfg={net:$("net").value,colPer100:co,fee1:a,fee2:b,fee3:c,poolAddr:pool,offerSol:off,simulatePayments:$("sim").checked,capUsd:cap,fee6:f6,rpcDevnet:$("rpcD").value.trim(),rpcMainnet:$("rpcM").value.trim()};
+  cfg={net:$("net").value,colPer100:co,fee1:a,fee2:b,fee3:c,poolAddr:pool,offerSol:off,simulatePayments:$("sim").checked,capUsd:cap,fee6:f6,balSnap:(window._bal!==undefined?window._bal:(pool===cfg.poolAddr?(cfg.balSnap||0):0)),rpcDevnet:$("rpcD").value.trim(),rpcMainnet:$("rpcM").value.trim()};
   try{localStorage.setItem("nova_cfg",JSON.stringify(cfg));$("saveMsg").className="msg";$("saveMsg").textContent="Saved in this browser. Copy the line below into index.html to show it to everyone.";showPub()}
   catch(e){$("saveMsg").className="msg err";$("saveMsg").textContent="Could not save in this browser."}
 };
@@ -141,7 +141,7 @@ $("air").onclick=async()=>{
 };
 
 function showPub(){
-  const p={net:cfg.net,colPer100:cfg.colPer100,fee1:cfg.fee1,fee2:cfg.fee2,fee3:cfg.fee3,fee6:cfg.fee6,capUsd:cfg.capUsd,poolAddr:cfg.poolAddr||"",offerSol:cfg.offerSol,simulatePayments:!!cfg.simulatePayments,rpcDevnet:cfg.rpcDevnet||"",rpcMainnet:cfg.rpcMainnet||""};
+  const p={net:cfg.net,colPer100:cfg.colPer100,fee1:cfg.fee1,fee2:cfg.fee2,fee3:cfg.fee3,fee6:cfg.fee6,capUsd:cfg.capUsd,balSnap:cfg.balSnap||0,poolAddr:cfg.poolAddr||"",offerSol:cfg.offerSol,simulatePayments:!!cfg.simulatePayments,rpcDevnet:cfg.rpcDevnet||"",rpcMainnet:cfg.rpcMainnet||""};
   $("pub").value="const PUBLIC_CFG="+JSON.stringify(p)+";";
 }
 $("copyPub").onclick=async()=>{try{await navigator.clipboard.writeText($("pub").value);$("copyPub").textContent="Copied"}catch(e){$("pub").select();$("copyPub").textContent="Select and copy"}setTimeout(()=>$("copyPub").textContent="Copy line",1800)};
@@ -153,7 +153,7 @@ $("chk").onclick=async()=>{
   try{
     const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"getBalance",params:[a]})});
     const j=await r.json();if(j.error)throw new Error(j.error.message);
-    m.className="msg";m.textContent="Balance on "+net+": "+fmt(j.result.value/1e9,4)+" SOL"+(j.result.value===0?". It is empty on this network, so check the Network setting above.":"");
+    window._bal=j.result.value/1e9;m.className="msg";m.textContent="Balance on "+net+": "+fmt(j.result.value/1e9,4)+" SOL (saved with your settings)"+(j.result.value===0?". It is empty on this network, so check the Network setting above.":"");
   }catch(e){m.textContent="Could not read the balance ("+(e.message||"network error")+"). For mainnet, add a Helius or QuickNode RPC URL below."}
   finally{$("chk").disabled=false}
 };

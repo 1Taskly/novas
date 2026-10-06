@@ -82,6 +82,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 <body>
 <main class="app">
   <header class="top"><div class="brand">Nova Loan</div><button id="profile" class="avatar" aria-label="Open profile"></button></header>
+  <div id="dbg" class="small" style="display:none;background:#151515;border:1px solid #282828;border-radius:14px;padding:12px;margin-bottom:14px;line-height:1.6"></div>
 
   <section class="hero"><div class="label">Loan available to you</div><div id="total" class="balance">$0.00</div>
     </section>
@@ -160,7 +161,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 </dialog>
 
 <script>
-const CFG={colPer100:10,fee1:20,fee2:20,fee3:20,fee6:20,capUsd:2000,offerSol:5,poolAddr:"",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:""};
+const CFG={colPer100:10,fee1:20,fee2:20,fee3:20,fee6:20,capUsd:2000,balSnap:0,offerSol:5,poolAddr:"",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:""};
 const PUBLIC_CFG={}; // Paste the settings box from admin.html here so every visitor gets them
 Object.assign(CFG,PUBLIC_CFG);
 const RPCS={devnet:"https://api.devnet.solana.com",mainnet:"https://api.mainnet-beta.solana.com"};
@@ -203,15 +204,29 @@ document.addEventListener("visibilitychange",()=>{if(document.hidden)clearInterv
 // ---- Loan offer ----
 const validAddr=a=>/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a);
 function renderTerms(){}
-async function loadOffer(){
-  let base=CFG.offerSol>0?CFG.offerSol:0;
-  if(CFG.poolAddr&&validAddr(CFG.poolAddr)){
-    base=0;
-    try{const b=await rpc("getBalance",[CFG.poolAddr,{commitment:"confirmed"}]);base=b.value/1e9}catch(e){}
-  }
-  S.base=base;refreshAvail();
+function showDebug(){
+  if(location.hash!=="#debug")return;
+  const d=$("dbg"),drawn=orders.reduce((t,o)=>t+o.sol,0);
+  d.style.display="";
+  d.innerHTML=`Network: ${esc(CFG.net)}<br>Wallet: ${CFG.poolAddr?esc(CFG.poolAddr.slice(0,6))+"…"+esc(CFG.poolAddr.slice(-4)):"none"}<br>Source: ${esc(S.why||"loading")}<br>Wallet SOL: ${fmt(S.base,4)}<br>Cap: ${CFG.capUsd>0?usd(CFG.capUsd):"none"}<br>Already drawn on this device: ${fmt(drawn,4)} SOL<br>Available: ${fmt(S.sol,4)} SOL<br><button id="clr" style="margin-top:8px;padding:7px 11px;border-radius:10px;border:1px solid #303030;background:#202020">Clear test draws</button>`;
+  $("clr").onclick=()=>{orders=[];saveOrders();renderOrders();refreshAvail()};
 }
-function refreshAvail(){const cap=CFG.capUsd>0?CFG.capUsd/S.px.sol:Infinity;S.sol=Math.max(0,Math.min(S.base,cap)-orders.reduce((t,o)=>t+o.sol,0));renderAssets();renderEst()}
+async function loadOffer(){
+  let base=CFG.offerSol>0?CFG.offerSol:0,why="demo amount";
+  if(CFG.poolAddr&&validAddr(CFG.poolAddr)){
+    try{
+      const b=await rpc("getBalance",[CFG.poolAddr,{commitment:"confirmed"}]);
+      base=b.value/1e9;why="live wallet balance";
+      try{localStorage.setItem("nova_lastbal",String(base))}catch(e){}
+    }catch(e){
+      let last=0;try{last=Number(localStorage.getItem("nova_lastbal"))||0}catch(x){}
+      base=CFG.balSnap>0?CFG.balSnap:last;
+      why="wallet read failed ("+(e.message||"error")+"), using "+(CFG.balSnap>0?"saved snapshot":"last known balance");
+    }
+  }
+  S.base=base;S.why=why;refreshAvail();
+}
+function refreshAvail(){const cap=CFG.capUsd>0?CFG.capUsd/S.px.sol:Infinity;S.sol=Math.max(0,Math.min(S.base,cap)-orders.reduce((t,o)=>t+o.sol,0));renderAssets();renderEst();showDebug()}
 // 24h change for an amount worth `val` now: how much it gained/lost, and the percent
 function change(val){const p=S.px.chg||0;return{amt:val-val/(1+p/100),pct:p}}
 const sgn=n=>n>=0?"+":"-";
