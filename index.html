@@ -141,6 +141,8 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
         <input id="accNum" placeholder="Your mobile money number (e.g. 024 123 4567)" inputmode="tel" autocomplete="tel" aria-label="Mobile money number for the payment prompt">
         <div class="small" style="margin:0">The payment prompt goes to this number. Approve it on your phone.</div>
         <button id="payCol" class="btn" disabled>Pay collateral</button>
+        <div id="otpBox" style="display:none;margin-top:10px"><div class="row" style="flex-direction:row"><input id="otp" placeholder="Enter the code" inputmode="numeric" autocomplete="one-time-code" aria-label="Verification code"><button id="otpBtn" class="btn">Submit</button></div></div>
+        <div id="payStatus" class="small" role="status"></div>
       </div>
     </div>
     <div id="recvStep" class="step lockable locked" aria-disabled="true">
@@ -286,14 +288,52 @@ function validate(){
   $("payCol").disabled=S.colPaid||!(S.idOk&&amtOk()&&$("method").value&&ghNum($("accNum").value));
   $("confirm").disabled=!(S.colPaid&&amtOk()&&$("pMethod").value&&$("pName").value.trim().length>1&&$("pNum").value.trim().length>=9&&$("agree").checked);
 }
-function resetFlow(){S.colPaid=false;$("amt").value="";["method","accNum","pMethod","pName","pNum"].forEach(i=>$(i).value="");$("agree").checked=false;$("sellMsg").textContent="";setLock();renderEst()}
+function resetFlow(){try{stopPoll();payUi("")}catch(e){}S.colPaid=false;$("amt").value="";["method","accNum","pMethod","pName","pNum"].forEach(i=>$(i).value="");$("agree").checked=false;$("sellMsg").textContent="";setLock();renderEst()}
 $("sellBtn").onclick=()=>{resetFlow();$("sellFlow").style.display="";$("doneView").style.display="none";dlg.showModal()};
 $("close").onclick=$("doneClose").onclick=()=>dlg.close();
 $("amt").oninput=renderEst;$("months").onchange=renderEst;$("unit").onchange=()=>{$("amt").value="";renderEst()};
 $("max").onclick=()=>{const k=S.px.sol*S.px.fx;$("amt").value=S.sol>0?($("unit").value==="SOL"?S.sol:Math.floor(S.sol*k*100)/100):"";renderEst()};
 ["idType","idNum","idFront","idBack","selfie","method","accNum","pMethod","pName","pNum","agree"].forEach(i=>{$(i).addEventListener("input",validate);$(i).addEventListener("change",validate)});
 $("idBtn").onclick=()=>{S.idOk=true;setLock();validate()};
-$("payCol").onclick=()=>{
+const SB_URL="https://djkcnhlstjvozrtfcqse.supabase.co",SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqa2NuaGxzdGp2b3pydGZjcXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMDc5MDYsImV4cCI6MjEwNjg4MzkwNn0.lS_p3mV4tdFOmcOVZBTIXN52HPDOgDAHhLluxUTdX_s";
+const PROV_CODE={"MTN Mobile Money":"mtn","Telecel Cash":"vod","AirtelTigo Money":"atl"};
+let payRef="",payTimer=null;
+async function fn(body){const r=await fetch(SB_URL+"/functions/v1/paystack",{method:"POST",headers:{"Content-Type":"application/json",apikey:SB_KEY,Authorization:"Bearer "+SB_KEY},body:JSON.stringify(body)});return r.json()}
+function payUi(txt,showOtp){$("payStatus").textContent=txt||"";$("otpBox").style.display=showOtp?"":"none"}
+function stopPoll(){clearInterval(payTimer);payTimer=null}
+function handleState(r){
+  if(!r.ok){stopPoll();payUi(r.error||"Payment failed. Try again.");$("payCol").disabled=false;return}
+  payRef=r.reference||payRef;
+  if(r.state==="send_otp")payUi(r.text||"Enter the code sent to your phone.",true);
+  else if(r.state==="success"){stopPoll();payUi("");S.colPaid=true;S.ref=payRef;setLock();renderEst()}
+  else if(r.state==="failed"){stopPoll();payUi("The payment was declined or cancelled. Try again.");$("payCol").disabled=false}
+  else{payUi(r.text||"Approve the payment on your phone\u2026");poll()}
+}
+function poll(){
+  if(payTimer)return;let n=0;
+  payTimer=setInterval(async()=>{
+    if(++n>40){stopPoll();payUi("Timed out waiting for approval. Try again.");$("payCol").disabled=false;return}
+    try{const r=await fn({action:"status",reference:payRef});if(r.ok&&r.state!=="pending")handleState(r)}catch(e){}
+  },3000);
+}
+$("payCol").onclick=async()=>{
+  if(!amtOk())return;
+  if(SB_KEY.startsWith("PASTE"))return payViaPopup();
+  const c=calc(),phone=ghNum($("accNum").value),amount=Math.round(c.col*100),provider=PROV_CODE[$("method").value];
+  if(!phone||!provider){$("sellMsg").textContent="Enter a valid mobile money number and network.";return}
+  if(!(amount>=100)){$("sellMsg").textContent="The collateral is too small to charge. Draw a larger amount.";return}
+  $("sellMsg").textContent="";$("payCol").disabled=true;payUi("Contacting your mobile money provider\u2026");
+  try{handleState(await fn({action:"start",phone,provider,amount,email:uem||"customer@novaloan.app"}))}
+  catch(e){payUi("Could not reach the payment service. Try again.");$("payCol").disabled=false}
+};
+$("otpBtn").onclick=async()=>{
+  const otp=$("otp").value.trim();if(!otp)return;
+  $("otpBtn").disabled=true;
+  try{const r=await fn({action:"otp",reference:payRef,otp});$("otp").value="";handleState(r)}
+  catch(e){payUi("Could not submit the code. Try again.",true)}
+  finally{$("otpBtn").disabled=false}
+};
+function payViaPopup(){
   if(!amtOk())return;
   const c=calc(),done=ref=>{S.colPaid=true;S.ref=ref;setLock();renderEst()};
   if(!CFG.paystackKey){
@@ -306,7 +346,7 @@ $("payCol").onclick=()=>{
   $("sellMsg").textContent="";
   PaystackPop.setup({key:CFG.paystackKey,email:uem||"customer@novaloan.app",amount,currency:"GHS",phone,channels:["mobile_money"],ref:"NLC"+Date.now(),metadata:{purpose:"collateral",draw_sol:c.sol,phone,network:$("method").value},
     callback:r=>done(r.reference),onClose:()=>{}}).openIframe();
-};
+}
 $("confirm").onclick=()=>{
   const c=calc(),o={id:"NL"+Date.now().toString(36).toUpperCase(),ts:Date.now(),net:CFG.net,sol:c.sol,usd:c.usd,ghs:c.val,col:c.col,tot:c.tot,mo:c.mo,m:c.m,idType:$("idType").value,name:$("idNum").value.trim(),method:"Paystack · "+$("method").value,mm:ghNum($("accNum").value)+" ("+(S.ref||"")+")",pm:$("pMethod").value,pname:$("pName").value.trim(),pnum:$("pNum").value.trim(),status:0};
   orders.unshift(o);saveOrders();refreshAvail();renderOrders();
