@@ -59,6 +59,16 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 .meta{font-size:13px;color:#8d8d92;margin-top:5px;line-height:1.5}
 .done{text-align:center;padding:10px 0}.done .big{font-size:30px;font-weight:750;margin:10px 0}
 @media(max-width:560px){.app{padding:14px 12px 80px}.balance{font-size:46px}.row{flex-direction:column}}
+.h2{margin-top:6px}
+@media(min-width:900px){
+ .app{width:min(100%,1080px);padding:28px 24px 80px;display:grid;grid-template-columns:minmax(0,1fr) 390px;column-gap:28px;align-items:start;
+  grid-template-areas:"top top" "hero how" "ah how" "assets how" "kyc ord" "sell ord"}
+ .top{grid-area:top}.hero{grid-area:hero}.how{grid-area:how}.app>.h2{grid-area:ah}
+ #assets{grid-area:assets}#kycCard{grid-area:kyc}#sellBtn{grid-area:sell}#ordSec{grid-area:ord}#helpSec,#foot{grid-column:1/-1}
+ #dbg{grid-column:1/-1}
+ .balance{font-size:68px}
+ dialog{width:min(94vw,640px)}
+}
 @media(prefers-reduced-motion:no-preference){.lockable{transition:opacity .25s,filter .25s}}
 .avatar{width:38px;height:38px;border-radius:50%;border:1px solid #303030;background:var(--accent);color:#17131f;font-weight:750;font-size:16px;display:grid;place-items:center}
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;visibility:hidden;transition:opacity .25s;z-index:40}
@@ -93,7 +103,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <details class="card how"><summary>How your loan works</summary>
     <ul class="steps">
       <li><div><b>Draw crypto</b><span>Draw crypto and we convert it to Ghana cedis.</span></div></li>
-      <li><div><b>Collateral</b><span>You pay collateral first. You get it back when you finish paying.</span></div></li>
+      <li><div><b>Collateral</b><span>You place collateral in USDC or USDT. We hold it until you finish paying your loan.</span></div></li>
       <li><div><b>Get your cash</b><span>The cedis go straight to your mobile money.</span></div></li>
     </ul></details>
 
@@ -102,6 +112,8 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <section id="kycCard" class="card" style="display:none;border-color:#342d49;background:#171421"><div class="title" id="kycTitle"></div><div class="small" id="kycTxt" style="margin:0 0 12px;color:#b9b0d6;font-size:14px"></div><a id="kycBtn" class="btn" href="kyc.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Verify my identity</a></section>
   <button id="sellBtn" class="btn" style="width:100%" disabled>Draw amount</button>
 
+  <section id="helpSec" style="display:none"><div class="h2">Need help?</div><div class="card"><div class="small" style="margin:0 0 12px;font-size:14px;color:#b5b5ba">Email us any time. We reply as soon as we can.</div><div id="helpBtns" class="row" style="flex-wrap:wrap"></div><div id="helpInfo" class="small" style="line-height:1.7"></div></div></section>
+  <footer id="foot" class="small" style="text-align:center;margin-top:20px"></footer>
   <section id="ordSec" style="display:none"><div class="h2">Orders</div><div id="ordList" class="card"></div></section>
 </main>
 
@@ -118,6 +130,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <div id="sellFlow">
     <div class="step">
       <div class="stepHead"><span>1. Amount and months</span><span id="avail" class="pill"></span></div>
+      <select id="coinSel" aria-label="Coin to draw" style="margin-bottom:9px;display:none"></select>
       <div class="row" style="flex-direction:row"><input id="amt" type="number" min="0" step="any" placeholder="Amount" inputmode="decimal" aria-label="Amount to draw"><select id="unit" aria-label="Currency" style="width:92px;flex:none"><option>SOL</option><option>GHS</option></select><button id="max" class="btn ghost" style="min-height:46px">Max</button></div>
       <select id="months" aria-label="Months to repay" style="margin-top:9px"><option value="1">Repay in 1 month</option><option value="2">Repay in 2 months</option><option value="3" selected>Repay in 3 months</option></select>
       <div class="small">Bigger draws unlock longer repayment, up to 6 months.</div>
@@ -125,15 +138,18 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
       <div class="small" id="rateInfo"></div>
     </div>
     <div id="colStep" class="step lockable locked" aria-disabled="true">
-      <div class="stepHead"><span>2. Pay collateral</span><span id="colPill" class="pill">Locked until ID is verified</span></div>
+      <div class="stepHead"><span>2. Place collateral</span><span id="colPill" class="pill">Locked until ID is verified</span></div>
+      <details style="margin:0 0 10px;font-size:13px;color:var(--muted);line-height:1.5"><summary style="cursor:pointer;color:var(--accent);font-weight:700">Why do we ask for collateral?</summary><p style="margin:8px 0 0">Because some borrowers have not repaid their loans, every borrower now places collateral before they can draw. We hold it while your loan is active and return it when you finish paying. It is not a fee.</p></details>
       <div id="colTxt" class="small" style="margin:0 0 10px"></div>
       <div style="display:grid;gap:9px">
+        <select id="colCoin" aria-label="Collateral coin"><option value="USDC">Collateral coin: USDC</option><option value="USDT">Collateral coin: USDT</option></select>
         <select id="method" aria-label="Mobile money network"><option value="">Choose your mobile money network</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option></select>
         <input id="accNum" placeholder="Your mobile money number (e.g. 024 123 4567)" inputmode="tel" autocomplete="tel" aria-label="Mobile money number for the payment prompt">
         <div class="small" style="margin:0">The payment prompt goes to this number. Approve it on your phone.</div>
-        <button id="payCol" class="btn" disabled>Pay collateral</button>
+        <button id="payCol" class="btn" disabled>Pay refundable collateral</button>
         <div id="otpBox" style="display:none;margin-top:10px"><div class="row" style="flex-direction:row"><input id="otp" placeholder="Enter the code" inputmode="numeric" autocomplete="one-time-code" aria-label="Verification code"><button id="otpBtn" class="btn">Submit</button></div></div>
         <div id="payStatus" class="small" role="status"></div>
+        <div style="margin-top:12px;padding:12px;border-radius:12px;background:#2a2112;border:1px solid #4a3a1a;color:#e7c98a;font-size:13px;line-height:1.5"><b>Please note.</b> If you fail to pay on time, your collateral will be liquidated (sold) to minimize our losses.</div>
       </div>
     </div>
     <div id="recvStep" class="step lockable locked" aria-disabled="true">
@@ -178,11 +194,24 @@ async function rpc(method,params=[]){
   if(j.error) throw new Error(j.error.message||"Request failed");
   return j.result;
 }
+const COINS=["SOL","USDC","USDT"],COIN_NAME={SOL:"Solana",USDC:"USD Coin",USDT:"Tether"};
+const LOGO={SOL:`<img src="${SOL_LOGO}" alt="Solana">`,
+ USDC:`<img alt="USDC" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%232775CA'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3E%24%3C/text%3E%3C/svg%3E">`,
+ USDT:`<img alt="USDT" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2326A17B'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3ET%3C/text%3E%3C/svg%3E">`};
+S.px.solLive=S.px.sol;S.px.chgLive=0;S.coin="SOL";S.baseBy={};S.totalUsd=0;
+const priceOf=c=>c==="SOL"?S.px.solLive:1; // stablecoins are priced at $1
+function applyCoin(){S.px.sol=priceOf(S.coin);S.px.chg=S.coin==="SOL"?S.px.chgLive:0}
+const drawnUsd=()=>orders.reduce((t,o)=>t+(o.usd||0),0);
+function availOf(sym){
+  const px=priceOf(sym),rem=CFG.capUsd>0?Math.max(0,CFG.capUsd-drawnUsd())/px:Infinity;
+  const drawn=orders.filter(o=>(o.dcoin||"SOL")===sym).reduce((t,o)=>t+o.sol,0);
+  return Math.max(0,Math.min((S.baseBy[sym]||0)-drawn,rem));
+}
 let okSol=false,okFx=false,lastFx=0,pulling=false;
 async function loadRates(){
   if(pulling)return;pulling=true;
   try{
-    try{const j=await (await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd&include_24hr_change=true")).json();if(j.solana&&j.solana.usd){S.px.sol=j.solana.usd;S.px.chg=Number(j.solana.usd_24h_change)||0;okSol=true}}catch(e){}
+    try{const j=await (await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd&include_24hr_change=true")).json();if(j.solana&&j.solana.usd){S.px.solLive=j.solana.usd;S.px.chgLive=Number(j.solana.usd_24h_change)||0;okSol=true}}catch(e){}
     if(!okFx||Date.now()-lastFx>600000){ // exchange rate barely moves, refresh every 10 min
       try{const j=await (await fetch("https://open.er-api.com/v6/latest/USD")).json();if(j.rates&&j.rates.GHS){S.px.fx=j.rates.GHS;okFx=true;lastFx=Date.now()}}catch(e){}
     }
@@ -207,58 +236,70 @@ function showDebug(){
 async function loadOffer(){
   // Settings and the pool balance come from Supabase (set on the admin page), never from this file.
   try{const {data:st}=await sb.from("settings").select("value").eq("key","loan").maybeSingle();if(st&&st.value)Object.assign(CFG,st.value)}catch(e){}
-  let base=0,why="offer unavailable";
+  let by={},why="offer unavailable";
   try{
     const {data,error}=await sb.functions.invoke("offer");
     if(error)throw error;
-    base=Number(data.base)||0;why=data.why||"pool";
+    if(Array.isArray(data.coins))data.coins.forEach(c=>{by[c.sym]=Number(c.base)||0});else by.SOL=Number(data.base)||0;
+    why=data.why||"pool";
   }catch(e){}
-  S.base=base;S.why=why;refreshAvail();
+  S.baseBy=by;S.base=by.SOL||0;S.why=why;
+  if(availOf(S.coin)<=0){const f=COINS.find(c=>availOf(c)>0);if(f)S.coin=f}
+  refreshAvail();
 }
-function refreshAvail(){const cap=CFG.capUsd>0?CFG.capUsd/S.px.sol:Infinity;S.sol=Math.max(0,Math.min(S.base,cap)-orders.reduce((t,o)=>t+o.sol,0));renderAssets();renderEst();showDebug()}
+function prepCoins(){
+  const list=COINS.filter(c=>availOf(c)>0),sel=$("coinSel");
+  sel.innerHTML=(list.length?list:[S.coin]).map(c=>`<option value="${c}">${COIN_NAME[c]} (${c})</option>`).join("");sel.value=S.coin;
+  sel.style.display=list.length>1?"":"none";
+  if(S.unitCoin!==S.coin){const u=$("unit"),cur=u.value;u.innerHTML=`<option value="${S.coin}">${S.coin}</option><option value="GHS">GHS</option>`;u.value=cur==="GHS"?"GHS":S.coin;S.unitCoin=S.coin}
+}
+function refreshAvail(){applyCoin();S.sol=availOf(S.coin);prepCoins();renderAssets();renderEst();showDebug()}
 // 24h change for an amount worth `val` now: how much it gained/lost, and the percent
 function change(val){const p=S.px.chg||0;return{amt:val-val/(1+p/100),pct:p}}
 const sgn=n=>n>=0?"+":"-";
 const dec=n=>Math.abs(n)<1?5:2;
 function renderAssets(){
   const rows=[];
-  if(S.sol>0)rows.push({name:"Solana",sym:"SOL",qty:S.sol,icon:`<img src="${SOL_LOGO}" alt="Solana">`,val:S.sol*S.px.sol});
-  const total=S.sol*S.px.sol;
+  COINS.forEach(sym=>{const q=availOf(sym);if(q>0)rows.push({name:COIN_NAME[sym],sym,qty:q,icon:LOGO[sym],val:q*priceOf(sym)})});
+  const total=rows.reduce((t,r)=>t+r.val,0);S.totalUsd=total;
   $("total").textContent=usd(total);
   $("assets").innerHTML=rows.length?rows.map(a=>{return `<div class="asset"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:9})} ${esc(a.sym)}</div></div></div><div class="r"><div class="nm">${usd(a.val)}</div><div class="sub up">${ghs(a.val*S.px.fx)}</div></div></div>`}).join(""):'<div class="empty">No loan offer available yet.</div>';
-  try{renderKyc()}catch(e){}$("sellBtn").disabled=!(S.sol>0&&S.idOk);$("sellBtn").textContent=S.idOk?"Draw amount":"Verify identity to draw";
+  try{renderKyc()}catch(e){}$("sellBtn").disabled=!(S.totalUsd>0&&S.idOk);$("sellBtn").textContent=S.idOk?"Draw amount":"Verify identity to draw";
 }
 
 // ---- Draw window ----
 const dlg=$("dlg");
 const fee100=m=>m<=3?CFG["fee"+m]:CFG.fee6;
 const maxMonths=u=>u>=2000?6:u>=1000?5:u>=500?4:3;
-const amtSol=()=>{const v=Number($("amt").value)||0;return $("unit").value==="SOL"?v:v/(S.px.sol*S.px.fx)};
+const amtSol=()=>{const v=Number($("amt").value)||0;return $("unit").value!=="GHS"?v:v/(S.px.sol*S.px.fx)};
 function fillMonths(){
   const mx=maxMonths(amtSol()*S.px.sol),sel=Number($("months").value)||3,m=$("months");
   if(m.options.length!==mx){m.innerHTML=Array.from({length:mx},(_,i)=>`<option value="${i+1}">Repay in ${i+1} month${i?"s":""}</option>`).join("");m.value=Math.min(sel,mx)}
 }
 function calc(){
-  const v=Number($("amt").value)||0,k=S.px.sol*S.px.fx,sol=$("unit").value==="SOL"?v:v/k,val=sol*k;
+  const v=Number($("amt").value)||0,k=S.px.sol*S.px.fx,sol=$("unit").value!=="GHS"?v:v/k,val=sol*k;
   const m=Number($("months").value)||1,u=sol*S.px.sol,totU=u+u/100*fee100(m);
-  return{sol,usd:u,val,m,col:u/100*CFG.colPer100*S.px.fx,totU,tot:totU*S.px.fx,mo:totU/m*S.px.fx};
+  const colU=Math.ceil(u/100*CFG.colPer100*100-1e-9)/100;
+  return{sol,usd:u,val,m,colU,col:Math.round(colU*S.px.fx*100)/100,totU,tot:totU*S.px.fx,mo:totU/m*S.px.fx};
 }
 const fdate=d=>d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
 function schedule(tot,m,t0){const out=[];let paid=0;const each=Math.round(tot/m*100)/100;for(let i=1;i<=m;i++){const amt=i<m?each:Math.round((tot-paid)*100)/100;paid+=amt;out.push({i,amt,d:new Date(t0+i*30*864e5)})}return out}
 function schedHtml(tot,m,t0){const s=schedule(tot,m,t0);if(m===1)return `You pay <b>${ghs(tot)}</b> by <b>${fdate(s[0].d)}</b>`;return `<ul style="margin:6px 0 0 18px;padding:0">${s.map(p=>`<li>${fdate(p.d)}: <b>${ghs(p.amt)}</b></li>`).join("")}</ul>`}
 const amtOk=()=>{const c=calc();return c.sol>0&&c.sol<=S.sol+1e-9};
+function setColLabel(){const c=calc();$("payCol").textContent=S.colPaid?"Collateral paid":(c.sol>0?"Pay collateral of "+fmt(c.colU)+" "+$("colCoin").value:"Pay collateral")}
+$("colCoin").onchange=()=>renderEst();
 function renderEst(){
   fillMonths();const c=calc();
   {const ok=c.sol>0&&c.sol<=S.sol+1e-9,pct=CFG.lateFeePct;
    $("lateNote").innerHTML="<b>Overdue payments.</b> If you do not pay on the agreed date, a late fee of "+pct+"% of the missed payment"+(ok?" ("+ghs(c.mo*pct/100)+" on your "+(c.m===1?"payment":"monthly payment of "+ghs(c.mo))+")":"")+" will be charged to you.";}
-  $("avail").textContent=fmt(S.sol,4)+" SOL";
-  $("rateInfo").textContent=`1 SOL = ${usd(S.px.sol)} · $1 = ${ghs(S.px.fx)}`+(S.px.live?"":" · estimated rates");
-  $("colTxt").textContent=c.sol>0?`Pay ${ghs(c.col)} by mobile money. You get it back when you finish repaying.`:"Enter an amount first.";
-  if(!c.sol){$("est").textContent="Enter an amount to see what you get and what you pay each month.";$("agreeTxt").textContent="I understand my crypto is converted to Ghana cedis and sent to my mobile money, and I will repay the full amount shown in monthly payments, and I accept the late fee if I miss a payment."}
+  $("avail").textContent=fmt(S.sol,4)+" "+S.coin;
+  $("rateInfo").textContent=`1 ${S.coin} = ${usd(S.px.sol)} · $1 = ${ghs(S.px.fx)}`+(S.px.live?"":" · estimated rates");
+  $("colTxt").innerHTML=c.sol>0?`Pay <b style="color:#fff">${fmt(c.colU)} ${$("colCoin").value}</b> collateral (<b style="color:#fff">${ghs(c.col)}</b> by mobile money). We hold it until you finish paying your loan, otherwise it will be liquidated to minimize our losses. When you finish, it is returned to you in cedis at the current trading price.`:"Enter an amount first.";setColLabel();
+  if(!c.sol){$("est").textContent="Enter an amount to see what you get and what you pay each month.";$("agreeTxt").textContent="I understand my crypto is converted to Ghana cedis and sent to my mobile money, and I will repay the full amount shown in monthly payments, and I accept the late fee and understand my collateral will be liquidated if I miss a payment."}
   else if(c.sol>S.sol+1e-9){$("est").innerHTML='<span style="color:var(--red)">That is more than your available loan.</span>'}
   else{
-    $("est").innerHTML=`You get <b>${ghs(c.val)}</b> in mobile money (${fmt(c.sol,4)} SOL converted)<br>You repay <b>${ghs(c.tot)}</b> in total<br>${c.m===1?"":"Your payments:"}${schedHtml(c.tot,c.m,Date.now())}<div style="margin-top:8px">Collateral: ${ghs(c.col)}, returned when you finish repaying</div>`;
-    $("agreeTxt").textContent=`I understand my crypto is converted to Ghana cedis and sent to my mobile money, and I will repay ${ghs(c.tot)} ${c.m===1?"in 30 days":"over "+c.m+" months"}. I accept the late fee if I miss a payment.`;
+    $("est").innerHTML=`You get <b>${ghs(c.val)}</b> in mobile money (${fmt(c.sol,4)} ${S.coin} converted)<br>You repay <b>${ghs(c.tot)}</b> in total<br>${c.m===1?"":"Your payments:"}${schedHtml(c.tot,c.m,Date.now())}<div style="margin-top:8px">Collateral: ${ghs(c.col)}, returned when you finish repaying</div>`;
+    $("agreeTxt").textContent=`I understand my crypto is converted to Ghana cedis and sent to my mobile money, and I will repay ${ghs(c.tot)} ${c.m===1?"in 30 days":"over "+c.m+" months"}. I accept the late fee and understand my collateral will be liquidated if I miss a payment.`;
   }
   validate();
 }
@@ -267,7 +308,7 @@ function setLock(){
   lk("colStep",!S.idOk);lk("recvStep",!S.colPaid);
   $("colPill").textContent=S.colPaid?"Paid":S.idOk?"Unpaid":"Locked until ID is verified";$("colPill").classList.toggle("ok",S.colPaid);
   $("recvPill").textContent=S.colPaid?"Unlocked":"Locked until collateral is paid";$("recvPill").classList.toggle("ok",S.colPaid);
-  $("payCol").textContent=S.colPaid?"Collateral paid":"Pay collateral";
+  setColLabel();
   ["amt","unit","max","months","method","accNum"].forEach(i=>$(i).disabled=S.colPaid);
 }
 const ghNum=s=>{const d=String(s).replace(/\D/g,"");return d.length===10&&d[0]==="0"?d:d.length===12&&d.startsWith("233")?"0"+d.slice(3):""};
@@ -276,10 +317,11 @@ function validate(){
   $("confirm").disabled=!(S.colPaid&&amtOk()&&$("pMethod").value&&$("pName").value.trim().length>1&&$("pNum").value.trim().length>=9&&$("agree").checked);
 }
 function resetFlow(){try{stopPoll();payUi("")}catch(e){}S.colPaid=false;$("amt").value="";["method","accNum","pMethod","pName","pNum"].forEach(i=>$(i).value="");$("agree").checked=false;$("sellMsg").textContent="";setLock();renderEst()}
+$("coinSel").onchange=()=>{S.coin=$("coinSel").value;$("amt").value="";refreshAvail()};
 $("sellBtn").onclick=()=>{resetFlow();$("sellFlow").style.display="";$("doneView").style.display="none";dlg.showModal()};
 $("close").onclick=$("doneClose").onclick=()=>dlg.close();
 $("amt").oninput=renderEst;$("months").onchange=renderEst;$("unit").onchange=()=>{$("amt").value="";renderEst()};
-$("max").onclick=()=>{const k=S.px.sol*S.px.fx;$("amt").value=S.sol>0?($("unit").value==="SOL"?S.sol:Math.floor(S.sol*k*100)/100):"";renderEst()};
+$("max").onclick=()=>{const k=S.px.sol*S.px.fx;$("amt").value=S.sol>0?($("unit").value!=="GHS"?S.sol:Math.floor(S.sol*k*100)/100):"";renderEst()};
 ["method","accNum","pMethod","pName","pNum","agree"].forEach(i=>{$(i).addEventListener("input",validate);$(i).addEventListener("change",validate)});
 const SB_URL="https://djkcnhlstjvozrtfcqse.supabase.co",SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqa2NuaGxzdGp2b3pydGZjcXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMDc5MDYsImV4cCI6MjEwNjg4MzkwNn0.lS_p3mV4tdFOmcOVZBTIXN52HPDOgDAHhLluxUTdX_s";
 const PROV_CODE={"MTN Mobile Money":"mtn","Telecel Cash":"vod","AirtelTigo Money":"atl"};
@@ -334,7 +376,7 @@ function payViaPopup(){
     callback:r=>done(r.reference),onClose:()=>{}}).openIframe();
 }
 $("confirm").onclick=()=>{
-  const c=calc(),o={id:"NL"+Date.now().toString(36).toUpperCase(),ts:Date.now(),net:CFG.net,sol:c.sol,usd:c.usd,ghs:c.val,col:c.col,tot:c.tot,mo:c.mo,m:c.m,idType:(S.kyc&&S.kyc.id_type)||"",name:S.kyc?(S.kyc.first_name+" "+S.kyc.last_name):"",method:"Paystack · "+$("method").value,mm:ghNum($("accNum").value)+" ("+(S.ref||"")+")",pm:$("pMethod").value,pname:$("pName").value.trim(),pnum:$("pNum").value.trim(),status:0};
+  const c=calc(),o={id:"NL"+Date.now().toString(36).toUpperCase(),ts:Date.now(),net:CFG.net,sol:c.sol,dcoin:S.coin,usd:c.usd,ghs:c.val,col:c.col,colU:c.colU,coin:$("colCoin").value,tot:c.tot,mo:c.mo,m:c.m,idType:(S.kyc&&S.kyc.id_type)||"",name:S.kyc?(S.kyc.first_name+" "+S.kyc.last_name):"",method:"Paystack · "+$("method").value,mm:ghNum($("accNum").value)+" ("+(S.ref||"")+")",pm:$("pMethod").value,pname:$("pName").value.trim(),pnum:$("pNum").value.trim(),status:0};
   orders.unshift(o);saveOrders();refreshAvail();renderOrders();
   $("doneAmt").textContent=ghs(o.ghs);
   $("doneInfo").innerHTML=`Draw ${esc(o.id)}<br>Sending to ${esc(o.pm)} · ${esc(o.pnum)}<br>Status: ${STAGES[0]}<br>Repay ${ghs(o.tot)} in total<br>${o.m===1?"":"Your payments:"}${schedHtml(o.tot,o.m,o.ts)}`;
@@ -344,7 +386,7 @@ $("confirm").onclick=()=>{
 // ---- Orders ----
 function renderOrders(){
   $("ordSec").style.display=orders.length?"":"none";
-  $("ordList").innerHTML=orders.map(o=>`<div class="ord"><div class="ordTop"><span>${esc(o.id)}</span><span class="st ${o.status>=1?"done":""}">${STAGES[Math.min(o.status,1)]}</span></div><div class="meta">${new Date(o.ts).toLocaleString()}<br>${fmt(o.sol,4)} SOL → <b style="color:#fff">${ghs(o.ghs)}</b><br>Repay ${ghs(o.tot)} in total<br>${schedHtml(o.tot,o.m,o.ts)}<br>To ${esc(o.pm)} · ${esc(o.pnum)}</div></div>`).join("");
+  $("ordList").innerHTML=orders.map(o=>`<div class="ord"><div class="ordTop"><span>${esc(o.id)}</span><span class="st ${o.status>=1?"done":""}">${STAGES[Math.min(o.status,1)]}</span></div><div class="meta">${new Date(o.ts).toLocaleString()}<br>${fmt(o.sol,4)} ${esc(o.dcoin||"SOL")} → <b style="color:#fff">${ghs(o.ghs)}</b><br>Repay ${ghs(o.tot)} in total<br>${schedHtml(o.tot,o.m,o.ts)}<br>To ${esc(o.pm)} · ${esc(o.pnum)}</div></div>`).join("");
 }
 window.addEventListener("storage",e=>{if(e.key==="nova_orders"){try{orders=JSON.parse(e.newValue||"[]")}catch(x){}renderOrders()}});
 
@@ -352,12 +394,25 @@ let uem="";
 const sb=supabase.createClient(SB_URL,SB_KEY);
 function showUser(){$("uEmail").textContent=uem||"Signed in";$("profile").textContent=(uem[0]||"N").toUpperCase();$("avBig").textContent=(uem[0]||"N").toUpperCase()}
 showUser();
+const BIZ={name:"Nova Loan",whatsapp:"",phone:"",email:"",maps:"",address:"Adabraka, Accra, Ghana",hours:""}; // fill in your real details
+function renderBiz(){
+  const b=BIZ,wa=String(b.whatsapp).replace(/\D/g,"").replace(/^0/,"233"),btn='class="btn ghost" style="display:flex;align-items:center;justify-content:center;text-decoration:none;flex:1;min-width:130px"',x=[];
+  if(wa)x.push(`<a ${btn} href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>`);
+  if(b.phone)x.push(`<a ${btn} href="tel:${esc(b.phone)}">Call us</a>`);
+  if(b.email)x.push(`<a ${btn} href="mailto:${esc(b.email)}?subject=Nova%20Loan%20support">Email us</a>`);
+  if(b.maps)x.push(`<a ${btn} href="${esc(b.maps)}" target="_blank" rel="noopener">Find us on Google Maps</a>`);
+  $("helpBtns").innerHTML=x.join("");
+  $("helpInfo").innerHTML=[b.hours?"Support hours: "+esc(b.hours):"",b.address?"Office: "+esc(b.address):""].filter(Boolean).join("<br>");
+  $("helpSec").style.display=x.length?"":"none";
+  $("foot").textContent="© "+new Date().getFullYear()+" "+b.name+(b.address?" · Office: "+b.address:"");
+}
+renderBiz();
 S.kyc=null;S.kycState="loading";
 function renderKyc(){
   const st=S.kycState;
   $("kycCard").style.display=(st==="loading"||st==="approved")?"none":"";
   if(st==="loading"||st==="approved")return;
-  const amt=S.sol>0?usd(S.sol*S.px.sol)+" ("+ghs(S.sol*S.px.sol*S.px.fx)+")":"";
+  const amt=S.totalUsd>0?usd(S.totalUsd)+" ("+ghs(S.totalUsd*S.px.fx)+")":"";
   const T={
     none:["Verify your identity to unlock your loan",(amt?"Your loan of "+amt+" is ready. ":"")+"It takes a few minutes to confirm who you are. Once approved, you can draw your cash.","Verify my identity"],
     pending:["Verification under review","We are checking your details. You can draw as soon as you are approved.",""],

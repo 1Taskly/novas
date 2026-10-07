@@ -41,8 +41,16 @@ input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;pa
 .pill{font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px;background:var(--s2);color:var(--muted)}
 .pill.ok{background:#12301f;color:var(--green)}.pill.no{background:#3a1616;color:#ff9a9a}.pill.wait{background:#2a2112;color:var(--amber)}
 .head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;font-weight:700}
+.coin{border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:14px;background:#111}
+.inl{display:flex;gap:8px;align-items:center;margin:0;color:var(--text)}.inl input{width:auto}
 .empty{padding:22px;text-align:center;color:#85858a;font-size:14px}
 @media(max-width:560px){.grid{grid-template-columns:1fr}}
+@media(min-width:900px){
+  .app{width:min(100%,1080px)}
+  #kycList,#loanList{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+  #kycList .card,#loanList .card{margin:0}
+  #kycList .empty,#loanList .empty{grid-column:1/-1}
+}
 </style>
 </head>
 <body>
@@ -74,11 +82,10 @@ input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;pa
       <div class="title">Money pool</div>
       <label for="net">Network</label>
       <select id="net"><option value="devnet">Devnet (test, no real money)</option><option value="mainnet">Mainnet (real)</option></select>
-      <label for="addr">Pool wallet address</label><input id="addr" placeholder="Solana address that holds the loan money" spellcheck="false" autocomplete="off">
-      <div class="hint">Users never see this. The server reads its balance and tells each dashboard how much is available.</div>
-      <label for="rpc">RPC URL (optional, e.g. your Helius URL)</label><input id="rpc" placeholder="https://..." spellcheck="false" autocomplete="off">
-      <label for="snap">Fallback balance in SOL (used only if the wallet cannot be read)</label><input id="snap" type="number" min="0" step="any" inputmode="decimal">
-      <div class="row" style="margin-top:12px"><button id="check" class="btn ghost sm">Check what users will see</button></div>
+      <label for="rpc">RPC URL (optional, e.g. your Helius URL for the same network)</label><input id="rpc" placeholder="https://..." spellcheck="false" autocomplete="off">
+      <div class="hint">Users never see any address on this page. The server reads each wallet and tells dashboards how much of each coin is available. Tick only the coins you want to offer.</div>
+      <div id="coinBox"></div>
+      <div class="row" style="margin-top:14px"><button id="check" class="btn ghost sm">Check what users will see</button></div>
       <div id="chk" class="hint"></div>
     </div>
     <div class="card">
@@ -173,38 +180,58 @@ async function decide(uid,a){
 }
 
 // ---------- Settings ----------
+const SYMS=["SOL","USDC","USDT"];
+const KNOWN={devnet:{USDC:"4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",USDT:""},mainnet:{USDC:"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",USDT:"Es9vMFrzaCERmJfrF4H2FYD4KCoNyH2Wj5Mi7APWNL5"}};
+$("coinBox").innerHTML=SYMS.map(s=>`<div class="coin"><div class="head"><span>${s}</span><label class="inl"><input type="checkbox" id="on-${s}"> Offer ${s}</label></div>
+  <label for="a-${s}">Pool wallet address for ${s}</label><input id="a-${s}" placeholder="Solana address that holds the ${s}" spellcheck="false" autocomplete="off">
+  ${s==="SOL"?"":`<label for="m-${s}">${s} token address</label><div class="row"><input id="m-${s}" style="flex:1;min-width:0" placeholder="The ${s} token address" spellcheck="false" autocomplete="off"><button type="button" class="btn ghost sm" data-fill="${s}">Use standard</button></div>`}
+  <label for="s-${s}">Fallback balance in ${s} (used only if the wallet cannot be read)</label><input id="s-${s}" type="number" min="0" step="any" inputmode="decimal"></div>`).join("");
+document.querySelectorAll("[data-fill]").forEach(b=>b.onclick=()=>{
+  const s=b.dataset.fill,v=(KNOWN[$("net").value]||{})[s];
+  if(!v){alert("There is no standard "+s+" on devnet. Paste the address of your own test token.");return}
+  $("m-"+s).value=v;
+});
 async function loadSettings(){
   const {data}=await sb.from("settings").select("key,value");
   const g=k=>((data||[]).find(r=>r.key===k)||{}).value||{};
   const l=g("loan"),p=g("pool");
   $("net").value=l.net||"devnet";$("cap").value=l.capUsd??2000;$("col").value=l.colPer100??10;
   $("f1").value=l.fee1??20;$("f2").value=l.fee2??20;$("f3").value=l.fee3??20;$("f6").value=l.fee6??20;$("late").value=l.lateFeePct??5;
-  $("addr").value=p.address||"";$("rpc").value=p.rpcUrl||"";$("snap").value=p.snapshot||0;
+  $("rpc").value=p.rpcUrl||"";
+  const coins=Array.isArray(p.coins)?p.coins:(p.address?[{sym:"SOL",address:p.address,mint:"",snapshot:p.snapshot||0,enabled:true}]:[]);
+  SYMS.forEach(s=>{const c=coins.find(x=>x.sym===s)||{};
+    $("on-"+s).checked=!!c.enabled;$("a-"+s).value=c.address||"";if(s!=="SOL")$("m-"+s).value=c.mint||"";$("s-"+s).value=c.snapshot||0});
 }
 $("save").onclick=async()=>{
   const m=$("smsg");m.className="msg";m.textContent="";
-  const ids=["cap","col","f1","f2","f3","f6","late","snap"];
+  const ids=["cap","col","f1","f2","f3","f6","late"];
   if(ids.some(i=>!($(i).value!==""&&num(i)>=0))){m.textContent="Numbers must be zero or more.";return}
-  const addr=$("addr").value.trim();
-  if(addr&&!validAddr(addr)){m.textContent="That does not look like a Solana address.";return}
   const rpc=$("rpc").value.trim();
   if(rpc&&!/^https:\/\//.test(rpc)){m.textContent="The RPC URL must start with https://";return}
+  const coins=[];
+  for(const s of SYMS){
+    const on=$("on-"+s).checked,address=$("a-"+s).value.trim(),mint=s==="SOL"?"":$("m-"+s).value.trim(),snap=Number($("s-"+s).value)||0;
+    if(on&&!validAddr(address)){m.textContent="Enter a valid pool wallet address for "+s+", or untick it.";return}
+    if(on&&s!=="SOL"&&!validAddr(mint)){m.textContent="Enter the "+s+" token address, or untick it.";return}
+    coins.push({sym:s,enabled:on,address,mint,snapshot:snap});
+  }
   $("save").disabled=true;
   const now=new Date().toISOString();
   const {error}=await sb.from("settings").upsert([
     {key:"loan",value:{net:$("net").value,capUsd:num("cap"),colPer100:num("col"),fee1:num("f1"),fee2:num("f2"),fee3:num("f3"),fee6:num("f6"),lateFeePct:num("late")},updated_at:now},
-    {key:"pool",value:{address:addr,rpcUrl:rpc,snapshot:num("snap")},updated_at:now}
+    {key:"pool",value:{rpcUrl:rpc,coins},updated_at:now}
   ]);
   $("save").disabled=false;
   if(error){m.textContent="Could not save: "+error.message;return}
   m.className="msg ok";m.textContent="Saved. Every user's dashboard will use these settings.";
-}
+};
 $("check").onclick=async()=>{
   $("chk").textContent="Checking…";
   try{
     const {data,error}=await sb.functions.invoke("offer");
     if(error)throw error;
-    $("chk").textContent=`Pool balance users are offered: ${Number(data.base).toLocaleString(undefined,{maximumFractionDigits:6})} SOL (${data.why}). Save your settings first if you just changed them.`;
+    const list=(data.coins||[]).map(c=>c.sym+": "+Number(c.base).toLocaleString(undefined,{maximumFractionDigits:6})+" ("+c.why+")");
+    $("chk").textContent=list.length?"Pool balances users are offered: "+list.join(" · ")+". Save your settings first if you just changed them.":"Nothing is offered yet ("+(data.why||"no coins ticked")+").";
   }catch(e){$("chk").textContent="The offer function did not answer. Check that it is deployed and named offer."}
 };
 
