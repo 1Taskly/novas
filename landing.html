@@ -229,8 +229,8 @@ $("form").addEventListener("submit",async e=>{
   go.disabled=true;go.classList.add("load");$("goTxt").textContent=mode==="up"?"Creating account…":"Logging in…";
   try{
     await register(em,pw);
-    msg.className="msg ok";msg.textContent=mode==="up"?"Account created. Next, verify your identity…":"Welcome back. Taking you to your loan offer…";
-    setTimeout(()=>{location.href=mode==="up"?"kyc.html":"index.html"},900);
+    msg.className="msg ok";msg.textContent=mode==="up"?"Account created. Taking you to your loan offer…":"Welcome back. Taking you to your loan offer…";
+    setTimeout(()=>{location.href="index.html"},900);
   }catch(err){
     msg.className=err.info?"msg ok":"msg";msg.textContent=err.message||"Something went wrong. Try again.";
     go.disabled=false;go.classList.remove("load");$("goTxt").textContent=mode==="up"?"Create account":"Log in";

@@ -90,8 +90,6 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <section class="hero"><div class="label">Loan available to you</div><div id="total" class="balance">$0.00</div>
     </section>
 
-  <section id="kycCard" class="card" style="display:none"><div class="title" id="kycTitle"></div><div class="small" id="kycTxt" style="margin:0 0 12px"></div><a id="kycBtn" class="btn" href="kyc.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Start verification</a></section>
-
   <details class="card how"><summary>How your loan works</summary>
     <ul class="steps">
       <li><div><b>Draw crypto</b><span>Draw crypto and we convert it to Ghana cedis.</span></div></li>
@@ -101,6 +99,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 
   <div class="h2">Available to draw</div>
   <div id="assets" class="card"><div class="empty">No loan offer available yet.</div></div>
+  <section id="kycCard" class="card" style="display:none;border-color:#342d49;background:#171421"><div class="title" id="kycTitle"></div><div class="small" id="kycTxt" style="margin:0 0 12px;color:#b9b0d6;font-size:14px"></div><a id="kycBtn" class="btn" href="kyc.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Verify my identity</a></section>
   <button id="sellBtn" class="btn" style="width:100%" disabled>Draw amount</button>
 
   <section id="ordSec" style="display:none"><div class="h2">Orders</div><div id="ordList" class="card"></div></section>
@@ -158,11 +157,8 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 </dialog>
 
 <script>
-const CFG={colPer100:10,fee1:20,fee2:20,fee3:20,fee6:20,capUsd:2000,lateFeePct:5,balSnap:0,paystackKey:"pk_live_1530c74b9368aa99844bc2dd4c5d0ee1fd867c68",offerSol:5,poolAddr:"",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:""};
-const PUBLIC_CFG={}; // Paste the settings box from admin.html here so every visitor gets them
-Object.assign(CFG,PUBLIC_CFG);
+const CFG={colPer100:10,fee1:20,fee2:20,fee3:20,fee6:20,capUsd:2000,lateFeePct:5,balSnap:0,paystackKey:"pk_live_1530c74b9368aa99844bc2dd4c5d0ee1fd867c68",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:""};
 const RPCS={devnet:"https://api.devnet.solana.com",mainnet:"https://api.mainnet-beta.solana.com"};
-try{Object.assign(CFG,JSON.parse(localStorage.getItem("nova_cfg")||"{}"))}catch(e){}
 const STAGES=["Sending to your mobile money","Paid out"];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
@@ -209,18 +205,14 @@ function showDebug(){
   $("clr").onclick=()=>{orders=[];saveOrders();renderOrders();refreshAvail()};
 }
 async function loadOffer(){
-  let base=CFG.offerSol>0?CFG.offerSol:0,why="demo amount";
-  if(CFG.poolAddr&&validAddr(CFG.poolAddr)){
-    try{
-      const b=await rpc("getBalance",[CFG.poolAddr,{commitment:"confirmed"}]);
-      base=b.value/1e9;why="live wallet balance";
-      try{localStorage.setItem("nova_lastbal",String(base))}catch(e){}
-    }catch(e){
-      let last=0;try{last=Number(localStorage.getItem("nova_lastbal"))||0}catch(x){}
-      base=CFG.balSnap>0?CFG.balSnap:last;
-      why="wallet read failed ("+(e.message||"error")+"), using "+(CFG.balSnap>0?"saved snapshot":"last known balance");
-    }
-  }
+  // Settings and the pool balance come from Supabase (set on the admin page), never from this file.
+  try{const {data:st}=await sb.from("settings").select("value").eq("key","loan").maybeSingle();if(st&&st.value)Object.assign(CFG,st.value)}catch(e){}
+  let base=0,why="offer unavailable";
+  try{
+    const {data,error}=await sb.functions.invoke("offer");
+    if(error)throw error;
+    base=Number(data.base)||0;why=data.why||"pool";
+  }catch(e){}
   S.base=base;S.why=why;refreshAvail();
 }
 function refreshAvail(){const cap=CFG.capUsd>0?CFG.capUsd/S.px.sol:Infinity;S.sol=Math.max(0,Math.min(S.base,cap)-orders.reduce((t,o)=>t+o.sol,0));renderAssets();renderEst();showDebug()}
@@ -234,7 +226,7 @@ function renderAssets(){
   const total=S.sol*S.px.sol;
   $("total").textContent=usd(total);
   $("assets").innerHTML=rows.length?rows.map(a=>{return `<div class="asset"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:9})} ${esc(a.sym)}</div></div></div><div class="r"><div class="nm">${usd(a.val)}</div><div class="sub up">${ghs(a.val*S.px.fx)}</div></div></div>`}).join(""):'<div class="empty">No loan offer available yet.</div>';
-  $("sellBtn").disabled=!(S.sol>0&&S.idOk);$("sellBtn").textContent=S.idOk?"Draw amount":"Verify identity to draw";
+  try{renderKyc()}catch(e){}$("sellBtn").disabled=!(S.sol>0&&S.idOk);$("sellBtn").textContent=S.idOk?"Draw amount":"Verify identity to draw";
 }
 
 // ---- Draw window ----
@@ -360,14 +352,22 @@ let uem="";
 const sb=supabase.createClient(SB_URL,SB_KEY);
 function showUser(){$("uEmail").textContent=uem||"Signed in";$("profile").textContent=(uem[0]||"N").toUpperCase();$("avBig").textContent=(uem[0]||"N").toUpperCase()}
 showUser();
-S.kyc=null;
+S.kyc=null;S.kycState="loading";
+function renderKyc(){
+  const st=S.kycState;
+  $("kycCard").style.display=(st==="loading"||st==="approved")?"none":"";
+  if(st==="loading"||st==="approved")return;
+  const amt=S.sol>0?usd(S.sol*S.px.sol)+" ("+ghs(S.sol*S.px.sol*S.px.fx)+")":"";
+  const T={
+    none:["Verify your identity to unlock your loan",(amt?"Your loan of "+amt+" is ready. ":"")+"It takes a few minutes to confirm who you are. Once approved, you can draw your cash.","Verify my identity"],
+    pending:["Verification under review","We are checking your details. You can draw as soon as you are approved.",""],
+    rejected:["Your verification needs attention",(S.kyc&&S.kyc.reject_reason)||"We could not verify your details. Please check them and submit again.","Update my details"]
+  }[st]||["Verification under review","",""];
+  $("kycTitle").textContent=T[0];$("kycTxt").textContent=T[1];$("kycBtn").style.display=T[2]?"flex":"none";$("kycBtn").textContent=T[2];
+}
 async function loadKyc(uid){
   let k=null;try{const {data}=await sb.from("kyc").select("*").eq("user_id",uid).maybeSingle();k=data}catch(e){}
-  S.kyc=k;S.idOk=!!k&&k.status==="approved";
-  const T={none:["Verify your identity to borrow","We verify every borrower before they can draw a loan. You will need your details, your ID and a selfie.","Start verification"],pending:["Verification under review","We are checking your details. You can draw a loan as soon as you are approved.",""],rejected:["Your verification needs attention",(k&&k.reject_reason)||"We could not verify your details. Please check them and submit again.","Update my details"]}[k?k.status:"none"]||null;
-  const t=T||["Verification under review","We are checking your details.",""];
-  $("kycCard").style.display=S.idOk?"none":"";
-  $("kycTitle").textContent=t[0];$("kycTxt").textContent=t[1];$("kycBtn").style.display=t[2]?"flex":"none";$("kycBtn").textContent=t[2];
+  S.kyc=k;S.kycState=k&&["pending","approved","rejected"].includes(k.status)?k.status:"none";S.idOk=S.kycState==="approved";
   setLock();renderAssets();
 }
 sb.auth.getSession().then(({data})=>{if(!data.session){location.replace("landing.html");return}uem=data.session.user.email||"";showUser();loadKyc(data.session.user.id)});
