@@ -180,9 +180,9 @@ async function decide(uid,a){
 }
 
 // ---------- Settings ----------
-const SYMS=["SOL","USDC","USDT"];
+const SYMS=["SOL","USDC"],LABEL={USDC:"USDC (users see it as USDT)"},lb=s=>LABEL[s]||s;
 const KNOWN={devnet:{USDC:"4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",USDT:""},mainnet:{USDC:"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",USDT:"Es9vMFrzaCERmJfrF4H2FYD4KCoNyH2Wj5Mi7APWNL5"}};
-$("coinBox").innerHTML=SYMS.map(s=>`<div class="coin"><div class="head"><span>${s}</span><label class="inl"><input type="checkbox" id="on-${s}"> Offer ${s}</label></div>
+$("coinBox").innerHTML=SYMS.map(s=>`<div class="coin"><div class="head"><span>${lb(s)}</span><label class="inl"><input type="checkbox" id="on-${s}"> Offer ${s}</label></div>
   <label for="a-${s}">Pool wallet address for ${s}</label><input id="a-${s}" placeholder="Solana address that holds the ${s}" spellcheck="false" autocomplete="off">
   ${s==="SOL"?"":`<label for="m-${s}">${s} token address</label><div class="row"><input id="m-${s}" style="flex:1;min-width:0" placeholder="The ${s} token address" spellcheck="false" autocomplete="off"><button type="button" class="btn ghost sm" data-fill="${s}">Use standard</button></div>`}
   <label for="s-${s}">Fallback balance in ${s} (used only if the wallet cannot be read)</label><input id="s-${s}" type="number" min="0" step="any" inputmode="decimal"></div>`).join("");

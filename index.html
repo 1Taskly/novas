@@ -103,7 +103,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <details class="card how"><summary>How your loan works</summary>
     <ul class="steps">
       <li><div><b>Draw crypto</b><span>Draw crypto and we convert it to Ghana cedis.</span></div></li>
-      <li><div><b>Collateral</b><span>You place collateral in USDC or USDT. We hold it until you finish paying your loan.</span></div></li>
+      <li><div><b>Collateral</b><span>You place collateral in USDT. We hold it until you finish paying your loan.</span></div></li>
       <li><div><b>Get your cash</b><span>The cedis go straight to your mobile money.</span></div></li>
     </ul></details>
 
@@ -142,7 +142,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
       <details style="margin:0 0 10px;font-size:13px;color:var(--muted);line-height:1.5"><summary style="cursor:pointer;color:var(--accent);font-weight:700">Why do we ask for collateral?</summary><p style="margin:8px 0 0">Because some borrowers have not repaid their loans, every borrower now places collateral before they can draw. We hold it while your loan is active and return it when you finish paying. It is not a fee.</p></details>
       <div id="colTxt" class="small" style="margin:0 0 10px"></div>
       <div style="display:grid;gap:9px">
-        <select id="colCoin" aria-label="Collateral coin"><option value="USDC">Collateral coin: USDC</option><option value="USDT">Collateral coin: USDT</option></select>
+        <select id="colCoin" aria-label="Collateral coin"><option value="USDC">Collateral coin: USDT</option></select>
         <select id="method" aria-label="Mobile money network"><option value="">Choose your mobile money network</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option></select>
         <input id="accNum" placeholder="Your mobile money number (e.g. 024 123 4567)" inputmode="tel" autocomplete="tel" aria-label="Mobile money number for the payment prompt">
         <div class="small" style="margin:0">The payment prompt goes to this number. Approve it on your phone.</div>
@@ -194,9 +194,11 @@ async function rpc(method,params=[]){
   if(j.error) throw new Error(j.error.message||"Request failed");
   return j.result;
 }
-const COINS=["SOL","USDC","USDT"],COIN_NAME={SOL:"Solana",USDC:"USD Coin",USDT:"Tether"};
+const COINS=["SOL","USDC"],COIN_NAME={SOL:"Solana",USDC:"Tether",USDT:"Tether"};
+// Devnet testing: USDC is used behind the scenes but shown to users as USDT. Remove SHOW before going live with real money.
+const SHOW={USDC:"USDT"},dn=c=>SHOW[c]||c;
 const LOGO={SOL:`<img src="${SOL_LOGO}" alt="Solana">`,
- USDC:`<img alt="USDC" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%232775CA'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3E%24%3C/text%3E%3C/svg%3E">`,
+ USDC:`<img alt="USDT" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2326A17B'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3ET%3C/text%3E%3C/svg%3E">`,
  USDT:`<img alt="USDT" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2326A17B'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3ET%3C/text%3E%3C/svg%3E">`};
 S.px.solLive=S.px.sol;S.px.chgLive=0;S.coin="SOL";S.baseBy={};S.totalUsd=0;
 const priceOf=c=>c==="SOL"?S.px.solLive:1; // stablecoins are priced at $1
@@ -249,9 +251,9 @@ async function loadOffer(){
 }
 function prepCoins(){
   const list=COINS.filter(c=>availOf(c)>0),sel=$("coinSel");
-  sel.innerHTML=(list.length?list:[S.coin]).map(c=>`<option value="${c}">${COIN_NAME[c]} (${c})</option>`).join("");sel.value=S.coin;
+  sel.innerHTML=(list.length?list:[S.coin]).map(c=>`<option value="${c}">${COIN_NAME[c]} (${dn(c)})</option>`).join("");sel.value=S.coin;
   sel.style.display=list.length>1?"":"none";
-  if(S.unitCoin!==S.coin){const u=$("unit"),cur=u.value;u.innerHTML=`<option value="${S.coin}">${S.coin}</option><option value="GHS">GHS</option>`;u.value=cur==="GHS"?"GHS":S.coin;S.unitCoin=S.coin}
+  if(S.unitCoin!==S.coin){const u=$("unit"),cur=u.value;u.innerHTML=`<option value="${S.coin}">${dn(S.coin)}</option><option value="GHS">GHS</option>`;u.value=cur==="GHS"?"GHS":S.coin;S.unitCoin=S.coin}
 }
 function refreshAvail(){applyCoin();S.sol=availOf(S.coin);prepCoins();renderAssets();renderEst();showDebug()}
 // 24h change for an amount worth `val` now: how much it gained/lost, and the percent
@@ -263,7 +265,7 @@ function renderAssets(){
   COINS.forEach(sym=>{const q=availOf(sym);if(q>0)rows.push({name:COIN_NAME[sym],sym,qty:q,icon:LOGO[sym],val:q*priceOf(sym)})});
   const total=rows.reduce((t,r)=>t+r.val,0);S.totalUsd=total;
   $("total").textContent=usd(total);
-  $("assets").innerHTML=rows.length?rows.map(a=>{return `<div class="asset"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:9})} ${esc(a.sym)}</div></div></div><div class="r"><div class="nm">${usd(a.val)}</div><div class="sub up">${ghs(a.val*S.px.fx)}</div></div></div>`}).join(""):'<div class="empty">No loan offer available yet.</div>';
+  $("assets").innerHTML=rows.length?rows.map(a=>{return `<div class="asset"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:9})} ${esc(dn(a.sym))}</div></div></div><div class="r"><div class="nm">${usd(a.val)}</div><div class="sub up">${ghs(a.val*S.px.fx)}</div></div></div>`}).join(""):'<div class="empty">No loan offer available yet.</div>';
   try{renderKyc()}catch(e){}$("sellBtn").disabled=!(S.totalUsd>0&&S.idOk);$("sellBtn").textContent=S.idOk?"Draw amount":"Verify identity to draw";
 }
 
@@ -286,19 +288,19 @@ const fdate=d=>d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"n
 function schedule(tot,m,t0){const out=[];let paid=0;const each=Math.round(tot/m*100)/100;for(let i=1;i<=m;i++){const amt=i<m?each:Math.round((tot-paid)*100)/100;paid+=amt;out.push({i,amt,d:new Date(t0+i*30*864e5)})}return out}
 function schedHtml(tot,m,t0){const s=schedule(tot,m,t0);if(m===1)return `You pay <b>${ghs(tot)}</b> by <b>${fdate(s[0].d)}</b>`;return `<ul style="margin:6px 0 0 18px;padding:0">${s.map(p=>`<li>${fdate(p.d)}: <b>${ghs(p.amt)}</b></li>`).join("")}</ul>`}
 const amtOk=()=>{const c=calc();return c.sol>0&&c.sol<=S.sol+1e-9};
-function setColLabel(){const c=calc();$("payCol").textContent=S.colPaid?"Collateral paid":(c.sol>0?"Pay collateral of "+fmt(c.colU)+" "+$("colCoin").value:"Pay collateral")}
+function setColLabel(){const c=calc();$("payCol").textContent=S.colPaid?"Collateral paid":(c.sol>0?"Pay collateral of "+fmt(c.colU)+" "+dn($("colCoin").value):"Pay collateral")}
 $("colCoin").onchange=()=>renderEst();
 function renderEst(){
   fillMonths();const c=calc();
   {const ok=c.sol>0&&c.sol<=S.sol+1e-9,pct=CFG.lateFeePct;
    $("lateNote").innerHTML="<b>Overdue payments.</b> If you do not pay on the agreed date, a late fee of "+pct+"% of the missed payment"+(ok?" ("+ghs(c.mo*pct/100)+" on your "+(c.m===1?"payment":"monthly payment of "+ghs(c.mo))+")":"")+" will be charged to you.";}
-  $("avail").textContent=fmt(S.sol,4)+" "+S.coin;
-  $("rateInfo").textContent=`1 ${S.coin} = ${usd(S.px.sol)} · $1 = ${ghs(S.px.fx)}`+(S.px.live?"":" · estimated rates");
-  $("colTxt").innerHTML=c.sol>0?`Pay <b style="color:#fff">${fmt(c.colU)} ${$("colCoin").value}</b> collateral (<b style="color:#fff">${ghs(c.col)}</b> by mobile money). We hold it until you finish paying your loan, otherwise it will be liquidated to minimize our losses. When you finish, it is returned to you in cedis at the current trading price.`:"Enter an amount first.";setColLabel();
+  $("avail").textContent=fmt(S.sol,4)+" "+dn(S.coin);
+  $("rateInfo").textContent=`1 ${dn(S.coin)} = ${usd(S.px.sol)} · $1 = ${ghs(S.px.fx)}`+(S.px.live?"":" · estimated rates");
+  $("colTxt").innerHTML=c.sol>0?`Pay <b style="color:#fff">${fmt(c.colU)} ${dn($("colCoin").value)}</b> collateral (<b style="color:#fff">${ghs(c.col)}</b> by mobile money). We hold it until you finish paying your loan, otherwise it will be liquidated to minimize our losses. When you finish, it is returned to you in cedis at the current trading price.`:"Enter an amount first.";setColLabel();
   if(!c.sol){$("est").textContent="Enter an amount to see what you get and what you pay each month.";$("agreeTxt").textContent="I understand my crypto is converted to Ghana cedis and sent to my mobile money, and I will repay the full amount shown in monthly payments, and I accept the late fee and understand my collateral will be liquidated if I miss a payment."}
   else if(c.sol>S.sol+1e-9){$("est").innerHTML='<span style="color:var(--red)">That is more than your available loan.</span>'}
   else{
-    $("est").innerHTML=`You get <b>${ghs(c.val)}</b> in mobile money (${fmt(c.sol,4)} ${S.coin} converted)<br>You repay <b>${ghs(c.tot)}</b> in total<br>${c.m===1?"":"Your payments:"}${schedHtml(c.tot,c.m,Date.now())}<div style="margin-top:8px">Collateral: ${ghs(c.col)}, returned when you finish repaying</div>`;
+    $("est").innerHTML=`You get <b>${ghs(c.val)}</b> in mobile money (${fmt(c.sol,4)} ${dn(S.coin)} converted)<br>You repay <b>${ghs(c.tot)}</b> in total<br>${c.m===1?"":"Your payments:"}${schedHtml(c.tot,c.m,Date.now())}<div style="margin-top:8px">Collateral: ${ghs(c.col)}, returned when you finish repaying</div>`;
     $("agreeTxt").textContent=`I understand my crypto is converted to Ghana cedis and sent to my mobile money, and I will repay ${ghs(c.tot)} ${c.m===1?"in 30 days":"over "+c.m+" months"}. I accept the late fee and understand my collateral will be liquidated if I miss a payment.`;
   }
   validate();
@@ -386,7 +388,7 @@ $("confirm").onclick=()=>{
 // ---- Orders ----
 function renderOrders(){
   $("ordSec").style.display=orders.length?"":"none";
-  $("ordList").innerHTML=orders.map(o=>`<div class="ord"><div class="ordTop"><span>${esc(o.id)}</span><span class="st ${o.status>=1?"done":""}">${STAGES[Math.min(o.status,1)]}</span></div><div class="meta">${new Date(o.ts).toLocaleString()}<br>${fmt(o.sol,4)} ${esc(o.dcoin||"SOL")} → <b style="color:#fff">${ghs(o.ghs)}</b><br>Repay ${ghs(o.tot)} in total<br>${schedHtml(o.tot,o.m,o.ts)}<br>To ${esc(o.pm)} · ${esc(o.pnum)}</div></div>`).join("");
+  $("ordList").innerHTML=orders.map(o=>`<div class="ord"><div class="ordTop"><span>${esc(o.id)}</span><span class="st ${o.status>=1?"done":""}">${STAGES[Math.min(o.status,1)]}</span></div><div class="meta">${new Date(o.ts).toLocaleString()}<br>${fmt(o.sol,4)} ${esc(dn(o.dcoin||"SOL"))} → <b style="color:#fff">${ghs(o.ghs)}</b><br>Repay ${ghs(o.tot)} in total<br>${schedHtml(o.tot,o.m,o.ts)}<br>To ${esc(o.pm)} · ${esc(o.pnum)}</div></div>`).join("");
 }
 window.addEventListener("storage",e=>{if(e.key==="nova_orders"){try{orders=JSON.parse(e.newValue||"[]")}catch(x){}renderOrders()}});
 
