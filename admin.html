@@ -4,172 +4,228 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#000000">
 <title>Nova Loan Admin</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23c9bcff'/%3E%3Cstop offset='.55' stop-color='%23a995f5'/%3E%3Cstop offset='1' stop-color='%2335e875'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='%23000'/%3E%3Cpath d='M50 14C53 38 62 47 86 50C62 53 53 62 50 86C47 62 38 53 14 50C38 47 47 38 50 14Z' fill='url(%23g)'/%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
 :root{--bg:#000;--s1:#151515;--s2:#202020;--text:#f5f5f5;--muted:#9a9a9f;--line:#282828;--accent:#a995f5;--green:#35e875;--red:#ff5b5b;--amber:#f5b942}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
 button,input,select{font:inherit;color:inherit}button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.app{width:min(100%,760px);margin:auto;padding:18px 16px 60px}
-h1{font-size:23px;letter-spacing:-.5px;margin:0 0 4px}
-.sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+.app{width:min(100%,820px);margin:auto;padding:calc(18px + env(safe-area-inset-top,0px)) 16px 60px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+h1{font-size:23px;letter-spacing:-.5px;margin:0}
 .card{background:var(--s1);border:1px solid #202020;border-radius:22px;padding:17px;margin-bottom:16px}
 .title{font-size:17px;font-weight:700;margin-bottom:12px}
 label{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px}
 input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;padding:13px;width:100%}
-.btn{border:0;border-radius:14px;background:var(--accent);color:#17131f;font-weight:750;padding:0 18px;min-height:46px;width:100%;margin-top:14px}
+.btn{border:0;border-radius:14px;background:var(--accent);color:#17131f;font-weight:750;padding:0 16px;min-height:46px}
 .btn.ghost{background:var(--s2);color:var(--text);border:1px solid #303030}
-.btn:disabled{opacity:.45}
-.msg{font-size:13px;margin-top:10px;color:var(--green);min-height:1px}.msg.err{color:var(--red)}
+.btn.red{background:#3a1616;color:#ff9a9a;border:1px solid #5a2323}
+.btn.sm{min-height:38px;font-size:14px}
+.btn:disabled{opacity:.5}
+.tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.tab{border:0;background:#1b1b1b;color:#a8a8ad;border-radius:24px;padding:10px 16px;font-size:15px}
+.tab.active{background:var(--accent);color:#14121b;font-weight:700}
+.panel{display:none}.panel.on{display:block}
+.msg{font-size:13px;margin-top:10px;color:var(--red);line-height:1.45}.msg.ok{color:var(--green)}
 .hint{font-size:12px;color:#85858a;line-height:1.5;margin-top:6px}
-.sw{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0}
-.sw input{width:auto;transform:scale(1.4)}
-.ord{padding:14px 0;border-bottom:1px solid var(--line)}.ord:last-child{border-bottom:0}
-.ordTop{display:flex;justify-content:space-between;gap:10px;font-weight:700}
-.st{font-size:12px;font-weight:700;color:var(--amber)}.st.done{color:var(--green)}
-.meta{font-size:13px;color:#8d8d92;margin-top:5px;line-height:1.5}
-.empty{padding:20px;text-align:center;color:#85858a;font-size:14px}
-.warn{padding:13px;border-radius:14px;background:#2a2112;border:1px solid #4a3a1a;color:#e7c98a;font-size:12px;line-height:1.5;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kv{font-size:13px;color:#b5b5ba;line-height:1.7}.kv b{color:#fff}
+.photos{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
+.photos a{display:block;width:100px;height:100px;border-radius:12px;overflow:hidden;border:1px solid #303030;background:#080808}
+.photos img{width:100%;height:100%;object-fit:cover}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.pill{font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px;background:var(--s2);color:var(--muted)}
+.pill.ok{background:#12301f;color:var(--green)}.pill.no{background:#3a1616;color:#ff9a9a}.pill.wait{background:#2a2112;color:var(--amber)}
+.head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;font-weight:700}
+.empty{padding:22px;text-align:center;color:#85858a;font-size:14px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <main class="app">
 
-<section id="gate" class="card" style="margin-top:60px"><h1>Page not found</h1></section>
+<section id="login" class="card" style="margin-top:50px;max-width:420px;margin-left:auto;margin-right:auto">
+  <h1>Admin login</h1>
+  <label for="em">Email</label><input id="em" type="email" autocomplete="email">
+  <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password">
+  <button id="go" class="btn" style="width:100%;margin-top:14px">Log in</button>
+  <div id="lmsg" class="msg"></div>
+</section>
 
 <section id="panel" style="display:none">
-  <h1>Nova Loan Admin</h1>
-  <div class="sub">Changes here control the dashboard. They save in this browser for now; Supabase will make them global.</div>
-  <div class="warn">Temporary secret-link access: anyone who finds the link or reads this file's source can open this page. That is fine while settings only live in this browser, but real protection must come from Supabase login before this controls anything shared.</div>
-
-  <div class="card">
-    <div class="title">Settings</div>
-    <label for="net">Network</label>
-    <select id="net"><option value="devnet">Devnet (demo, no real money)</option><option value="mainnet">Mainnet (real)</option></select>
-    <label for="col">Collateral per $100 drawn ($)</label>
-    <input id="col" type="number" min="0" step="any" inputmode="decimal">
-    <label for="f1">Fee per $100 drawn, 1 month ($)</label>
-    <input id="f1" type="number" min="0" step="any" inputmode="decimal">
-    <label for="f2">Fee per $100 drawn, 2 months ($)</label>
-    <input id="f2" type="number" min="0" step="any" inputmode="decimal">
-    <label for="f3">Fee per $100 drawn, 3 months ($)</label>
-    <input id="f3" type="number" min="0" step="any" inputmode="decimal">
-    <label for="f6">Fee per $100 drawn, 4 to 6 months ($)</label>
-    <input id="f6" type="number" min="0" step="any" inputmode="decimal">
-    <div class="hint">Borrowers only see money, never percentages. Example: a fee of $20 per $100 means a $500 draw is repaid as $600, split across the months they choose.</div>
-    <label for="pool">Loan wallet address (private)</label>
-    <input id="pool" placeholder="Paste the wallet holding the SOL" autocomplete="off" spellcheck="false">
-    <div class="hint">Borrowers never see this address. Their dashboard shows this wallet's balance as the loan available. Leave blank to use the demo amount below.</div>
-    <button id="chk" class="btn ghost" type="button">Check wallet balance</button>
-    <div id="chkMsg" class="msg"></div>
-    <label for="offer">Demo amount (SOL)</label>
-    <input id="offer" type="number" min="0" step="any" inputmode="decimal">
-    <label for="cap">Max loan shown to each visitor ($)</label>
-    <input id="cap" type="number" min="0" step="any" inputmode="decimal">
-    <div class="hint">Everyone who opens the page sees at most this much, even if your wallet holds more. Set 0 for no limit.</div>
-        <label for="rpcD">Devnet RPC URL (optional)</label>
-    <input id="rpcD" placeholder="https://…">
-    <label for="rpcM">Mainnet RPC URL (optional, recommended for real use)</label>
-    <input id="rpcM" placeholder="https://…">
-    <div class="hint">Leave blank to use the free public endpoints. Use a provider such as Helius or QuickNode for mainnet.</div>
-    <div class="sw"><span>Simulate collateral payments<div class="hint">On: the Pay collateral button succeeds instantly (testing). Off: users see "not available yet" until real payments are connected.</div></span><input id="sim" type="checkbox" aria-label="Simulate collateral payments"></div>
-    <button id="save" class="btn">Save settings</button>
-    <div id="saveMsg" class="msg"></div>
+  <div class="top"><h1>Nova Loan Admin</h1><button id="out" class="btn ghost sm">Log out</button></div>
+  <div class="tabs">
+    <button class="tab active" data-p="kyc">Verifications</button>
+    <button class="tab" data-p="settings">Settings</button>
+    <button class="tab" data-p="loans">Loans</button>
   </div>
 
-  <div class="card">
-    <div class="title">Make it live for everyone</div>
-    <div class="hint" style="margin:0 0 8px">Settings saved above only apply in this browser. To show them to every visitor, copy this line, open index.html, and replace the line that starts with <b>const PUBLIC_CFG=</b>. If your RPC URLs contain a key, that key becomes visible to anyone who views the page.</div>
-    <input id="pub" readonly aria-label="Settings line for index.html">
-    <button id="copyPub" class="btn ghost" type="button">Copy line</button>
+  <div id="kyc" class="panel on">
+    <div class="row" style="margin-bottom:12px"><select id="kf" style="width:auto"><option value="pending">Waiting for review</option><option value="all">All applicants</option></select></div>
+    <div id="kycList"></div>
   </div>
 
-  <div class="card">
-    <div class="title">Devnet tools</div>
-    <label for="airAddr">Devnet wallet address</label>
-    <input id="airAddr" placeholder="Paste address" autocomplete="off" spellcheck="false">
-    <button id="air" class="btn ghost">Send 1 demo SOL</button>
-    <div id="airMsg" class="msg"></div>
+  <div id="settings" class="panel">
+    <div class="card">
+      <div class="title">Money pool</div>
+      <label for="net">Network</label>
+      <select id="net"><option value="devnet">Devnet (test, no real money)</option><option value="mainnet">Mainnet (real)</option></select>
+      <label for="addr">Pool wallet address</label><input id="addr" placeholder="Solana address that holds the loan money" spellcheck="false" autocomplete="off">
+      <div class="hint">Users never see this. The server reads its balance and tells each dashboard how much is available.</div>
+      <label for="rpc">RPC URL (optional, e.g. your Helius URL)</label><input id="rpc" placeholder="https://..." spellcheck="false" autocomplete="off">
+      <label for="snap">Fallback balance in SOL (used only if the wallet cannot be read)</label><input id="snap" type="number" min="0" step="any" inputmode="decimal">
+      <div class="row" style="margin-top:12px"><button id="check" class="btn ghost sm">Check what users will see</button></div>
+      <div id="chk" class="hint"></div>
+    </div>
+    <div class="card">
+      <div class="title">Loan terms</div>
+      <div class="grid">
+        <div><label for="cap">Most one borrower can draw (USD)</label><input id="cap" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div><label for="col">Collateral (% of the draw)</label><input id="col" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div><label for="f1">Fee for 1 month (%)</label><input id="f1" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div><label for="f2">Fee for 2 months (%)</label><input id="f2" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div><label for="f3">Fee for 3 months (%)</label><input id="f3" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div><label for="f6">Fee for 4 to 6 months (%)</label><input id="f6" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div><label for="late">Late fee (% of a missed payment)</label><input id="late" type="number" min="0" step="any" inputmode="decimal"></div>
+      </div>
+      <button id="save" class="btn" style="width:100%;margin-top:16px">Save settings</button>
+      <div id="smsg" class="msg"></div>
+      <div class="hint">Saved settings apply to every user's dashboard within a minute.</div>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="title">Draw requests</div>
-    <div id="orders"></div>
-  </div>
-</section>
+  <div id="loans" class="panel"><div id="loanList"></div></div>
 </main>
 
 <script>
-const KEY="afful";  // open this page as admin.html#change-me-key  (temporary; replace with Supabase admin login)
+const SB_URL="https://djkcnhlstjvozrtfcqse.supabase.co",SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqa2NuaGxzdGp2b3pydGZjcXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMDc5MDYsImV4cCI6MjEwNjg4MzkwNn0.lS_p3mV4tdFOmcOVZBTIXN52HPDOgDAHhLluxUTdX_s";
+const sb=supabase.createClient(SB_URL,SB_KEY);
 const $=id=>document.getElementById(id);
-const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-const fmt=(n,d=2)=>Number(n||0).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
-const STAGES=["Send cash to borrower","Paid out"];
-let cfg={net:"devnet",colPer100:10,fee1:20,fee2:20,fee3:20,poolAddr:"",offerSol:5,simulatePayments:true,rpcDevnet:"",rpcMainnet:"",capUsd:2000,balSnap:0,fee6:20};
-try{Object.assign(cfg,JSON.parse(localStorage.getItem("nova_cfg")||"{}"))}catch(e){}
-let orders=[];
-const readOrders=()=>{try{orders=JSON.parse(localStorage.getItem("nova_orders")||"[]")}catch(e){orders=[]}};
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+const num=id=>Number($(id).value);
+const validAddr=a=>/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a);
 
-function show(){
-  $("gate").style.display="none";$("panel").style.display="block";
-  $("net").value=cfg.net;$("col").value=cfg.colPer100;$("f1").value=cfg.fee1;$("f2").value=cfg.fee2;$("f3").value=cfg.fee3;$("pool").value=cfg.poolAddr||"";$("offer").value=cfg.offerSol;
-  $("cap").value=cfg.capUsd;$("f6").value=cfg.fee6;$("rpcD").value=cfg.rpcDevnet||"";$("rpcM").value=cfg.rpcMainnet||"";$("sim").checked=!!cfg.simulatePayments;
-  renderOrders();showPub();
+async function boot(){
+  const {data}=await sb.auth.getSession();
+  if(!data.session){$("login").style.display="";$("panel").style.display="none";return}
+  const {data:p}=await sb.from("profiles").select("role").eq("id",data.session.user.id).maybeSingle();
+  if(!p||p.role!=="admin"){
+    $("login").style.display="";$("panel").style.display="none";
+    $("lmsg").textContent="This account is not an admin.";await sb.auth.signOut();return;
+  }
+  $("login").style.display="none";$("panel").style.display="";
+  loadKyc();loadSettings();loadLoans();
 }
-if(location.hash.slice(1)===KEY)show();
-
-$("save").onclick=()=>{
-  const co=Number($("col").value),a=Number($("f1").value),b=Number($("f2").value),c=Number($("f3").value),f6=Number($("f6").value),cap=Number($("cap").value),pool=$("pool").value.trim(),off=Number($("offer").value);
-  if(!(co>=0)||!(a>=0)||!(b>=0)||!(c>=0)||!(f6>=0)||!(cap>=0)||!(off>=0)||(pool&&!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(pool))){$("saveMsg").className="msg err";$("saveMsg").textContent="Check the collateral, fee, amount and wallet address values.";return}
-  cfg={net:$("net").value,colPer100:co,fee1:a,fee2:b,fee3:c,poolAddr:pool,offerSol:off,simulatePayments:$("sim").checked,capUsd:cap,fee6:f6,balSnap:(window._bal!==undefined?window._bal:(pool===cfg.poolAddr?(cfg.balSnap||0):0)),rpcDevnet:$("rpcD").value.trim(),rpcMainnet:$("rpcM").value.trim()};
-  try{localStorage.setItem("nova_cfg",JSON.stringify(cfg));$("saveMsg").className="msg";$("saveMsg").textContent="Saved in this browser. Copy the line below into index.html to show it to everyone.";showPub()}
-  catch(e){$("saveMsg").className="msg err";$("saveMsg").textContent="Could not save in this browser."}
+$("go").onclick=async()=>{
+  $("lmsg").textContent="";$("go").disabled=true;
+  const {error}=await sb.auth.signInWithPassword({email:$("em").value.trim(),password:$("pw").value});
+  $("go").disabled=false;
+  if(error){$("lmsg").textContent="Wrong email or password.";return}
+  boot();
 };
+$("pw").addEventListener("keydown",e=>{if(e.key==="Enter")$("go").click()});
+$("out").onclick=()=>sb.auth.signOut().finally(()=>location.reload());
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));
+  document.querySelectorAll(".panel").forEach(x=>x.classList.toggle("on",x.id===b.dataset.p));
+});
 
-$("air").onclick=async()=>{
-  const a=$("airAddr").value.trim();$("airMsg").className="msg err";
-  if(!a){$("airMsg").textContent="Paste a devnet address first.";return}
-  $("air").disabled=true;
-  try{
-    const r=await fetch(cfg.rpcDevnet||"https://api.devnet.solana.com",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"requestAirdrop",params:[a,1e9]})});
-    const j=await r.json();
-    if(j.error)throw new Error(j.error.message);
-    $("airMsg").className="msg";$("airMsg").textContent="Sent. It can take a few seconds to show up."
-  }catch(e){$("airMsg").textContent="Airdrop failed (devnet limits requests): "+(e.message||"")}
-  finally{$("air").disabled=false}
-};
-
-function showPub(){
-  const p={net:cfg.net,colPer100:cfg.colPer100,fee1:cfg.fee1,fee2:cfg.fee2,fee3:cfg.fee3,fee6:cfg.fee6,capUsd:cfg.capUsd,balSnap:cfg.balSnap||0,poolAddr:cfg.poolAddr||"",offerSol:cfg.offerSol,simulatePayments:!!cfg.simulatePayments,rpcDevnet:cfg.rpcDevnet||"",rpcMainnet:cfg.rpcMainnet||""};
-  $("pub").value="const PUBLIC_CFG="+JSON.stringify(p)+";";
+// ---------- Verifications ----------
+$("kf").onchange=loadKyc;
+async function loadKyc(){
+  const L=$("kycList");L.innerHTML='<div class="empty">Loading…</div>';
+  let q=sb.from("kyc").select("*").order("created_at",{ascending:false});
+  if($("kf").value==="pending")q=q.eq("status","pending");
+  const {data:rows,error}=await q;
+  if(error){L.innerHTML='<div class="empty">Could not load verifications.</div>';return}
+  const {data:ps}=await sb.from("profiles").select("id,email");
+  const em=Object.fromEntries((ps||[]).map(p=>[p.id,p.email]));
+  if(!rows.length){L.innerHTML='<div class="empty">Nobody is waiting for review.</div>';return}
+  const cards=await Promise.all(rows.map(async k=>{
+    let urls=[];
+    try{const {data}=await sb.storage.from("kyc").createSignedUrls([k.front_path,k.back_path,k.selfie_path].filter(Boolean),600);urls=(data||[]).map(d=>d.signedUrl)}catch(e){}
+    const cls=k.status==="approved"?"ok":k.status==="rejected"?"no":"wait";
+    return `<div class="card">
+      <div class="head"><span>${esc(k.first_name)} ${esc(k.last_name)}</span><span class="pill ${cls}">${esc(k.status)}</span></div>
+      <div class="kv">${esc(em[k.user_id]||"")}<br>Phone: <b>${esc(k.phone)}</b> · Born: <b>${esc(k.date_of_birth)}</b><br>Address: <b>${esc(k.address)}</b><br>Work: <b>${esc(k.occupation)}</b>${k.employer?" at <b>"+esc(k.employer)+"</b>":""}<br>${esc(k.id_type)}: <b>${esc(k.id_number)}</b>${k.reject_reason?"<br>Reason given: "+esc(k.reject_reason):""}</div>
+      <div class="photos">${urls.map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="ID photo"></a>`).join("")||"<span class='hint'>No photos</span>"}</div>
+      <div class="row"><button class="btn sm" data-a="approve" data-u="${esc(k.user_id)}"${k.status==="approved"?" disabled":""}>Approve</button><button class="btn red sm" data-a="reject" data-u="${esc(k.user_id)}">Reject</button></div>
+    </div>`;
+  }));
+  L.innerHTML=cards.join("");
+  L.querySelectorAll("button[data-a]").forEach(b=>b.onclick=()=>decide(b.dataset.u,b.dataset.a));
 }
-$("copyPub").onclick=async()=>{try{await navigator.clipboard.writeText($("pub").value);$("copyPub").textContent="Copied"}catch(e){$("pub").select();$("copyPub").textContent="Select and copy"}setTimeout(()=>$("copyPub").textContent="Copy line",1800)};
-$("chk").onclick=async()=>{
-  const a=$("pool").value.trim(),m=$("chkMsg");m.className="msg err";
-  if(!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a)){m.textContent="Paste a valid Solana address first.";return}
-  const net=$("net").value,url=(net==="mainnet"?$("rpcM").value.trim():$("rpcD").value.trim())||(net==="mainnet"?"https://api.mainnet-beta.solana.com":"https://api.devnet.solana.com");
-  $("chk").disabled=true;m.textContent="Checking…";
+async function decide(uid,a){
+  let upd={reviewed_at:new Date().toISOString()};
+  if(a==="approve"){upd.status="approved";upd.reject_reason=null}
+  else{
+    const why=prompt("Reason the user will see (for example: your ID photo was blurry):");
+    if(!why||!why.trim())return;
+    upd.status="rejected";upd.reject_reason=why.trim();
+  }
+  const {error}=await sb.from("kyc").update(upd).eq("user_id",uid);
+  if(error){alert("Could not save. "+error.message);return}
+  loadKyc();
+}
+
+// ---------- Settings ----------
+async function loadSettings(){
+  const {data}=await sb.from("settings").select("key,value");
+  const g=k=>((data||[]).find(r=>r.key===k)||{}).value||{};
+  const l=g("loan"),p=g("pool");
+  $("net").value=l.net||"devnet";$("cap").value=l.capUsd??2000;$("col").value=l.colPer100??10;
+  $("f1").value=l.fee1??20;$("f2").value=l.fee2??20;$("f3").value=l.fee3??20;$("f6").value=l.fee6??20;$("late").value=l.lateFeePct??5;
+  $("addr").value=p.address||"";$("rpc").value=p.rpcUrl||"";$("snap").value=p.snapshot||0;
+}
+$("save").onclick=async()=>{
+  const m=$("smsg");m.className="msg";m.textContent="";
+  const ids=["cap","col","f1","f2","f3","f6","late","snap"];
+  if(ids.some(i=>!($(i).value!==""&&num(i)>=0))){m.textContent="Numbers must be zero or more.";return}
+  const addr=$("addr").value.trim();
+  if(addr&&!validAddr(addr)){m.textContent="That does not look like a Solana address.";return}
+  const rpc=$("rpc").value.trim();
+  if(rpc&&!/^https:\/\//.test(rpc)){m.textContent="The RPC URL must start with https://";return}
+  $("save").disabled=true;
+  const now=new Date().toISOString();
+  const {error}=await sb.from("settings").upsert([
+    {key:"loan",value:{net:$("net").value,capUsd:num("cap"),colPer100:num("col"),fee1:num("f1"),fee2:num("f2"),fee3:num("f3"),fee6:num("f6"),lateFeePct:num("late")},updated_at:now},
+    {key:"pool",value:{address:addr,rpcUrl:rpc,snapshot:num("snap")},updated_at:now}
+  ]);
+  $("save").disabled=false;
+  if(error){m.textContent="Could not save: "+error.message;return}
+  m.className="msg ok";m.textContent="Saved. Every user's dashboard will use these settings.";
+}
+$("check").onclick=async()=>{
+  $("chk").textContent="Checking…";
   try{
-    const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"getBalance",params:[a]})});
-    const j=await r.json();if(j.error)throw new Error(j.error.message);
-    window._bal=j.result.value/1e9;m.className="msg";m.textContent="Balance on "+net+": "+fmt(j.result.value/1e9,4)+" SOL (saved with your settings)"+(j.result.value===0?". It is empty on this network, so check the Network setting above.":"");
-  }catch(e){m.textContent="Could not read the balance ("+(e.message||"network error")+"). For mainnet, add a Helius or QuickNode RPC URL below."}
-  finally{$("chk").disabled=false}
+    const {data,error}=await sb.functions.invoke("offer");
+    if(error)throw error;
+    $("chk").textContent=`Pool balance users are offered: ${Number(data.base).toLocaleString(undefined,{maximumFractionDigits:6})} SOL (${data.why}). Save your settings first if you just changed them.`;
+  }catch(e){$("chk").textContent="The offer function did not answer. Check that it is deployed and named offer."}
 };
-function renderOrders(){
-  readOrders();
-  $("orders").innerHTML=orders.length?orders.map((o,i)=>`<div class="ord">
-    <div class="ordTop"><span>${esc(o.id)}</span><span class="st ${o.status>=1?"done":""}">${STAGES[Math.min(o.status,1)]}</span></div>
-    <div class="meta">${new Date(o.ts).toLocaleString()} · ${esc(o.net)}<br>${fmt(o.sol,4)} SOL → cash out GHS ${fmt(o.ghs)} · Collateral GHS ${fmt(o.col)}<br>Repay GHS ${fmt(o.tot)} · ${o.m} month${o.m>1?"s":""} of GHS ${fmt(o.mo)}<br>${esc(o.idType)} ${esc(o.name)} · Collateral from ${esc(o.method)} ${esc(o.mm)}<br>Send cash to ${esc(o.pm)} · ${esc(o.pname)} · ${esc(o.pnum)}</div>
-    ${o.status<1?`<button class="btn ghost" data-i="${i}" style="min-height:40px">Mark cash sent</button>`:""}
-  </div>`).join(""):'<div class="empty">No orders yet.</div>';
-  document.querySelectorAll("#orders [data-i]").forEach(b=>b.onclick=()=>{
-    readOrders();orders[b.dataset.i].status++;
-    try{localStorage.setItem("nova_orders",JSON.stringify(orders))}catch(e){}
-    renderOrders();
+
+// ---------- Loans ----------
+async function loadLoans(){
+  const L=$("loanList");
+  const {data:rows,error}=await sb.from("loans").select("*").order("created_at",{ascending:false}).limit(100);
+  if(error){L.innerHTML='<div class="empty">Could not load loans.</div>';return}
+  if(!rows.length){L.innerHTML='<div class="empty">No loans yet. Draws will appear here once they are saved on the server (the next stage).</div>';return}
+  const {data:ps}=await sb.from("profiles").select("id,email");
+  const em=Object.fromEntries((ps||[]).map(p=>[p.id,p.email]));
+  L.innerHTML=rows.map(r=>`<div class="card"><div class="head"><span>${esc(em[r.user_id]||r.user_id)}</span><span class="pill ${r.status==="paid"?"ok":"wait"}">${esc(r.status)}</span></div>
+    <div class="kv">${new Date(r.created_at).toLocaleString()}<br>Draw: <b>${Number(r.sol).toFixed(4)} SOL</b> · GHS <b>${Number(r.ghs).toFixed(2)}</b> · ${esc(r.months)} month(s)<br>Collateral: GHS <b>${Number(r.collateral_ghs).toFixed(2)}</b> ${r.collateral_paid?"(paid)":"(unpaid)"}<br>Pay out to: <b>${esc(r.payout_network)}</b> · ${esc(r.payout_name)} · ${esc(r.payout_number)}</div>
+    ${r.status!=="paid"?`<div class="row" style="margin-top:12px"><button class="btn sm" data-id="${esc(r.id)}">Mark paid out</button></div>`:""}</div>`).join("");
+  L.querySelectorAll("button[data-id]").forEach(b=>b.onclick=async()=>{
+    const {error}=await sb.from("loans").update({status:"paid"}).eq("id",b.dataset.id);
+    if(error){alert("Could not save. "+error.message);return}
+    loadLoans();
   });
 }
+boot();
 </script>
 </body>
 </html>

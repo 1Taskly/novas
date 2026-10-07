@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <title>Nova Loan</title>
-<script>try{if(!localStorage.getItem("nova_user"))location.replace("landing.html")}catch(e){}</script>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23c9bcff'/%3E%3Cstop offset='.55' stop-color='%23a995f5'/%3E%3Cstop offset='1' stop-color='%2335e875'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='%23000'/%3E%3Cpath d='M50 14C53 38 62 47 86 50C62 53 53 62 50 86C47 62 38 53 14 50C38 47 47 38 50 14Z' fill='url(%23g)'/%3E%3C/svg%3E">
+<script>try{if(!Object.keys(localStorage).some(function(k){return /^sb-.*-auth-token$/.test(k)}))location.replace("landing.html")}catch(e){}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
 :root{--bg:#000;--s1:#151515;--s2:#202020;--text:#f5f5f5;--muted:#9a9a9f;--line:#282828;--accent:#a995f5;--green:#35e875;--red:#ff5b5b;--amber:#f5b942}
 *{box-sizing:border-box}
@@ -88,6 +90,8 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <section class="hero"><div class="label">Loan available to you</div><div id="total" class="balance">$0.00</div>
     </section>
 
+  <section id="kycCard" class="card" style="display:none"><div class="title" id="kycTitle"></div><div class="small" id="kycTxt" style="margin:0 0 12px"></div><a id="kycBtn" class="btn" href="kyc.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Start verification</a></section>
+
   <details class="card how"><summary>How your loan works</summary>
     <ul class="steps">
       <li><div><b>Draw crypto</b><span>Draw crypto and we convert it to Ghana cedis.</span></div></li>
@@ -121,20 +125,8 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
       <div class="est" id="est"></div>
       <div class="small" id="rateInfo"></div>
     </div>
-    <div class="step">
-      <div class="stepHead"><span>2. Verify your ID</span><span id="idPill" class="pill">Not verified</span></div>
-      <div style="display:grid;gap:9px">
-        <select id="idType" aria-label="ID type"><option>Ghana Card</option><option>Driver's license</option><option>Passport</option><option>Voter ID</option></select>
-        <input id="idNum" placeholder="ID number" aria-label="ID number" autocomplete="off">
-        <div class="small" style="margin:0">Front of your ID</div><input id="idFront" type="file" accept="image/*" aria-label="Front of ID">
-        <div class="small" style="margin:0">Back of your ID</div><input id="idBack" type="file" accept="image/*" aria-label="Back of ID">
-        <div class="small" style="margin:0">Your photo (selfie)</div><input id="selfie" type="file" accept="image/*" capture="user" aria-label="Selfie">
-        <button id="idBtn" class="btn" disabled>Submit ID</button>
-      </div>
-      <div class="small">Use a clear photo of both sides. We check your ID before any money is sent.</div>
-    </div>
     <div id="colStep" class="step lockable locked" aria-disabled="true">
-      <div class="stepHead"><span>3. Pay collateral</span><span id="colPill" class="pill">Locked until ID is verified</span></div>
+      <div class="stepHead"><span>2. Pay collateral</span><span id="colPill" class="pill">Locked until ID is verified</span></div>
       <div id="colTxt" class="small" style="margin:0 0 10px"></div>
       <div style="display:grid;gap:9px">
         <select id="method" aria-label="Mobile money network"><option value="">Choose your mobile money network</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option></select>
@@ -146,11 +138,12 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
       </div>
     </div>
     <div id="recvStep" class="step lockable locked" aria-disabled="true">
-      <div class="stepHead"><span>4. Where to send your cash</span><span id="recvPill" class="pill">Locked until collateral is paid</span></div>
+      <div class="stepHead"><span>3. Where to send your cash</span><span id="recvPill" class="pill">Locked until collateral is paid</span></div>
       <div style="display:grid;gap:9px">
         <select id="pMethod" aria-label="Payout network"><option value="">Choose mobile money network</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option></select>
         <input id="pName" placeholder="Account name" aria-label="Account name">
         <input id="pNum" placeholder="Mobile money number" inputmode="numeric" aria-label="Payout number">
+        <div id="lateNote" style="padding:12px;border-radius:12px;background:#2a2112;border:1px solid #4a3a1a;color:#e7c98a;font-size:13px;line-height:1.5"></div>
         <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--muted);margin:0"><input id="agree" type="checkbox" style="width:auto;margin-top:3px"><span id="agreeTxt"></span></label>
         <button id="confirm" class="btn" disabled>Confirm draw</button>
       </div>
@@ -165,7 +158,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 </dialog>
 
 <script>
-const CFG={colPer100:10,fee1:20,fee2:20,fee3:20,fee6:20,capUsd:2000,balSnap:0,paystackKey:"pk_live_1530c74b9368aa99844bc2dd4c5d0ee1fd867c68",offerSol:5,poolAddr:"",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:""};
+const CFG={colPer100:10,fee1:20,fee2:20,fee3:20,fee6:20,capUsd:2000,lateFeePct:5,balSnap:0,paystackKey:"pk_live_1530c74b9368aa99844bc2dd4c5d0ee1fd867c68",offerSol:5,poolAddr:"",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:""};
 const PUBLIC_CFG={}; // Paste the settings box from admin.html here so every visitor gets them
 Object.assign(CFG,PUBLIC_CFG);
 const RPCS={devnet:"https://api.devnet.solana.com",mainnet:"https://api.mainnet-beta.solana.com"};
@@ -241,7 +234,7 @@ function renderAssets(){
   const total=S.sol*S.px.sol;
   $("total").textContent=usd(total);
   $("assets").innerHTML=rows.length?rows.map(a=>{return `<div class="asset"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:9})} ${esc(a.sym)}</div></div></div><div class="r"><div class="nm">${usd(a.val)}</div><div class="sub up">${ghs(a.val*S.px.fx)}</div></div></div>`}).join(""):'<div class="empty">No loan offer available yet.</div>';
-  $("sellBtn").disabled=!(S.sol>0);
+  $("sellBtn").disabled=!(S.sol>0&&S.idOk);$("sellBtn").textContent=S.idOk?"Draw amount":"Verify identity to draw";
 }
 
 // ---- Draw window ----
@@ -258,33 +251,35 @@ function calc(){
   const m=Number($("months").value)||1,u=sol*S.px.sol,totU=u+u/100*fee100(m);
   return{sol,usd:u,val,m,col:u/100*CFG.colPer100*S.px.fx,totU,tot:totU*S.px.fx,mo:totU/m*S.px.fx};
 }
+const fdate=d=>d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+function schedule(tot,m,t0){const out=[];let paid=0;const each=Math.round(tot/m*100)/100;for(let i=1;i<=m;i++){const amt=i<m?each:Math.round((tot-paid)*100)/100;paid+=amt;out.push({i,amt,d:new Date(t0+i*30*864e5)})}return out}
+function schedHtml(tot,m,t0){const s=schedule(tot,m,t0);if(m===1)return `You pay <b>${ghs(tot)}</b> by <b>${fdate(s[0].d)}</b>`;return `<ul style="margin:6px 0 0 18px;padding:0">${s.map(p=>`<li>${fdate(p.d)}: <b>${ghs(p.amt)}</b></li>`).join("")}</ul>`}
 const amtOk=()=>{const c=calc();return c.sol>0&&c.sol<=S.sol+1e-9};
 function renderEst(){
   fillMonths();const c=calc();
+  {const ok=c.sol>0&&c.sol<=S.sol+1e-9,pct=CFG.lateFeePct;
+   $("lateNote").innerHTML="<b>Overdue payments.</b> If you do not pay on the agreed date, a late fee of "+pct+"% of the missed payment"+(ok?" ("+ghs(c.mo*pct/100)+" on your "+(c.m===1?"payment":"monthly payment of "+ghs(c.mo))+")":"")+" will be charged to you.";}
   $("avail").textContent=fmt(S.sol,4)+" SOL";
   $("rateInfo").textContent=`1 SOL = ${usd(S.px.sol)} · $1 = ${ghs(S.px.fx)}`+(S.px.live?"":" · estimated rates");
   $("colTxt").textContent=c.sol>0?`Pay ${ghs(c.col)} by mobile money. You get it back when you finish repaying.`:"Enter an amount first.";
-  if(!c.sol){$("est").textContent="Enter an amount to see what you get and what you pay each month.";$("agreeTxt").textContent="I understand my crypto is converted to Ghana cedis and sent to my mobile money, and I will repay the full amount shown in monthly payments."}
+  if(!c.sol){$("est").textContent="Enter an amount to see what you get and what you pay each month.";$("agreeTxt").textContent="I understand my crypto is converted to Ghana cedis and sent to my mobile money, and I will repay the full amount shown in monthly payments, and I accept the late fee if I miss a payment."}
   else if(c.sol>S.sol+1e-9){$("est").innerHTML='<span style="color:var(--red)">That is more than your available loan.</span>'}
   else{
-    $("est").innerHTML=`You get <b>${ghs(c.val)}</b> in mobile money (${fmt(c.sol,4)} SOL converted)<br>You repay <b>${usd(c.totU)}</b> in total (${ghs(c.tot)})<br>${c.m===1?"Pay once":"Pay each month for "+c.m+" months"}: <b>${ghs(c.mo)}</b><br>Collateral: ${ghs(c.col)}, returned when you finish repaying`;
-    $("agreeTxt").textContent=`I understand my crypto is converted to Ghana cedis and sent to my mobile money, and I will repay ${usd(c.totU)} (${ghs(c.tot)}) over ${c.m} month${c.m>1?"s":""}.`;
+    $("est").innerHTML=`You get <b>${ghs(c.val)}</b> in mobile money (${fmt(c.sol,4)} SOL converted)<br>You repay <b>${ghs(c.tot)}</b> in total<br>${c.m===1?"":"Your payments:"}${schedHtml(c.tot,c.m,Date.now())}<div style="margin-top:8px">Collateral: ${ghs(c.col)}, returned when you finish repaying</div>`;
+    $("agreeTxt").textContent=`I understand my crypto is converted to Ghana cedis and sent to my mobile money, and I will repay ${ghs(c.tot)} ${c.m===1?"in 30 days":"over "+c.m+" months"}. I accept the late fee if I miss a payment.`;
   }
   validate();
 }
 function setLock(){
   const lk=(id,on)=>{$(id).classList.toggle("locked",on);$(id).setAttribute("aria-disabled",String(on))};
   lk("colStep",!S.idOk);lk("recvStep",!S.colPaid);
-  $("idPill").textContent=S.idOk?"Verified":"Not verified";$("idPill").classList.toggle("ok",S.idOk);
   $("colPill").textContent=S.colPaid?"Paid":S.idOk?"Unpaid":"Locked until ID is verified";$("colPill").classList.toggle("ok",S.colPaid);
   $("recvPill").textContent=S.colPaid?"Unlocked":"Locked until collateral is paid";$("recvPill").classList.toggle("ok",S.colPaid);
-  $("idBtn").textContent=S.idOk?"ID submitted":"Submit ID";
   $("payCol").textContent=S.colPaid?"Collateral paid":"Pay collateral";
   ["amt","unit","max","months","method","accNum"].forEach(i=>$(i).disabled=S.colPaid);
 }
 const ghNum=s=>{const d=String(s).replace(/\D/g,"");return d.length===10&&d[0]==="0"?d:d.length===12&&d.startsWith("233")?"0"+d.slice(3):""};
 function validate(){
-  $("idBtn").disabled=S.idOk||!($("idNum").value.trim().length>=6&&$("idFront").files.length&&$("idBack").files.length&&$("selfie").files.length);
   $("payCol").disabled=S.colPaid||!(S.idOk&&amtOk()&&$("method").value&&ghNum($("accNum").value));
   $("confirm").disabled=!(S.colPaid&&amtOk()&&$("pMethod").value&&$("pName").value.trim().length>1&&$("pNum").value.trim().length>=9&&$("agree").checked);
 }
@@ -293,8 +288,7 @@ $("sellBtn").onclick=()=>{resetFlow();$("sellFlow").style.display="";$("doneView
 $("close").onclick=$("doneClose").onclick=()=>dlg.close();
 $("amt").oninput=renderEst;$("months").onchange=renderEst;$("unit").onchange=()=>{$("amt").value="";renderEst()};
 $("max").onclick=()=>{const k=S.px.sol*S.px.fx;$("amt").value=S.sol>0?($("unit").value==="SOL"?S.sol:Math.floor(S.sol*k*100)/100):"";renderEst()};
-["idType","idNum","idFront","idBack","selfie","method","accNum","pMethod","pName","pNum","agree"].forEach(i=>{$(i).addEventListener("input",validate);$(i).addEventListener("change",validate)});
-$("idBtn").onclick=()=>{S.idOk=true;setLock();validate()};
+["method","accNum","pMethod","pName","pNum","agree"].forEach(i=>{$(i).addEventListener("input",validate);$(i).addEventListener("change",validate)});
 const SB_URL="https://djkcnhlstjvozrtfcqse.supabase.co",SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqa2NuaGxzdGp2b3pydGZjcXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMDc5MDYsImV4cCI6MjEwNjg4MzkwNn0.lS_p3mV4tdFOmcOVZBTIXN52HPDOgDAHhLluxUTdX_s";
 const PROV_CODE={"MTN Mobile Money":"mtn","Telecel Cash":"vod","AirtelTigo Money":"atl"};
 let payRef="",payTimer=null;
@@ -348,30 +342,42 @@ function payViaPopup(){
     callback:r=>done(r.reference),onClose:()=>{}}).openIframe();
 }
 $("confirm").onclick=()=>{
-  const c=calc(),o={id:"NL"+Date.now().toString(36).toUpperCase(),ts:Date.now(),net:CFG.net,sol:c.sol,usd:c.usd,ghs:c.val,col:c.col,tot:c.tot,mo:c.mo,m:c.m,idType:$("idType").value,name:$("idNum").value.trim(),method:"Paystack · "+$("method").value,mm:ghNum($("accNum").value)+" ("+(S.ref||"")+")",pm:$("pMethod").value,pname:$("pName").value.trim(),pnum:$("pNum").value.trim(),status:0};
+  const c=calc(),o={id:"NL"+Date.now().toString(36).toUpperCase(),ts:Date.now(),net:CFG.net,sol:c.sol,usd:c.usd,ghs:c.val,col:c.col,tot:c.tot,mo:c.mo,m:c.m,idType:(S.kyc&&S.kyc.id_type)||"",name:S.kyc?(S.kyc.first_name+" "+S.kyc.last_name):"",method:"Paystack · "+$("method").value,mm:ghNum($("accNum").value)+" ("+(S.ref||"")+")",pm:$("pMethod").value,pname:$("pName").value.trim(),pnum:$("pNum").value.trim(),status:0};
   orders.unshift(o);saveOrders();refreshAvail();renderOrders();
   $("doneAmt").textContent=ghs(o.ghs);
-  $("doneInfo").innerHTML=`Draw ${esc(o.id)}<br>Sending to ${esc(o.pm)} · ${esc(o.pnum)}<br>Status: ${STAGES[0]}<br>Repay ${ghs(o.tot)} in ${o.m} month${o.m>1?"s":""}`;
+  $("doneInfo").innerHTML=`Draw ${esc(o.id)}<br>Sending to ${esc(o.pm)} · ${esc(o.pnum)}<br>Status: ${STAGES[0]}<br>Repay ${ghs(o.tot)} in total<br>${o.m===1?"":"Your payments:"}${schedHtml(o.tot,o.m,o.ts)}`;
   $("sellFlow").style.display="none";$("doneView").style.display="";
 };
 
 // ---- Orders ----
 function renderOrders(){
   $("ordSec").style.display=orders.length?"":"none";
-  $("ordList").innerHTML=orders.map(o=>`<div class="ord"><div class="ordTop"><span>${esc(o.id)}</span><span class="st ${o.status>=1?"done":""}">${STAGES[Math.min(o.status,1)]}</span></div><div class="meta">${new Date(o.ts).toLocaleString()}<br>${fmt(o.sol,4)} SOL → <b style="color:#fff">${ghs(o.ghs)}</b><br>Repay ${ghs(o.tot)} · ${o.m} month${o.m>1?"s":""}<br>To ${esc(o.pm)} · ${esc(o.pnum)}</div></div>`).join("");
+  $("ordList").innerHTML=orders.map(o=>`<div class="ord"><div class="ordTop"><span>${esc(o.id)}</span><span class="st ${o.status>=1?"done":""}">${STAGES[Math.min(o.status,1)]}</span></div><div class="meta">${new Date(o.ts).toLocaleString()}<br>${fmt(o.sol,4)} SOL → <b style="color:#fff">${ghs(o.ghs)}</b><br>Repay ${ghs(o.tot)} in total<br>${schedHtml(o.tot,o.m,o.ts)}<br>To ${esc(o.pm)} · ${esc(o.pnum)}</div></div>`).join("");
 }
 window.addEventListener("storage",e=>{if(e.key==="nova_orders"){try{orders=JSON.parse(e.newValue||"[]")}catch(x){}renderOrders()}});
 
-let uem="";try{uem=JSON.parse(localStorage.getItem("nova_user")||"{}").email||""}catch(e){}
-$("uEmail").textContent=uem||"Signed in";$("profile").textContent=(uem[0]||"N").toUpperCase();$("avBig").textContent=(uem[0]||"N").toUpperCase();
+let uem="";
+const sb=supabase.createClient(SB_URL,SB_KEY);
+function showUser(){$("uEmail").textContent=uem||"Signed in";$("profile").textContent=(uem[0]||"N").toUpperCase();$("avBig").textContent=(uem[0]||"N").toUpperCase()}
+showUser();
+S.kyc=null;
+async function loadKyc(uid){
+  let k=null;try{const {data}=await sb.from("kyc").select("*").eq("user_id",uid).maybeSingle();k=data}catch(e){}
+  S.kyc=k;S.idOk=!!k&&k.status==="approved";
+  const T={none:["Verify your identity to borrow","We verify every borrower before they can draw a loan. You will need your details, your ID and a selfie.","Start verification"],pending:["Verification under review","We are checking your details. You can draw a loan as soon as you are approved.",""],rejected:["Your verification needs attention",(k&&k.reject_reason)||"We could not verify your details. Please check them and submit again.","Update my details"]}[k?k.status:"none"]||null;
+  const t=T||["Verification under review","We are checking your details.",""];
+  $("kycCard").style.display=S.idOk?"none":"";
+  $("kycTitle").textContent=t[0];$("kycTxt").textContent=t[1];$("kycBtn").style.display=t[2]?"flex":"none";$("kycBtn").textContent=t[2];
+  setLock();renderAssets();
+}
+sb.auth.getSession().then(({data})=>{if(!data.session){location.replace("landing.html");return}uem=data.session.user.email||"";showUser();loadKyc(data.session.user.id)});
 const side=$("side"),scrim=$("scrim");
 function sideOpen(o){side.classList.toggle("open",o);scrim.classList.toggle("on",o);side.setAttribute("aria-hidden",String(!o));if(o)$("sideClose").focus()}
 $("profile").onclick=()=>sideOpen(true);$("sideClose").onclick=scrim.onclick=()=>sideOpen(false);
 addEventListener("keydown",e=>{if(e.key==="Escape")sideOpen(false)});
 $("logout").onclick=()=>{
   if(confirm("Log out of Nova Loan?")){
-    try{localStorage.removeItem("nova_user")}catch(e){}
-    location.href="landing.html";
+    sb.auth.signOut().finally(()=>{location.href="landing.html"});
   }
 };
 renderTerms();renderOrders();loadOffer();loadRates();startRates();setInterval(loadOffer,60000);
