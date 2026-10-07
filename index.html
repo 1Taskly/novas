@@ -12,14 +12,22 @@
 :root{--bg:#000;--s1:#151515;--s2:#202020;--text:#f5f5f5;--muted:#9a9a9f;--line:#282828;--accent:#a995f5;--green:#35e875;--red:#ff5b5b;--amber:#f5b942}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
-body{min-height:100vh}
+body{height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none}
 button,input,select{font:inherit;color:inherit}button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.app{width:min(100%,760px);margin:auto;padding:18px 16px 80px}
-.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.app{height:100vh;height:100dvh;display:flex;flex-direction:column}
+.pg{flex:1;min-height:0;width:min(100%,760px);margin:0 auto;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 10px;scrollbar-width:none}
+.pg::-webkit-scrollbar{display:none}
+.pg>*{flex:none}
+#sellBtn{margin-top:auto}
+.foot{flex:none;text-align:center;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--bg);font-size:12px;line-height:1.55;color:#7d7d83}
+.foot .fa{display:flex;align-items:center;justify-content:center;gap:6px;color:#b5b5ba;font-weight:600}
+.foot .fa svg{flex:none;color:var(--accent)}
+.foot .fb{margin-top:1px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .brand{font-size:23px;font-weight:750;letter-spacing:-.5px}
 .logout{background:var(--s2);border:1px solid #303030;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:700}
-.hero{padding:6px 2px 22px}
+.hero{padding:2px 2px 14px}
 .label{color:#a1a1a6;font-size:14px;margin-bottom:8px}
 .balance{font-size:52px;line-height:1.02;font-weight:750;letter-spacing:-2px}
 .chg{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:20px;font-weight:700;min-height:30px}.chg.up{color:var(--green)}.chg.down{color:var(--red)}.chip{font-size:17px;font-weight:750;padding:3px 10px;border-radius:9px;color:#06210f;background:var(--green)}.chg.down .chip{background:var(--red);color:#2a0808}
@@ -58,13 +66,13 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 .st{font-size:12px;font-weight:700;color:var(--amber)}.st.done{color:var(--green)}
 .meta{font-size:13px;color:#8d8d92;margin-top:5px;line-height:1.5}
 .done{text-align:center;padding:10px 0}.done .big{font-size:30px;font-weight:750;margin:10px 0}
-@media(max-width:560px){.app{padding:14px 12px 80px}.balance{font-size:46px}.row{flex-direction:column}}
+@media(max-width:560px){.pg{padding-left:12px;padding-right:12px}.balance{font-size:46px}.row{flex-direction:column}}
 .h2{margin-top:6px}
 @media(min-width:900px){
- .app{width:min(100%,1080px);padding:28px 24px 80px;display:grid;grid-template-columns:minmax(0,1fr) 390px;column-gap:28px;align-items:start;
+ .pg{width:min(100%,1080px);padding:28px 24px 12px;display:grid;grid-template-columns:minmax(0,1fr) 390px;column-gap:28px;align-items:start;
   grid-template-areas:"top top" "hero how" "ah how" "assets how" "kyc ord" "sell ord"}
- .top{grid-area:top}.hero{grid-area:hero}.how{grid-area:how}.app>.h2{grid-area:ah}
- #assets{grid-area:assets}#kycCard{grid-area:kyc}#sellBtn{grid-area:sell}#ordSec{grid-area:ord}#helpSec,#foot{grid-column:1/-1}
+ .top{grid-area:top}.hero{grid-area:hero}.how{grid-area:how}.pg>.h2{grid-area:ah}
+ #assets{grid-area:assets}#kycCard{grid-area:kyc}#sellBtn{grid-area:sell}#ordSec{grid-area:ord}#helpSec{grid-column:1/-1}#sellBtn{margin-top:0}
  #dbg{grid-column:1/-1}
  .balance{font-size:68px}
  dialog{width:min(94vw,640px)}
@@ -89,15 +97,20 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 .how .steps li::before{content:counter(s);flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#17131f;font-weight:750;font-size:14px;display:grid;place-items:center}
 .how .steps b{display:block;font-size:16px;color:var(--accent)}
 .how .steps span{font-size:14px;color:var(--muted)}
+.chgNote{font-size:13px;font-weight:600;color:var(--muted)}
+@media(max-height:760px){.balance{font-size:42px}.chg{margin-top:8px;font-size:17px;min-height:26px}.chip{font-size:15px}.card{padding:14px;margin-bottom:12px}.h2{font-size:21px;margin:4px 2px 9px}.asset{padding:11px 0}.ico{width:38px;height:38px}.step{padding:13px}}
+@media(max-height:760px){#kycCard{padding:14px}#kycCard .title{font-size:16px;margin-bottom:8px}#kycTxt{font-size:13px!important;line-height:1.45;margin-bottom:10px!important}#kycBtn{min-height:44px}}
+@media(max-height:620px){.balance{font-size:36px}.label{margin-bottom:4px;font-size:13px}.top{margin-bottom:8px}.hero{padding-bottom:8px}.foot{padding-top:7px;font-size:11px}}
 </style>
 <script src="https://js.paystack.co/v1/inline.js"></script>
 </head>
 <body>
 <main class="app">
+<div class="pg" id="pg">
   <header class="top"><div class="brand">Nova Loan</div><button id="profile" class="avatar" aria-label="Open profile"></button></header>
   <div id="dbg" class="small" style="display:none;background:#151515;border:1px solid #282828;border-radius:14px;padding:12px;margin-bottom:14px;line-height:1.6"></div>
 
-  <section class="hero"><div class="label">Loan available to you</div><div id="total" class="balance">$0.00</div>
+  <section class="hero"><div class="label">Loan available to you</div><div id="total" class="balance">$0.00</div><div id="chg" class="chg" aria-live="polite"></div>
     </section>
 
   <details class="card how"><summary>How your loan works</summary>
@@ -113,8 +126,9 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <button id="sellBtn" class="btn" style="width:100%" disabled>Draw amount</button>
 
   <section id="helpSec" style="display:none"><div class="h2">Need help?</div><div class="card"><div class="small" style="margin:0 0 12px;font-size:14px;color:#b5b5ba">Email us any time. We reply as soon as we can.</div><div id="helpBtns" class="row" style="flex-wrap:wrap"></div><div id="helpInfo" class="small" style="line-height:1.7"></div></div></section>
-  <footer id="foot" class="small" style="text-align:center;margin-top:20px"></footer>
   <section id="ordSec" style="display:none"><div class="h2">Orders</div><div id="ordList" class="card"></div></section>
+</div>
+<footer id="foot" class="foot"></footer>
 </main>
 
 <div id="scrim" class="scrim"></div>
@@ -200,9 +214,9 @@ const SHOW={USDC:"USDT"},dn=c=>SHOW[c]||c;
 const LOGO={SOL:`<img src="${SOL_LOGO}" alt="Solana">`,
  USDC:`<img alt="USDT" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2326A17B'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3ET%3C/text%3E%3C/svg%3E">`,
  USDT:`<img alt="USDT" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2326A17B'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3ET%3C/text%3E%3C/svg%3E">`};
-S.px.solLive=S.px.sol;S.px.chgLive=0;S.coin="SOL";S.baseBy={};S.totalUsd=0;
-const priceOf=c=>c==="SOL"?S.px.solLive:1; // stablecoins are priced at $1
-function applyCoin(){S.px.sol=priceOf(S.coin);S.px.chg=S.coin==="SOL"?S.px.chgLive:0}
+S.px.solLive=S.px.sol;S.px.chgLive=0;S.px.usdcLive=1;S.px.chgBy={SOL:0,USDC:0};S.px.chgOk=false;S.coin="SOL";S.baseBy={};S.totalUsd=0;
+const priceOf=c=>c==="SOL"?S.px.solLive:(S.px.usdcLive||1); // stablecoin: live price (stays near $1)
+function applyCoin(){S.px.sol=priceOf(S.coin);S.px.chg=S.px.chgBy[S.coin]||0}
 const drawnUsd=()=>orders.reduce((t,o)=>t+(o.usd||0),0);
 function availOf(sym){
   const px=priceOf(sym),rem=CFG.capUsd>0?Math.max(0,CFG.capUsd-drawnUsd())/px:Infinity;
@@ -213,7 +227,11 @@ let okSol=false,okFx=false,lastFx=0,pulling=false;
 async function loadRates(){
   if(pulling)return;pulling=true;
   try{
-    try{const j=await (await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd&include_24hr_change=true")).json();if(j.solana&&j.solana.usd){S.px.solLive=j.solana.usd;S.px.chgLive=Number(j.solana.usd_24h_change)||0;okSol=true}}catch(e){}
+    try{const j=await (await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana,usd-coin&vs_currencies=usd&include_24hr_change=true")).json();
+      if(j.solana&&j.solana.usd){S.px.solLive=j.solana.usd;S.px.chgLive=Number(j.solana.usd_24h_change)||0;S.px.chgBy.SOL=S.px.chgLive;okSol=true}
+      const u=j["usd-coin"];if(u&&u.usd){const p=Number(u.usd);S.px.usdcLive=(p>0.97&&p<1.03)?p:1;S.px.chgBy.USDC=Number(u.usd_24h_change)||0}
+      S.px.chgOk=okSol||!!(u&&u.usd);
+    }catch(e){}
     if(!okFx||Date.now()-lastFx>600000){ // exchange rate barely moves, refresh every 10 min
       try{const j=await (await fetch("https://open.er-api.com/v6/latest/USD")).json();if(j.rates&&j.rates.GHS){S.px.fx=j.rates.GHS;okFx=true;lastFx=Date.now()}}catch(e){}
     }
@@ -260,12 +278,20 @@ function refreshAvail(){applyCoin();S.sol=availOf(S.coin);prepCoins();renderAsse
 function change(val){const p=S.px.chg||0;return{amt:val-val/(1+p/100),pct:p}}
 const sgn=n=>n>=0?"+":"-";
 const dec=n=>Math.abs(n)<1?5:2;
+function renderChg(total,rows){
+  const el=$("chg");let d=0;
+  rows.forEach(r=>{const p=S.px.chgBy[r.sym]||0;d+=r.val-r.val/(1+p/100)});
+  if(!(total>0)||!S.px.chgOk){el.className="chg";el.innerHTML="";return}
+  const base=total-d,pct=base>0?d/base*100:0,up=d>=0,ap=Math.abs(pct);
+  el.className="chg "+(up?"up":"down");
+  el.innerHTML=`<span>${up?"▲":"▼"} ${up?"+":"-"}${usd(Math.abs(d))}</span><span class="chip">${up?"+":"-"}${fmt(ap,ap<0.1?3:2)}%</span><span class="chgNote">24h</span>`;
+}
 function renderAssets(){
   const rows=[];
   COINS.forEach(sym=>{const q=availOf(sym);if(q>0)rows.push({name:COIN_NAME[sym],sym,qty:q,icon:LOGO[sym],val:q*priceOf(sym)})});
   const total=rows.reduce((t,r)=>t+r.val,0);S.totalUsd=total;
-  $("total").textContent=usd(total);
-  $("assets").innerHTML=rows.length?rows.map(a=>{return `<div class="asset"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:9})} ${esc(dn(a.sym))}</div></div></div><div class="r"><div class="nm">${usd(a.val)}</div><div class="sub up">${ghs(a.val*S.px.fx)}</div></div></div>`}).join(""):'<div class="empty">No loan offer available yet.</div>';
+  $("total").textContent=usd(total);renderChg(total,rows);
+  $("assets").innerHTML=rows.length?rows.map(a=>{return `<div class="asset"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:a.sym==="SOL"?9:2})} ${esc(dn(a.sym))}</div></div></div><div class="r"><div class="nm">${usd(a.val)}</div><div class="sub up">${ghs(a.val*S.px.fx)}</div></div></div>`}).join(""):'<div class="empty">No loan offer available yet.</div>';
   try{renderKyc()}catch(e){}$("sellBtn").disabled=!(S.totalUsd>0&&S.idOk);$("sellBtn").textContent=S.idOk?"Draw amount":"Verify identity to draw";
 }
 
@@ -404,9 +430,9 @@ function renderBiz(){
   if(b.email)x.push(`<a ${btn} href="mailto:${esc(b.email)}?subject=Nova%20Loan%20support">Email us</a>`);
   if(b.maps)x.push(`<a ${btn} href="${esc(b.maps)}" target="_blank" rel="noopener">Find us on Google Maps</a>`);
   $("helpBtns").innerHTML=x.join("");
-  $("helpInfo").innerHTML=[b.hours?"Support hours: "+esc(b.hours):"",b.address?"Office: "+esc(b.address):""].filter(Boolean).join("<br>");
+  $("helpInfo").innerHTML=[b.hours?"Support hours: "+esc(b.hours):"",""].filter(Boolean).join("<br>");
   $("helpSec").style.display=x.length?"":"none";
-  $("foot").textContent="© "+new Date().getFullYear()+" "+b.name+(b.address?" · Office: "+b.address:"");
+  $("foot").innerHTML=(b.address?`<div class="fa"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Office: ${esc(b.address)}</span></div>`:"")+`<div class="fb">© ${new Date().getFullYear()} ${esc(b.name)}</div>`;
 }
 renderBiz();
 S.kyc=null;S.kycState="loading";
