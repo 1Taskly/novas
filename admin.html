@@ -235,8 +235,8 @@ $("check").onclick=async()=>{
   try{
     const {data,error}=await sb.functions.invoke("offer");
     if(error)throw error;
-    const list=(data.coins||[]).map(c=>c.sym+": "+Number(c.base).toLocaleString(undefined,{maximumFractionDigits:6})+" ("+c.why+")");
-    $("chk").textContent=list.length?"Pool balances users are offered: "+list.join(" · ")+". Save your settings first if you just changed them.":"Nothing is offered yet ("+(data.why||"no coins ticked")+").";
+    const list=(data.coins||[]).map(c=>c.sym+": "+Number(c.base).toLocaleString(undefined,{maximumFractionDigits:6})+" ("+c.why+(c.err?": "+c.err:"")+(c.note?": "+c.note:"")+")");
+    $("chk").textContent=(list.length?"Pool balances users are offered: "+list.join(" · ")+". Save your settings first if you just changed them.":"Nothing is offered yet ("+(data.why||"no coins ticked")+").")+" [network: "+(data.net||"?")+(data.solRpc?", Solana RPC: "+data.solRpc:"")+"]";
   }catch(e){$("chk").textContent="The offer function did not answer. Check that it is deployed and named offer."}
 };
 

@@ -121,12 +121,9 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 .liveTag{display:inline-flex;align-items:center;font-size:12px;font-weight:700;color:var(--muted);margin-left:8px;vertical-align:middle;letter-spacing:0}
 .liveDot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:6px}.liveDot.off{background:var(--amber)}
 .mrow .sp{position:relative}.beat{position:absolute;right:0;width:7px;height:7px;margin:-3.5px -3.5px 0 0;border-radius:50%}
-.nm.fu,.nm.fd{border-radius:6px}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(53,232,117,.6)}100%{box-shadow:0 0 0 8px rgba(53,232,117,0)}}
 @keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.7);opacity:.55}}
-@keyframes fu{from{background:rgba(53,232,117,.38)}to{background:transparent}}
-@keyframes fd{from{background:rgba(255,91,91,.38)}to{background:transparent}}
-@media(prefers-reduced-motion:no-preference){.liveDot:not(.off){animation:pulse 1.6s infinite}.beat{animation:beat 1.4s ease-in-out infinite}.fu{animation:fu .9s ease-out}.fd{animation:fd .9s ease-out}}
+@media(prefers-reduced-motion:no-preference){.liveDot:not(.off){animation:pulse 1.6s infinite}.beat{animation:beat 1.4s ease-in-out infinite}}
 .addr{word-break:break-all;font-size:13px;color:var(--muted);margin:6px 0 10px;line-height:1.5}
 @media(max-height:760px){.balance{font-size:42px}.chg{margin-top:8px;font-size:17px;min-height:26px}.chip{font-size:15px}.card{padding:14px;margin-bottom:12px}.h2{font-size:21px;margin:4px 2px 9px}.asset{padding:11px 0}.ico{width:38px;height:38px}.step{padding:13px}}
 @media(max-height:760px){#kycCard{padding:14px}#kycCard .title{font-size:16px;margin-bottom:8px}#kycTxt{font-size:13px!important;line-height:1.45;margin-bottom:10px!important}#kycBtn{min-height:44px}}
@@ -294,6 +291,7 @@ const MK=[["bitcoin","BTC","Bitcoin","#f7931a","major"],["ethereum","ETH","Ether
 const ADDR={BTC:"",ETH:""};
 const BN={BTC:"btcusdt",ETH:"ethusdt",SOL:"solusdt",BNB:"bnbusdt",XRP:"xrpusdt",ADA:"adausdt",TRX:"trxusdt",LTC:"ltcusdt",LINK:"linkusdt",AVAX:"avaxusdt",DOGE:"dogeusdt",SHIB:"shibusdt",PEPE:"pepeusdt",BONK:"bonkusdt",WIF:"wifusdt",FLOKI:"flokiusdt"};
 const BNR=Object.fromEntries(Object.entries(BN).map(([k,v])=>[v,k]));
+S.ck={};S.ckT={};S.ckF={};S.chart="line";
 let ws=null,wsOk=false,wsRetry=0,rt=0;const dirty=new Set();
 const BORROW={BTC:"BTC",ETH:"ETH",SOL:"SOL",USDT:"USDC"},FEE=.005;S.mk={};S.cat="all";S.side="buy";S.step="view";
 const pcs=p=>(p>=0?"+":"-")+fmt(Math.abs(p),2)+"%";
@@ -333,7 +331,7 @@ function drawMk(){
   let h="";
   if(st==="view"){$("mkT").textContent=m[2]+" · "+sym;
     h=`<div class="balance" id="lp" style="font-size:38px">${d.p!=null?mpx(d.p):"—"}</div><div class="chg ${up?"up":"down"}">${d.p!=null?`<span class="chip">${pcs(d.chg||0)}</span><span class="chgNote">24h</span>`:""}</div>
-    <div style="margin:12px 0 2px;height:100px">${spark(d.sp,320,100,up).replace("<svg",'<svg style="width:100%;height:100%"')}</div><div class="small" style="margin:0 0 12px">Last 7 days</div>
+    <div class="seg" style="margin:12px 0 8px"><button data-ch="line" class="${S.chart!=="candle"||!BN[sym]?"on":""}">Line</button>${BN[sym]?`<button data-ch="candle" class="${S.chart==="candle"?"on":""}">Candles</button>`:""}</div><div id="chartBox" style="position:relative;height:120px"></div><div class="small" id="chartNote" style="margin:4px 0 12px"></div>
     ${held>0?`<div class="small" style="margin:0 0 10px">You hold ${qf(held)} ${sym}${d.p?" ≈ "+usd(held*d.p):""}</div>`:""}
     <div class="row" style="flex-direction:row"><button class="btn" id="bBuy" style="flex:1" ${d.p?"":"disabled"}>Buy</button><button class="btn ghost" id="bSell" style="flex:1" ${held>0&&d.p?"":"disabled"}>Sell</button></div>
     ${c?`<button class="btn ghost" id="mkBor" ${can?"":"disabled"}>Borrow cedis</button><div class="small">${!S.idOk?"Verify your identity in the Borrow tab to borrow.":!can?"No "+sym+" is available to borrow right now.":"Borrow "+sym+" and cash out to mobile money."}</div>`:""}`}
@@ -352,6 +350,9 @@ function drawMk(){
   $("mkBody").innerHTML=h;
   $("mkBody").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{S.sym=b.dataset.p;S.step="trade";S.back="pick";S.amt=buy?50:25;drawMk()});
   $("mkBody").querySelectorAll("[data-cp]").forEach(b=>b.onclick=()=>{try{navigator.clipboard.writeText(b.dataset.cp);b.textContent="Copied"}catch(e){}});
+  if(st==="view"&&$("chartBox")){drawChart();
+    $("mkBody").querySelectorAll("[data-ch]").forEach(b=>b.onclick=()=>{S.chart=b.dataset.ch;S.ckF[sym]=false;$("mkBody").querySelectorAll("[data-ch]").forEach(x=>x.classList.toggle("on",x===b));drawChart()});
+    if(S.ck[sym]&&Date.now()-S.ck[sym].t>60000)loadCandles(sym)}
   const q=id=>$(id),amt=q("tAmt"),fxN=()=>S.px.fx||CFG.fallbackUsdGhs;
   if(q("bBuy")){q("bBuy").onclick=()=>{S.side="buy";S.step="trade";S.back="view";S.amt=50;drawMk()};q("bSell").onclick=()=>{S.side="sell";S.step="trade";S.back="view";S.amt=25;drawMk()}}
   if(q("mkBor"))q("mkBor").onclick=()=>{$("mkDlg").close();setTab("borrow");openLoan(c)};
@@ -379,6 +380,26 @@ async function confirmIn(ref){const msg=$("tMsg");if(!msg)return;msg.className="
   msg.className="msg";msg.textContent="Payment received but not confirmed yet. Your balance will update shortly."}
 $("mkX").onclick=()=>$("mkDlg").close();
 $("chips").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.cat=b.dataset.c;$("chips").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));renderMk()});
+// ---- Popup chart: line or candlesticks ----
+function candles(c,w,h){
+  const mn=Math.min(...c.map(x=>x[2])),mx=Math.max(...c.map(x=>x[1])),r=(mx-mn)||1,n=c.length,st=w/n,bw=st*.62,y=v=>2+(mx-v)/r*(h-4);
+  const body=c.map((k,i)=>{const x=(i*st+st/2).toFixed(1),col=k[3]>=k[0]?"#35e875":"#ff5b5b",yo=y(k[0]),yc=y(k[3]);
+    return `<line x1="${x}" x2="${x}" y1="${y(k[1]).toFixed(1)}" y2="${y(k[2]).toFixed(1)}" stroke="${col}" stroke-width="1.2" vector-effect="non-scaling-stroke"/><rect x="${(x-bw/2).toFixed(1)}" y="${Math.min(yo,yc).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1.2,Math.abs(yo-yc)).toFixed(1)}" fill="${col}"/>`}).join("");
+  const last=c[n-1],up=last[3]>=last[0];
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:100%" aria-hidden="true">${body}</svg><i class="beat" style="right:auto;left:${((n-.5)/n*100).toFixed(1)}%;top:${(y(last[3])/h*100).toFixed(1)}%;background:${up?"#35e875":"#ff5b5b"}"></i>`}
+function drawChart(){
+  const box=$("chartBox");if(!box||!S.sym)return;const sym=S.sym,d=S.mk[sym]||{},up=(d.chg||0)>=0,note=$("chartNote");
+  if(!(S.chart==="candle"&&BN[sym])){box.innerHTML=spark(d.sp,320,120,up,true).replace("<svg",'<svg style="width:100%;height:100%"');if(note)note.textContent="Last 7 days";return}
+  const ck=S.ck[sym];
+  if(!ck){const f=S.ckF[sym];box.innerHTML='<div class="empty">'+(f?"Candles are not available right now.":"Loading candles…")+"</div>";if(note)note.textContent="";
+    if(!f&&!(S.ckT[sym]&&Date.now()-S.ckT[sym]<15000))loadCandles(sym);return}
+  box.innerHTML=candles(ck.c,320,120);if(note)note.textContent="Last 7 days · 4-hour candles"}
+async function loadCandles(sym){
+  if(!BN[sym])return;S.ckT[sym]=Date.now();S.ckF[sym]=false;
+  try{const r=await (await fetch("https://api.binance.com/api/v3/klines?symbol="+BN[sym].toUpperCase()+"&interval=4h&limit=42")).json();
+    if(!Array.isArray(r)||r.length<2)throw 0;S.ck[sym]={t:Date.now(),c:r.map(k=>[+k[1],+k[2],+k[3],+k[4]])}}
+  catch(e){if(!S.ck[sym])S.ckF[sym]=true}
+  if(S.sym===sym&&S.step==="view"&&$("mkDlg").open)drawChart()}
 // ---- Live prices: Binance public stream, polling kept as fallback ----
 function setLive(on){wsOk=on;document.querySelectorAll(".liveTag").forEach(e=>{e.innerHTML='<i class="liveDot'+(on?"":" off")+'"></i>'+(on?"Live":"Delayed")})}
 function startWs(){
@@ -386,26 +407,26 @@ function startWs(){
   try{w=ws=new WebSocket("wss://stream.binance.com:9443/stream?streams="+Object.values(BN).map(x=>x+"@miniTicker").join("/"))}catch(e){return}
   w.onopen=()=>{wsRetry=0;setLive(true)};
   w.onmessage=ev=>{try{const d=JSON.parse(ev.data).data,k=BNR[String(d.s||"").toLowerCase()],p=+d.c,o=+d.o;if(!k||!(p>0))return;
-    const e=S.mk[k]||(S.mk[k]={p,chg:0,sp:null});e.prev=e.p;e.p=p;if(o>0)e.chg=(p-o)/o*100;if(e.sp&&e.sp.length)e.sp[e.sp.length-1]=p;
+    const e=S.mk[k]||(S.mk[k]={p,chg:0,sp:null});e.prev=e.p;e.p=p;if(o>0)e.chg=(p-o)/o*100;if(e.sp&&e.sp.length)e.sp[e.sp.length-1]=p;const cc=S.ck[k];if(cc&&cc.c.length){const l=cc.c[cc.c.length-1];l[3]=p;l[1]=Math.max(l[1],p);l[2]=Math.min(l[2],p)}
     if(k==="SOL"){S.px.solLive=p;S.px.chgBy.SOL=e.chg;okSol=true}if(k==="BTC"||k==="ETH"){S.px.chgBy[k]=e.chg;S.px.chgOk=true}
     dirty.add(k)}catch(x){}};
   w.onclose=w.onerror=()=>{if(ws!==w)return;ws=null;try{w.close()}catch(e){}setLive(false);setTimeout(startWs,Math.min(30000,2000*(++wsRetry)))};
 }
-const flash=(el,up)=>{el.classList.remove("fu","fd");void el.offsetWidth;el.classList.add(up?"fu":"fd")};
 // Update text in place (never re-render) so taps on buttons are not lost
 function flush(){
   if(dirty.size){const ks=[...dirty];dirty.clear();
     ks.forEach(k=>{const e=S.mk[k],row=$("mkts").querySelector('[data-s="'+k+'"]');if(!e||!row)return;
       const pr=row.querySelector("[data-pr]"),ch=row.querySelector("[data-ch]"),sp=row.querySelector(".sp"),up=e.chg>=0;
-      if(pr){pr.textContent=mpx(e.p);if(e.prev!=null&&e.p!==e.prev)flash(pr,e.p>e.prev)}
+      if(pr)pr.textContent=mpx(e.p)
       if(ch){ch.textContent=pcs(e.chg);ch.className="sub "+(up?"up":"down")}
       if(sp)sp.innerHTML=spark(e.sp,64,28,up,true)});
-    const lp=$("lp"),e=S.sym&&S.mk[S.sym];if(lp&&e&&S.step==="view"&&$("mkDlg").open){lp.textContent=mpx(e.p);if(e.prev!=null&&e.p!==e.prev)flash(lp,e.p>e.prev)}
-    const pv=$("pv");if(pv){const n=pvOf(),o=+pv.dataset.v||0;pv.textContent=usd(n);pv.dataset.v=n;if(o&&n!==o)flash(pv,n>o)}}
+    if(S.sym&&ks.includes(S.sym)&&S.step==="view"&&$("mkDlg").open)drawChart();
+    const lp=$("lp"),e=S.sym&&S.mk[S.sym];if(lp&&e&&S.step==="view"&&$("mkDlg").open){lp.textContent=mpx(e.p)}
+    const pv=$("pv");if(pv){const n=pvOf();pv.textContent=usd(n);pv.dataset.v=n}}
   if(!dlg.open){try{applyCoin()}catch(x){}
     COINS.forEach(sym=>{const v=$("assets").querySelector('[data-av="'+sym+'"]');if(!v)return;
       const q=availOf(sym,true),val=q*priceOf(sym),old=+v.dataset.v,g=$("assets").querySelector('[data-ag="'+sym+'"]'),pe=$("assets").querySelector('[data-ap="'+sym+'"]'),qe=$("assets").querySelector('[data-aq="'+sym+'"]');
-      if(val!==old){v.textContent=usd(val);v.dataset.v=val;if(g)g.textContent=ghs(val*S.px.fx);if(old)flash(v,val>old)}
+      if(val!==old){v.textContent=usd(val);v.dataset.v=val;if(g)g.textContent=ghs(val*S.px.fx)}
       if(pe){const h=pxLine(sym);if(pe.innerHTML!==h)pe.innerHTML=h}
       if(qe&&q>0&&/^Up to/.test(qe.textContent))qe.textContent="Up to "+q.toLocaleString(undefined,{maximumFractionDigits:sym==="USDC"?2:q<1?6:4})+" "+dn(sym)})}
 }
