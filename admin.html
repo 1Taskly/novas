@@ -9,7 +9,7 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23c9bcff'/%3E%3Cstop offset='.55' stop-color='%23a995f5'/%3E%3Cstop offset='1' stop-color='%2335e875'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='%23000'/%3E%3Cpath d='M50 14C53 38 62 47 86 50C62 53 53 62 50 86C47 62 38 53 14 50C38 47 47 38 50 14Z' fill='url(%23g)'/%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
-:root{--bg:#000;--s1:#151515;--s2:#202020;--text:#f5f5f5;--muted:#9a9a9f;--line:#282828;--accent:#a995f5;--green:#35e875;--red:#ff5b5b;--amber:#f5b942}
+:root{--bg:#000;--s1:#151515;--s2:#202020;--text:#f5f5f5;--muted:#9a9a9f;--line:#282828;--accent:#2f7bff;--green:#35e875;--red:#ff5b5b;--amber:#f5b942}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
 button,input,select{font:inherit;color:inherit}button{cursor:pointer}
@@ -21,7 +21,7 @@ h1{font-size:23px;letter-spacing:-.5px;margin:0}
 .title{font-size:17px;font-weight:700;margin-bottom:12px}
 label{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px}
 input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;padding:13px;width:100%}
-.btn{border:0;border-radius:14px;background:var(--accent);color:#17131f;font-weight:750;padding:0 16px;min-height:46px}
+.btn{border:0;border-radius:14px;background:var(--accent);color:#ffffff;font-weight:750;padding:0 16px;min-height:46px}
 .btn.ghost{background:var(--s2);color:var(--text);border:1px solid #303030}
 .btn.red{background:#3a1616;color:#ff9a9a;border:1px solid #5a2323}
 .btn.sm{min-height:38px;font-size:14px}
@@ -97,7 +97,12 @@ input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;pa
         <div><label for="f2">Fee for 2 months (%)</label><input id="f2" type="number" min="0" step="any" inputmode="decimal"></div>
         <div><label for="f3">Fee for 3 months (%)</label><input id="f3" type="number" min="0" step="any" inputmode="decimal"></div>
         <div><label for="f6">Fee for 4 to 6 months (%)</label><input id="f6" type="number" min="0" step="any" inputmode="decimal"></div>
-        <div><label for="late">Late fee (% of a missed payment)</label><input id="late" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div><label for="late">Late fee (USD, flat)</label><input id="late" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div><label for="lateD">Extra interest per day overdue (%)</label><input id="lateD" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div><label for="cBTC">Loan cap: Bitcoin (USD)</label><input id="cBTC" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div><label for="cETH">Loan cap: Ethereum (USD)</label><input id="cETH" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div><label for="cSOL">Loan cap: Solana (USD)</label><input id="cSOL" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div><label for="cUSDC">Loan cap: Tether (USDT) (USD)</label><input id="cUSDC" type="number" min="0" step="any" inputmode="decimal"></div>
       </div>
       <button id="save" class="btn" style="width:100%;margin-top:16px">Save settings</button>
       <div id="smsg" class="msg"></div>
@@ -180,11 +185,11 @@ async function decide(uid,a){
 }
 
 // ---------- Settings ----------
-const SYMS=["SOL","USDC"],LABEL={USDC:"USDC (users see it as USDT)"},lb=s=>LABEL[s]||s;
+const SYMS=["SOL","USDC","ETH","BTC"],LABEL={USDC:"USDC (users see it as USDT)",ETH:"Ethereum (Sepolia test network)",BTC:"Bitcoin (testnet)"},lb=s=>LABEL[s]||s;
 const KNOWN={devnet:{USDC:"4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",USDT:""},mainnet:{USDC:"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",USDT:"Es9vMFrzaCERmJfrF4H2FYD4KCoNyH2Wj5Mi7APWNL5"}};
 $("coinBox").innerHTML=SYMS.map(s=>`<div class="coin"><div class="head"><span>${lb(s)}</span><label class="inl"><input type="checkbox" id="on-${s}"> Offer ${s}</label></div>
-  <label for="a-${s}">Pool wallet address for ${s}</label><input id="a-${s}" placeholder="Solana address that holds the ${s}" spellcheck="false" autocomplete="off">
-  ${s==="SOL"?"":`<label for="m-${s}">${s} token address</label><div class="row"><input id="m-${s}" style="flex:1;min-width:0" placeholder="The ${s} token address" spellcheck="false" autocomplete="off"><button type="button" class="btn ghost sm" data-fill="${s}">Use standard</button></div>`}
+  <label for="a-${s}">Pool wallet address for ${s}</label><input id="a-${s}" placeholder="${s==='ETH'?'Sepolia address starting with 0x':s==='BTC'?'Bitcoin testnet address (tb1…)':'Solana address that holds the '+s}" spellcheck="false" autocomplete="off">
+  ${s!=="USDC"?"":`<label for="m-${s}">${s} token address</label><div class="row"><input id="m-${s}" style="flex:1;min-width:0" placeholder="The ${s} token address" spellcheck="false" autocomplete="off"><button type="button" class="btn ghost sm" data-fill="${s}">Use standard</button></div>`}
   <label for="s-${s}">Fallback balance in ${s} (used only if the wallet cannot be read)</label><input id="s-${s}" type="number" min="0" step="any" inputmode="decimal"></div>`).join("");
 document.querySelectorAll("[data-fill]").forEach(b=>b.onclick=()=>{
   const s=b.dataset.fill,v=(KNOWN[$("net").value]||{})[s];
@@ -196,11 +201,11 @@ async function loadSettings(){
   const g=k=>((data||[]).find(r=>r.key===k)||{}).value||{};
   const l=g("loan"),p=g("pool");
   $("net").value=l.net||"devnet";$("cap").value=l.capUsd??2000;$("col").value=l.colPer100??10;
-  $("f1").value=l.fee1??20;$("f2").value=l.fee2??20;$("f3").value=l.fee3??20;$("f6").value=l.fee6??20;$("late").value=l.lateFeePct??5;
+  $("f1").value=l.fee1??20;$("f2").value=l.fee2??20;$("f3").value=l.fee3??20;$("f6").value=l.fee6??20;$("late").value=l.lateFeeUsd??50;$("lateD").value=l.lateDailyPct??0.5;["BTC","ETH","SOL","USDC"].forEach(k=>$("c"+k).value=(l.caps&&l.caps[k])??2000);
   $("rpc").value=p.rpcUrl||"";
   const coins=Array.isArray(p.coins)?p.coins:(p.address?[{sym:"SOL",address:p.address,mint:"",snapshot:p.snapshot||0,enabled:true}]:[]);
   SYMS.forEach(s=>{const c=coins.find(x=>x.sym===s)||{};
-    $("on-"+s).checked=!!c.enabled;$("a-"+s).value=c.address||"";if(s!=="SOL")$("m-"+s).value=c.mint||"";$("s-"+s).value=c.snapshot||0});
+    $("on-"+s).checked=!!c.enabled;$("a-"+s).value=c.address||"";if(s==="USDC")$("m-"+s).value=c.mint||"";$("s-"+s).value=c.snapshot||0});
 }
 $("save").onclick=async()=>{
   const m=$("smsg");m.className="msg";m.textContent="";
@@ -210,15 +215,15 @@ $("save").onclick=async()=>{
   if(rpc&&!/^https:\/\//.test(rpc)){m.textContent="The RPC URL must start with https://";return}
   const coins=[];
   for(const s of SYMS){
-    const on=$("on-"+s).checked,address=$("a-"+s).value.trim(),mint=s==="SOL"?"":$("m-"+s).value.trim(),snap=Number($("s-"+s).value)||0;
-    if(on&&!validAddr(address)){m.textContent="Enter a valid pool wallet address for "+s+", or untick it.";return}
-    if(on&&s!=="SOL"&&!validAddr(mint)){m.textContent="Enter the "+s+" token address, or untick it.";return}
+    const on=$("on-"+s).checked,address=$("a-"+s).value.trim(),mint=s==="USDC"?$("m-"+s).value.trim():"",snap=Number($("s-"+s).value)||0;
+    if(on&&!(s==="ETH"?/^0x[0-9a-fA-F]{40}$/.test(address):s==="BTC"?/^(tb1|bc1|[mn2])[a-zA-Z0-9]{24,62}$/.test(address):validAddr(address))){m.textContent="Enter a valid pool wallet address for "+s+", or untick it.";return}
+    if(on&&s==="USDC"&&!validAddr(mint)){m.textContent="Enter the "+s+" token address, or untick it.";return}
     coins.push({sym:s,enabled:on,address,mint,snapshot:snap});
   }
   $("save").disabled=true;
   const now=new Date().toISOString();
   const {error}=await sb.from("settings").upsert([
-    {key:"loan",value:{net:$("net").value,capUsd:num("cap"),colPer100:num("col"),fee1:num("f1"),fee2:num("f2"),fee3:num("f3"),fee6:num("f6"),lateFeePct:num("late")},updated_at:now},
+    {key:"loan",value:{net:$("net").value,capUsd:num("cap"),colPer100:num("col"),fee1:num("f1"),fee2:num("f2"),fee3:num("f3"),fee6:num("f6"),lateFeeUsd:num("late"),lateDailyPct:num("lateD"),caps:{BTC:num("cBTC"),ETH:num("cETH"),SOL:num("cSOL"),USDC:num("cUSDC")}},updated_at:now},
     {key:"pool",value:{rpcUrl:rpc,coins},updated_at:now}
   ]);
   $("save").disabled=false;

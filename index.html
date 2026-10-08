@@ -9,7 +9,7 @@
 <script>try{if(!Object.keys(localStorage).some(function(k){return /^sb-.*-auth-token$/.test(k)}))location.replace("landing.html")}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
-:root{--bg:#000;--s1:#151515;--s2:#202020;--text:#f5f5f5;--muted:#9a9a9f;--line:#282828;--accent:#a995f5;--green:#35e875;--red:#ff5b5b;--amber:#f5b942}
+:root{--bg:#000;--s1:#151515;--s2:#202020;--text:#f5f5f5;--muted:#9a9a9f;--line:#282828;--accent:#2f7bff;--green:#35e875;--red:#ff5b5b;--amber:#f5b942}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
 body{height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none}
@@ -37,7 +37,7 @@ button,input,select{font:inherit;color:inherit}button{cursor:pointer}
 input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;padding:13px;width:100%}
 input::placeholder{color:#77777d}
 .row input{flex:1;min-width:0}
-.btn{border:0;border-radius:14px;background:var(--accent);color:#17131f;font-weight:750;padding:0 18px;min-height:48px}
+.btn{border:0;border-radius:14px;background:var(--accent);color:#ffffff;font-weight:750;padding:0 18px;min-height:48px}
 .btn.ghost{background:var(--s2);color:var(--text);border:1px solid #303030}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .msg{font-size:13px;margin-top:10px;color:var(--red);line-height:1.45}
@@ -70,15 +70,15 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 .h2{margin-top:6px}
 @media(min-width:900px){
  .pg{width:min(100%,1080px);padding:28px 24px 12px;display:grid;grid-template-columns:minmax(0,1fr) 390px;column-gap:28px;align-items:start;
-  grid-template-areas:"top top" "hero how" "ah how" "assets how" "kyc ord" "sell ord"}
+  grid-template-areas:"top top" "hero how" "ah how" "assets how" "mk ord" "kyc ord" "sell ord"}
  .top{grid-area:top}.hero{grid-area:hero}.how{grid-area:how}.pg>.h2{grid-area:ah}
- #assets{grid-area:assets}#kycCard{grid-area:kyc}#sellBtn{grid-area:sell}#ordSec{grid-area:ord}#helpSec{grid-column:1/-1}#sellBtn{margin-top:0}
+ #assets{grid-area:assets}#mkSec{grid-area:mk}#kycCard{grid-area:kyc}#sellBtn{grid-area:sell}#ordSec{grid-area:ord}#helpSec{grid-column:1/-1}#sellBtn{margin-top:0}
  #dbg{grid-column:1/-1}
  .balance{font-size:68px}
  dialog{width:min(94vw,640px)}
 }
 @media(prefers-reduced-motion:no-preference){.lockable{transition:opacity .25s,filter .25s}}
-.avatar{width:38px;height:38px;border-radius:50%;border:1px solid #303030;background:var(--accent);color:#17131f;font-weight:750;font-size:16px;display:grid;place-items:center}
+.avatar{width:38px;height:38px;border-radius:50%;border:1px solid #303030;background:var(--accent);color:#ffffff;font-weight:750;font-size:16px;display:grid;place-items:center}
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;visibility:hidden;transition:opacity .25s;z-index:40}
 .scrim.on{opacity:1;visibility:visible}
 .side{position:fixed;top:0;right:0;bottom:0;width:min(86%,320px);background:var(--s1);border-left:1px solid #282828;z-index:50;display:flex;flex-direction:column;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top,0px)) 18px calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(100%);visibility:hidden;transition:transform .28s ease,visibility .28s}
@@ -94,13 +94,35 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 .how[open] summary::after{content:"\2212"}
 .how .steps{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:14px;counter-reset:s}
 .how .steps li{display:flex;gap:12px;align-items:flex-start;counter-increment:s}
-.how .steps li::before{content:counter(s);flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#17131f;font-weight:750;font-size:14px;display:grid;place-items:center}
+.how .steps li::before{content:counter(s);flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#ffffff;font-weight:750;font-size:14px;display:grid;place-items:center}
 .how .steps b{display:block;font-size:16px;color:var(--accent)}
 .how .steps span{font-size:14px;color:var(--muted)}
+.mrow{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;border-bottom:1px solid var(--line);color:inherit;font:inherit;text-align:left}.mrow:active{opacity:.7}.mrow .sp{width:64px;height:28px;flex:none}.mrow .sp svg{width:100%;height:100%}.mrow .l{flex:1}.mrow .r{min-width:84px}
+#mkSec{display:block}
+.pg[data-tab=trade]>[data-v=borrow],.pg[data-tab=borrow]>[data-v=trade]{display:none!important}
+.tabs{flex:none;display:flex;border-top:1px solid var(--line);background:var(--bg)}
+.tabs button{flex:1;background:none;border:0;color:#7d7d83;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 6px}
+.tabs button.on{color:var(--accent)}.tabs svg{width:22px;height:22px}
+.chips{display:flex;gap:8px;margin:0 0 12px;overflow-x:auto}
+.chips button,.seg button{border:0;font-weight:700;color:var(--muted)}
+.chips button{background:var(--s2);border:1px solid #303030;border-radius:999px;padding:7px 14px;font-size:13px;white-space:nowrap}
+.chips button.on,.seg button.on{background:var(--accent);color:#ffffff}
+.seg{display:flex;background:var(--s2);border-radius:12px;padding:3px;margin:0 0 10px}.seg button{flex:1;background:none;border-radius:10px;padding:9px}
+.btn.ghost{background:var(--s2);color:var(--text);border:1px solid #303030}
+.pill{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.6px;color:var(--amber);border:1px solid var(--amber);border-radius:999px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+.demo{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px}.demo .v{font-size:26px;font-weight:750;letter-spacing:-.6px}.demo .k{font-size:12px;color:var(--muted);margin-bottom:3px}
 .chgNote{font-size:13px;font-weight:600;color:var(--muted)}
+.demo{display:block;text-align:center;margin-bottom:14px}.demo .v{font-size:46px;line-height:1.05;letter-spacing:-1.6px}.demo .k{margin:0}
+.demo .lnk{background:none;border:0;color:var(--accent);font-weight:700;font-size:12px;padding:0 0 0 6px}
+.acts{display:flex;justify-content:space-between;gap:4px;margin-top:20px}
+.act{flex:1;background:none;border:0;color:var(--text);display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12px;font-weight:700;min-width:0}
+.act i{width:50px;height:50px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center}.act:active i{opacity:.75}
+.act svg{width:22px;height:22px}
+.addr{word-break:break-all;font-size:13px;color:var(--muted);margin:6px 0 10px;line-height:1.5}
 @media(max-height:760px){.balance{font-size:42px}.chg{margin-top:8px;font-size:17px;min-height:26px}.chip{font-size:15px}.card{padding:14px;margin-bottom:12px}.h2{font-size:21px;margin:4px 2px 9px}.asset{padding:11px 0}.ico{width:38px;height:38px}.step{padding:13px}}
 @media(max-height:760px){#kycCard{padding:14px}#kycCard .title{font-size:16px;margin-bottom:8px}#kycTxt{font-size:13px!important;line-height:1.45;margin-bottom:10px!important}#kycBtn{min-height:44px}}
 @media(max-height:620px){.balance{font-size:36px}.label{margin-bottom:4px;font-size:13px}.top{margin-bottom:8px}.hero{padding-bottom:8px}.foot{padding-top:7px;font-size:11px}}
+@media(min-width:900px){.pg[data-tab=trade]{grid-template-areas:"top" "mk";grid-template-columns:1fr}}
 </style>
 <script src="https://js.paystack.co/v1/inline.js"></script>
 </head>
@@ -120,14 +142,16 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
       <li><div><b>Get your cash</b><span>The cedis go straight to your mobile money.</span></div></li>
     </ul></details>
 
-  <div class="h2">Available to draw</div>
+  <div class="h2">Choose a coin to borrow</div>
   <div id="assets" class="card"><div class="empty">No loan offer available yet.</div></div>
+  <section id="mkSec"><div id="demo" class="demo"></div><div class="h2">Assets</div><div class="chips" id="chips"><button data-c="all" class="on">All</button><button data-c="major">Majors</button><button data-c="meme">Meme coins</button></div><div id="mkts" class="card"></div></section>
   <section id="kycCard" class="card" style="display:none;border-color:#342d49;background:#171421"><div class="title" id="kycTitle"></div><div class="small" id="kycTxt" style="margin:0 0 12px;color:#b9b0d6;font-size:14px"></div><a id="kycBtn" class="btn" href="kyc.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Verify my identity</a></section>
   <button id="sellBtn" class="btn" style="width:100%" disabled>Draw amount</button>
 
   <section id="helpSec" style="display:none"><div class="h2">Need help?</div><div class="card"><div class="small" style="margin:0 0 12px;font-size:14px;color:#b5b5ba">Email us any time. We reply as soon as we can.</div><div id="helpBtns" class="row" style="flex-wrap:wrap"></div><div id="helpInfo" class="small" style="line-height:1.7"></div></div></section>
   <section id="ordSec" style="display:none"><div class="h2">Orders</div><div id="ordList" class="card"></div></section>
 </div>
+<nav class="tabs" id="tabs" aria-label="Main"><button data-t="trade" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Trade</button><button data-t="borrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>Borrow</button></nav>
 <footer id="foot" class="foot"></footer>
 </main>
 
@@ -139,6 +163,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   </div>
   <button id="logout" class="lo">Log out</button>
 </aside>
+<dialog id="mkDlg" aria-labelledby="mkT"><div class="dHead"><span id="mkT"></span><button class="x" id="mkX" aria-label="Close">✕</button></div><div id="mkBody"></div></dialog>
 <dialog id="dlg" aria-labelledby="dTitle">
   <div class="dHead"><span id="dTitle">Draw amount</span><button id="close" class="x" aria-label="Close">✕</button></div>
   <div id="sellFlow">
@@ -153,7 +178,6 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
     </div>
     <div id="colStep" class="step lockable locked" aria-disabled="true">
       <div class="stepHead"><span>2. Place collateral</span><span id="colPill" class="pill">Locked until ID is verified</span></div>
-      <details style="margin:0 0 10px;font-size:13px;color:var(--muted);line-height:1.5"><summary style="cursor:pointer;color:var(--accent);font-weight:700">Why do we ask for collateral?</summary><p style="margin:8px 0 0">Because some borrowers have not repaid their loans, every borrower now places collateral before they can draw. We hold it while your loan is active and return it when you finish paying. It is not a fee.</p></details>
       <div id="colTxt" class="small" style="margin:0 0 10px"></div>
       <div style="display:grid;gap:9px">
         <select id="colCoin" aria-label="Collateral coin"><option value="USDC">Collateral coin: USDT</option></select>
@@ -169,11 +193,14 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
     <div id="recvStep" class="step lockable locked" aria-disabled="true">
       <div class="stepHead"><span>3. Where to send your cash</span><span id="recvPill" class="pill">Locked until collateral is paid</span></div>
       <div style="display:grid;gap:9px">
-        <select id="pMethod" aria-label="Payout network"><option value="">Choose mobile money network</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option></select>
-        <input id="pName" placeholder="Account name" aria-label="Account name">
-        <input id="pNum" placeholder="Mobile money number" inputmode="numeric" aria-label="Payout number">
+        <select id="pMethod" aria-label="How to receive your cash"><option value="">How do you want to receive it?</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option><option>Bank transfer</option></select>
+        <select id="pBank" aria-label="Your bank" style="display:none"><option value="">Choose your bank</option><option>GCB Bank</option><option>Ecobank Ghana</option><option>Stanbic Bank</option><option>Absa Bank Ghana</option><option>Fidelity Bank</option><option>CalBank</option><option>Zenith Bank</option><option>Access Bank</option><option>Standard Chartered</option><option>First National Bank</option><option>Republic Bank</option><option>UBA</option><option>GTBank</option><option>Prudential Bank</option><option>Societe Generale Ghana</option><option>Agricultural Development Bank</option><option>Consolidated Bank Ghana</option></select>
+        <input id="pName" placeholder="Account name (your own name)" aria-label="Account name" autocomplete="name">
+        <input id="pNum" placeholder="Mobile money number" inputmode="numeric" aria-label="Payout number or account number">
+        <div id="pNameNote" class="small" style="margin:0"></div>
         <div id="lateNote" style="padding:12px;border-radius:12px;background:#2a2112;border:1px solid #4a3a1a;color:#e7c98a;font-size:13px;line-height:1.5"></div>
         <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--muted);margin:0"><input id="agree" type="checkbox" style="width:auto;margin-top:3px"><span id="agreeTxt"></span></label>
+        <div id="amlNote" style="padding:12px;border-radius:12px;background:#12202f;border:1px solid #1f3a57;color:#9cc4f5;font-size:13px;line-height:1.5"><b>Payouts are made only in your own name.</b> Under anti-money laundering rules, we send cash only to a mobile money number or bank account registered in the same name as your verified ID. We check the name before we pay, and we cannot pay anyone else.</div>
         <button id="confirm" class="btn" disabled>Confirm draw</button>
       </div>
     </div>
@@ -187,7 +214,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 </dialog>
 
 <script>
-const CFG={colPer100:10,fee1:20,fee2:20,fee3:20,fee6:20,capUsd:2000,lateFeePct:5,balSnap:0,paystackKey:"pk_live_1530c74b9368aa99844bc2dd4c5d0ee1fd867c68",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:""};
+const CFG={colPer100:10,fee1:20,fee2:20,fee3:20,fee6:20,capUsd:2000,caps:{BTC:2000,ETH:2000,SOL:2000,USDC:2000},fallbackPx:{BTC:65000,ETH:3400},lateFeeUsd:50,lateDailyPct:0.5,balSnap:0,paystackKey:"pk_live_1530c74b9368aa99844bc2dd4c5d0ee1fd867c68",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:""};
 const RPCS={devnet:"https://api.devnet.solana.com",mainnet:"https://api.mainnet-beta.solana.com"};
 const STAGES=["Sending to your mobile money","Paid out"];
 const $=id=>document.getElementById(id);
@@ -208,22 +235,33 @@ async function rpc(method,params=[]){
   if(j.error) throw new Error(j.error.message||"Request failed");
   return j.result;
 }
-const COINS=["SOL","USDC"],COIN_NAME={SOL:"Solana",USDC:"Tether",USDT:"Tether"};
+const COINS=["BTC","ETH","SOL","USDC"],COIN_NAME={BTC:"Bitcoin",ETH:"Ethereum",SOL:"Solana",USDC:"Tether",USDT:"Tether"};
 // Devnet testing: USDC is used behind the scenes but shown to users as USDT. Remove SHOW before going live with real money.
 const SHOW={USDC:"USDT"},dn=c=>SHOW[c]||c;
 const LOGO={SOL:`<img src="${SOL_LOGO}" alt="Solana">`,
  USDC:`<img alt="USDT" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2326A17B'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3ET%3C/text%3E%3C/svg%3E">`,
  USDT:`<img alt="USDT" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2326A17B'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3ET%3C/text%3E%3C/svg%3E">`};
-S.px.solLive=S.px.sol;S.px.chgLive=0;S.px.usdcLive=1;S.px.chgBy={SOL:0,USDC:0};S.px.chgOk=false;S.coin="SOL";S.baseBy={};S.totalUsd=0;
-const priceOf=c=>c==="SOL"?S.px.solLive:(S.px.usdcLive||1); // stablecoin: live price (stays near $1)
+LOGO.BTC=`<img alt="BTC" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23f7931a'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3E%E2%82%BF%3C/text%3E%3C/svg%3E">`;LOGO.ETH=`<img alt="ETH" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23627eea'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3E%CE%9E%3C/text%3E%3C/svg%3E">`;
+try{const c=Number(localStorage.getItem("nova_fx"));if(c>1)S.px.fx=c}catch(e){}
+S.px.solLive=S.px.sol;S.px.chgLive=0;S.px.usdcLive=1;S.px.chgBy={SOL:0,USDC:0,BTC:0,ETH:0};S.px.chgOk=false;S.coin="SOL";S.baseBy={};S.liveBy={};S.totalUsd=0;
+const priceOf=c=>c==="SOL"?S.px.solLive:c==="USDC"?(S.px.usdcLive||1):((S.mk[c]&&S.mk[c].p)||CFG.fallbackPx[c]||1); // stablecoin: live price (stays near $1)
 function applyCoin(){S.px.sol=priceOf(S.coin);S.px.chg=S.px.chgBy[S.coin]||0}
 const drawnUsd=()=>orders.reduce((t,o)=>t+(o.usd||0),0);
-function availOf(sym){
-  const px=priceOf(sym),rem=CFG.capUsd>0?Math.max(0,CFG.capUsd-drawnUsd())/px:Infinity;
-  const drawn=orders.filter(o=>(o.dcoin||"SOL")===sym).reduce((t,o)=>t+o.sol,0);
-  return Math.max(0,Math.min((S.baseBy[sym]||0)-drawn,rem));
+function availOf(sym,raw){
+  if(!raw&&orders.some(o=>!o.repaid))return 0; // one loan at a time: nothing is available until the active loan is repaid
+  // Each coin has its own USD cap (admin sets CFG.caps). Pool balance limits it too. BTC/ETH have no pool wallet yet, so on devnet only the cap applies.
+  const px=priceOf(sym),cap=CFG.caps&&CFG.caps[sym]!=null?CFG.caps[sym]:CFG.capUsd,mine=orders.filter(o=>(o.dcoin||"SOL")===sym);
+  const drawn=mine.reduce((t,o)=>t+o.sol,0),usdDrawn=mine.reduce((t,o)=>t+(o.usd||0),0);
+  const rem=cap>0?Math.max(0,cap-usdDrawn)/px:Infinity,base=(sym in S.baseBy)?S.baseBy[sym]:((sym==="BTC"||sym==="ETH")&&CFG.net==="devnet"?Infinity:0);
+  const v=Math.min(base-drawn,rem);return isFinite(v)?Math.max(0,v):0;
 }
 let okSol=false,okFx=false,lastFx=0,pulling=false;
+// Live USD -> GHS rate. Cached 2 minutes, forced fresh when someone opens the loan form or pays in. The last real rate is remembered for next time.
+async function loadFx(force){
+  if(!force&&okFx&&Date.now()-lastFx<120000)return;
+  try{const j=await (await fetch("https://open.er-api.com/v6/latest/USD")).json();
+    if(j.rates&&j.rates.GHS){S.px.fx=j.rates.GHS;okFx=true;lastFx=Date.now();try{localStorage.setItem("nova_fx",String(j.rates.GHS))}catch(e){}}}catch(e){}
+}
 async function loadRates(){
   if(pulling)return;pulling=true;
   try{
@@ -232,15 +270,109 @@ async function loadRates(){
       const u=j["usd-coin"];if(u&&u.usd){const p=Number(u.usd);S.px.usdcLive=(p>0.97&&p<1.03)?p:1;S.px.chgBy.USDC=Number(u.usd_24h_change)||0}
       S.px.chgOk=okSol||!!(u&&u.usd);
     }catch(e){}
-    if(!okFx||Date.now()-lastFx>600000){ // exchange rate barely moves, refresh every 10 min
-      try{const j=await (await fetch("https://open.er-api.com/v6/latest/USD")).json();if(j.rates&&j.rates.GHS){S.px.fx=j.rates.GHS;okFx=true;lastFx=Date.now()}}catch(e){}
-    }
+    await loadFx();
     S.px.live=okSol&&okFx;
     refreshAvail();
   }finally{pulling=false}
 }
 let rateTimer=null;
-function startRates(){clearInterval(rateTimer);rateTimer=setInterval(loadRates,30000)}
+function startRates(){clearInterval(rateTimer);rateTimer=setInterval(()=>{loadRates();loadMarkets()},30000)}
+// ---- Trade tab: live prices + DEMO trading (fake money, real prices) ----
+// [coingecko id, symbol, name, colour, category]
+const MK=[["bitcoin","BTC","Bitcoin","#f7931a","major"],["ethereum","ETH","Ethereum","#627eea","major"],["solana","SOL","Solana","#9945ff","major"],["tether","USDT","Tether","#26a17b","major"],["binancecoin","BNB","BNB","#f3ba2f","major"],["ripple","XRP","XRP","#5b6270","major"],["cardano","ADA","Cardano","#3468d1","major"],["tron","TRX","TRON","#e0332a","major"],["litecoin","LTC","Litecoin","#8a98a8","major"],["chainlink","LINK","Chainlink","#2a5ada","major"],["avalanche-2","AVAX","Avalanche","#e84142","major"],
+["dogecoin","DOGE","Dogecoin","#c2a633","meme"],["shiba-inu","SHIB","Shiba Inu","#e0452f","meme"],["pepe","PEPE","Pepe","#4c8c3a","meme"],["bonk","BONK","Bonk","#f58c1f","meme"],["dogwifcoin","WIF","dogwifhat","#a7795c","meme"],["floki","FLOKI","Floki","#d9a441","meme"]];
+// Paste your testnet receive addresses here (shown on the Receive button)
+const ADDR={BTC:"",ETH:""};
+const BORROW={BTC:"BTC",ETH:"ETH",SOL:"SOL",USDT:"USDC"},FEE=.005;S.mk={};S.cat="all";S.side="buy";S.step="view";
+const pcs=p=>(p>=0?"+":"-")+fmt(Math.abs(p),2)+"%";
+const mpx=p=>p>=1?usd(p):"$"+p.toFixed(Math.min(10,Math.max(2,2-Math.floor(Math.log10(p)))));
+const qf=q=>q.toLocaleString(undefined,{maximumFractionDigits:q<1?6:4});
+function spark(a,w,h,up){if(!a||a.length<2)return"";const mn=Math.min(...a),r=(Math.max(...a)-mn)||1,st=Math.ceil(a.length/60),l=a.filter((_,i)=>i%st===0);
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${l.map((v,i)=>(i/(l.length-1)*w).toFixed(1)+","+(h-2-(v-mn)/r*(h-4)).toFixed(1)).join(" ")}" fill="none" stroke="${up?"#35e875":"#ff5b5b"}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>`}
+const mkIcon=m=>LOGO[BORROW[m[1]]]||`<span style="background:${m[3]};width:100%;height:100%;display:grid;place-items:center;color:#fff;font-size:${m[1].length>3?10:12}px;font-weight:800">${m[1].slice(0,4)}</span>`;
+function renderMk(){
+  $("mkts").innerHTML=MK.filter(m=>S.cat==="all"||m[4]===S.cat).map(m=>{const d=S.mk[m[1]],up=!d||d.chg>=0;
+    return `<button class="asset mrow" data-s="${m[1]}"><div class="l"><div class="ico">${mkIcon(m)}</div><div><div class="nm">${m[2]}</div><div class="qty">${m[1]}</div></div></div><div class="sp">${d?spark(d.sp,64,28,up):""}</div><div class="r"><div class="nm">${d?mpx(d.p):"—"}</div><div class="sub ${up?"up":"down"}">${d?pcs(d.chg):""}</div></div></button>`}).join("");
+  $("mkts").querySelectorAll(".mrow").forEach(b=>b.onclick=()=>{S.sym=b.dataset.s;S.step="view";drawMk();$("mkDlg").showModal()});renderWallet();
+}
+async function loadMarkets(){try{const r=await (await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&sparkline=true&price_change_percentage=24h&per_page=50&ids="+MK.map(m=>m[0]).join(","))).json();
+  if(!Array.isArray(r))return;r.forEach(x=>{const m=MK.find(k=>k[0]===x.id);if(m){S.mk[m[1]]={p:x.current_price,chg:x.price_change_percentage_24h||0,sp:(x.sparkline_in_7d||{}).price};if(m[1]==="BTC"||m[1]==="ETH"){S.px.chgBy[m[1]]=S.mk[m[1]].chg;S.px.chgOk=true}}});renderMk();try{applyCoin();renderAssets()}catch(e){}if($("mkDlg").open&&S.step==="view"&&S.sym)drawMk()}catch(e){}}
+// ---- Wallet (Supabase ledger) ----
+let W={usd:0,h:{},ok:true};
+const applyW=r=>{W={usd:Number(r.usd)||0,h:Object.fromEntries((r.h||[]).map(x=>[x.sym,Number(x.qty)])),ok:true};renderWallet()};
+async function loadWallet(){try{const [w,h]=await Promise.all([sb.from("wallets").select("usd").maybeSingle(),sb.from("holdings").select("sym,qty")]);if(w.error||h.error)throw 0;applyW({usd:w.data?w.data.usd:0,h:h.data})}catch(e){W.ok=false;renderWallet()}}
+function renderWallet(){let pv=W.usd;for(const k in W.h){const d=S.mk[k];if(d)pv+=W.h[k]*d.p}
+  const ic=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${p}"/></svg>`,
+  A=[["buy","Buy","M12 5v14M5 12h14"],["sell","Sell","M5 12h14"],["swap","Swap","M7 4v14M3 14l4 4 4-4M17 20V6M13 10l4-4 4 4"],["receive","Receive","M12 4v12M6 11l6 6 6-6M5 20h14"],["send","Send","M12 20V8M6 13l6-6 6 6M5 4h14"]];
+  $("demo").innerHTML=`<div class="k">Portfolio balance</div><div class="v">${usd(pv)}</div><div class="k">Cash ${usd(W.usd)}<button class="lnk" id="addF">Add funds</button></div><div class="acts">${A.map(x=>`<button class="act" data-a="${x[0]}"><i>${ic(x[2])}</i>${x[1]}</button>`).join("")}</div>`;
+  $("addF").onclick=()=>{S.sym=null;S.step="fund";S.back="view";S.fund=50;drawMk();$("mkDlg").showModal()};
+  $("demo").querySelectorAll(".act").forEach(b=>b.onclick=()=>{const a=b.dataset.a;S.sym=null;S.back=null;
+    if(a==="buy"||a==="sell"){S.side=a;S.step="pick"}else S.step=a==="receive"?"receive":"soon",S.act=a;
+    drawMk();$("mkDlg").showModal()})}
+async function callTrade(body){const {data,error}=await sb.functions.invoke("trade",{body});
+  if(error){let m=error.message;try{m=(await error.context.json()).error||m}catch(e){}throw new Error(m)}
+  if(data&&data.error)throw new Error(data.error);return data}
+// ---- Sheet: view -> trade (amount) -> fund (deposit) ----
+function drawMk(){
+  const sym=S.sym,st=S.step,m=sym&&MK.find(x=>x[1]===sym),d=(sym&&S.mk[sym])||{},up=(d.chg||0)>=0,c=BORROW[sym],can=!!c&&S.idOk&&availOf(c)>0,held=(sym&&W.h[sym])||0,buy=S.side==="buy";
+  const chips=(arr,k)=>`<div class="chips" id="qc">${arr.map(v=>`<button data-q="${v}">${v==="Max"?"Max":"$"+v}</button>`).join("")}</div>`;
+  const bk='<button class="btn ghost" id="bk" style="margin-top:10px">Back</button>',off=W.ok?"":'<div class="msg">Trading is not switched on yet.</div>';
+  let h="";
+  if(st==="view"){$("mkT").textContent=m[2]+" · "+sym;
+    h=`<div class="balance" style="font-size:38px">${d.p!=null?mpx(d.p):"—"}</div><div class="chg ${up?"up":"down"}">${d.p!=null?`<span class="chip">${pcs(d.chg||0)}</span><span class="chgNote">24h</span>`:""}</div>
+    <div style="margin:12px 0 2px;height:100px">${spark(d.sp,320,100,up).replace("<svg",'<svg style="width:100%;height:100%"')}</div><div class="small" style="margin:0 0 12px">Last 7 days</div>
+    ${held>0?`<div class="small" style="margin:0 0 10px">You hold ${qf(held)} ${sym}${d.p?" ≈ "+usd(held*d.p):""}</div>`:""}
+    <div class="row" style="flex-direction:row"><button class="btn" id="bBuy" style="flex:1" ${d.p?"":"disabled"}>Buy</button><button class="btn ghost" id="bSell" style="flex:1" ${held>0&&d.p?"":"disabled"}>Sell</button></div>
+    ${c?`<button class="btn ghost" id="mkBor" ${can?"":"disabled"}>Borrow cedis</button><div class="small">${!S.idOk?"Verify your identity in the Borrow tab to borrow.":!can?"No "+sym+" is available to borrow right now.":"Borrow "+sym+" and cash out to mobile money."}</div>`:""}`}
+  else if(st==="trade"){$("mkT").textContent=(buy?"Buy ":"Sell ")+sym;
+    h=`<div class="small" style="margin:0 0 8px">${buy?"Cash balance "+usd(W.usd):"You hold "+qf(held)+" "+sym+" ≈ "+usd(held*d.p)}</div>
+    <input id="tAmt" type="number" min="0" step="any" inputmode="decimal" placeholder="$0" value="${S.amt||50}" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px">${chips(buy?[25,50,100,250]:[25,50,100,"Max"])}
+    <div id="tEst" class="small" style="min-height:18px;text-align:center"></div><button class="btn" id="tGo">Continue</button><div id="tMsg" class="msg" role="status"></div>${off}${bk}`}
+  else if(st==="pick"){const rows=MK.filter(x=>buy||(W.h[x[1]]||0)>0);$("mkT").textContent=buy?"Buy which asset?":"Sell which asset?";
+    h=rows.length?rows.map(x=>{const e=S.mk[x[1]],u=!e||e.chg>=0;return `<button class="asset mrow" data-p="${x[1]}"><div class="l"><div class="ico">${mkIcon(x)}</div><div><div class="nm">${x[2]}</div><div class="qty">${buy?x[1]:qf(W.h[x[1]])+" "+x[1]}</div></div></div><div class="r"><div class="nm">${e?mpx(e.p):"—"}</div><div class="sub ${u?"up":"down"}">${e?pcs(e.chg):""}</div></div></button>`}).join(""):'<div class="empty">You do not hold any assets to sell yet.</div>'}
+  else if(st==="receive"){$("mkT").textContent="Receive";
+    h=Object.keys(ADDR).map(k=>{const m=MK.find(x=>x[1]===k);return `<div class="step"><div class="stepHead"><span>${m[2]} (testnet)</span></div>${ADDR[k]?`<div class="addr">${esc(ADDR[k])}</div><button class="btn ghost" data-cp="${esc(ADDR[k])}" style="width:100%">Copy address</button>`:'<div class="small">Address not set yet.</div>'}</div>`}).join("")+'<div class="small">Send only testnet coins to these addresses.</div>'}
+  else if(st==="soon"){$("mkT").textContent=S.act==="swap"?"Swap":"Send";h='<div class="empty">'+(S.act==="swap"?"Swap":"Send")+' is not switched on yet.</div>'}
+  else{$("mkT").textContent="Add funds";
+    h=`<div class="small" style="margin:0 0 8px">Pay with mobile money. Funds reach your balance after Paystack confirms.</div><input id="tAmt" type="number" min="5" step="any" inputmode="decimal" placeholder="$0" value="${S.fund||50}" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px">${chips([25,50,100,250])}
+    <div id="tEst" class="small" style="min-height:18px;text-align:center"></div><button class="btn" id="tGo">Pay with Mobile Money</button><div id="tMsg" class="msg" role="status"></div>${off}${S.back?bk:""}`}
+  $("mkBody").innerHTML=h;
+  $("mkBody").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{S.sym=b.dataset.p;S.step="trade";S.back="pick";S.amt=buy?50:25;drawMk()});
+  $("mkBody").querySelectorAll("[data-cp]").forEach(b=>b.onclick=()=>{try{navigator.clipboard.writeText(b.dataset.cp);b.textContent="Copied"}catch(e){}});
+  const q=id=>$(id),amt=q("tAmt"),fxN=()=>S.px.fx||CFG.fallbackUsdGhs;
+  if(q("bBuy")){q("bBuy").onclick=()=>{S.side="buy";S.step="trade";S.back="view";S.amt=50;drawMk()};q("bSell").onclick=()=>{S.side="sell";S.step="trade";S.back="view";S.amt=25;drawMk()}}
+  if(q("mkBor"))q("mkBor").onclick=()=>{$("mkDlg").close();setTab("borrow");openLoan(c)};
+  if(q("bk"))q("bk").onclick=()=>{S.step=S.back||"view";drawMk()};
+  if(!amt)return;
+  const upd=()=>{const v=+amt.value,go=q("tGo"),e=q("tEst");q("tMsg").textContent="";
+    if(st==="trade"){e.textContent=v>0&&d.p?(buy?"You get ≈ "+qf(v*(1-FEE)/d.p)+" "+sym:"You get ≈ "+usd(v*(1-FEE)))+" · 0.5% fee":"";go.textContent=buy&&v>W.usd+.005?"Add funds":(buy?"Buy ":"Sell ")+sym}
+    else e.textContent=v>0?"≈ GHS "+fmt(v*fxN(),2)+" (rate "+fmt(fxN(),2)+")":""};
+  amt.oninput=upd;upd();if(st==="fund")loadFx(true).then(()=>{if($("tAmt")===amt)upd()});
+  $("qc").querySelectorAll("button").forEach(b=>b.onclick=()=>{amt.value=b.dataset.q==="Max"?(Math.floor(held*d.p*100)/100):b.dataset.q;upd()});
+  q("tGo").onclick=async()=>{const v=+amt.value,msg=q("tMsg");msg.className="msg";
+    if(!(v>0)){msg.textContent="Enter an amount.";return}
+    if(st==="fund"){if(v<5){msg.textContent="Minimum deposit is $5.";return}return payIn(v)}
+    if(buy&&v>W.usd+.005){S.step="fund";S.fund=Math.max(5,Math.ceil(v-W.usd));S.amt=v;S.back="trade";drawMk();return}
+    q("tGo").disabled=true;
+    try{applyW(await callTrade({action:"trade",side:S.side,sym,usd:v}));S.step="view";drawMk();}catch(e){msg.textContent=e.message;q("tGo").disabled=false}};
+}
+async function payIn(v){const msg=$("tMsg");await loadFx(true);
+  if(!window.PaystackPop){msg.textContent="Payment could not load. Check your connection.";return}
+  sb.auth.getSession().then(({data})=>{const u=data.session.user,ref="NLD-"+u.id+"-"+Date.now();
+    PaystackPop.setup({key:CFG.paystackKey,email:u.email||uem,amount:Math.round(v*(S.px.fx||CFG.fallbackUsdGhs)*100),currency:"GHS",channels:["mobile_money"],ref,metadata:{purpose:"deposit"},
+      callback:r=>confirmIn(r.reference),onClose:()=>{}}).openIframe()})}
+async function confirmIn(ref){const msg=$("tMsg");if(!msg)return;msg.className="msg ok";msg.textContent="Confirming your payment…";
+  for(let i=0;i<8;i++){try{applyW(await callTrade({action:"deposit",ref}));S.step=S.back||"view";drawMk();return}catch(e){await new Promise(r=>setTimeout(r,3000))}}
+  msg.className="msg";msg.textContent="Payment received but not confirmed yet. Your balance will update shortly."}
+$("mkX").onclick=()=>$("mkDlg").close();
+$("chips").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.cat=b.dataset.c;$("chips").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));renderMk()});
+// ---- Tabs: Trade (default) / Borrow ----
+function setTab(t){$("pg").dataset.tab=t;document.querySelectorAll("#tabs button").forEach(b=>{b.classList.toggle("on",b.dataset.t===t);b.setAttribute("aria-current",b.dataset.t===t?"page":"false")});$("pg").scrollTop=0}
+[...$("pg").children].forEach(el=>{if(!el.matches(".top"))el.dataset.v=el.id==="mkSec"?"trade":"borrow"});
+document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>setTab(b.dataset.t));setTab("trade");
+const hero=document.querySelector(".hero");if(hero)hero.style.display="none";
+setInterval(()=>{if(!dlg.open)loadOffer()},30000); // keep pool balances live
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){loadFx().then(()=>refreshAvail())}}); // fresh rate when the app comes back to the front
 document.addEventListener("visibilitychange",()=>{if(document.hidden)clearInterval(rateTimer);else{loadRates();startRates()}});
 
 // ---- Loan offer ----
@@ -256,21 +388,21 @@ function showDebug(){
 async function loadOffer(){
   // Settings and the pool balance come from Supabase (set on the admin page), never from this file.
   try{const {data:st}=await sb.from("settings").select("value").eq("key","loan").maybeSingle();if(st&&st.value)Object.assign(CFG,st.value)}catch(e){}
-  let by={},why="offer unavailable";
+  let by={},lv={},why="offer unavailable";
   try{
     const {data,error}=await sb.functions.invoke("offer");
     if(error)throw error;
-    if(Array.isArray(data.coins))data.coins.forEach(c=>{by[c.sym]=Number(c.base)||0});else by.SOL=Number(data.base)||0;
+    if(Array.isArray(data.coins))data.coins.forEach(c=>{by[c.sym]=Number(c.base)||0;lv[c.sym]=c.why==="live"});else by.SOL=Number(data.base)||0;
     why=data.why||"pool";
   }catch(e){}
-  S.baseBy=by;S.base=by.SOL||0;S.why=why;
+  S.baseBy=by;S.liveBy=lv;S.base=by.SOL||0;S.why=why;
   if(availOf(S.coin)<=0){const f=COINS.find(c=>availOf(c)>0);if(f)S.coin=f}
   refreshAvail();
 }
 function prepCoins(){
   const list=COINS.filter(c=>availOf(c)>0),sel=$("coinSel");
   sel.innerHTML=(list.length?list:[S.coin]).map(c=>`<option value="${c}">${COIN_NAME[c]} (${dn(c)})</option>`).join("");sel.value=S.coin;
-  sel.style.display=list.length>1?"":"none";
+  sel.style.display="none";
   if(S.unitCoin!==S.coin){const u=$("unit"),cur=u.value;u.innerHTML=`<option value="${S.coin}">${dn(S.coin)}</option><option value="GHS">GHS</option>`;u.value=cur==="GHS"?"GHS":S.coin;S.unitCoin=S.coin}
 }
 function refreshAvail(){applyCoin();S.sol=availOf(S.coin);prepCoins();renderAssets();renderEst();showDebug()}
@@ -287,13 +419,19 @@ function renderChg(total,rows){
   el.innerHTML=`<span>${up?"▲":"▼"} ${up?"+":"-"}${usd(Math.abs(d))}</span><span class="chip">${up?"+":"-"}${fmt(ap,ap<0.1?3:2)}%</span><span class="chgNote">24h</span>`;
 }
 function renderAssets(){
-  const rows=[];
-  COINS.forEach(sym=>{const q=availOf(sym);if(q>0)rows.push({name:COIN_NAME[sym],sym,qty:q,icon:LOGO[sym],val:q*priceOf(sym)})});
-  const total=rows.reduce((t,r)=>t+r.val,0);S.totalUsd=total;
-  $("total").textContent=usd(total);renderChg(total,rows);
-  $("assets").innerHTML=rows.length?rows.map(a=>{return `<div class="asset"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty">${a.qty.toLocaleString(undefined,{maximumFractionDigits:a.sym==="SOL"?9:2})} ${esc(dn(a.sym))}</div></div></div><div class="r"><div class="nm">${usd(a.val)}</div><div class="sub up">${ghs(a.val*S.px.fx)}</div></div></div>`}).join(""):'<div class="empty">No loan offer available yet.</div>';
-  try{renderKyc()}catch(e){}$("sellBtn").disabled=!(S.totalUsd>0&&S.idOk);$("sellBtn").textContent=S.idOk?"Draw amount":"Verify identity to draw";
+  const act=orders.find(o=>!o.repaid),actSym=act&&(act.dcoin||"SOL");
+  const rows=COINS.map(sym=>{const q=availOf(sym,true);return{name:COIN_NAME[sym],sym,qty:q,icon:LOGO[sym],val:q*priceOf(sym)}});
+  S.totalUsd=act?0:rows.reduce((t,r)=>t+r.val,0);
+  $("assets").innerHTML=(act?`<div class="small" style="margin:0 0 6px;color:var(--amber)">You have an active ${COIN_NAME[actSym]} loan. Repay it before you borrow again.</div>`:"")+rows.map(a=>{
+    const ok=a.qty>0,live=S.liveBy[a.sym],tag=ok?(live?'<span style="color:var(--green)">● Live on-chain</span>':'<span style="color:var(--amber)">● Test limit</span>'):"";
+    const sub=act?(a.sym===actSym?"Active loan":"Locked until you repay"):ok?"Up to "+a.qty.toLocaleString(undefined,{maximumFractionDigits:a.sym==="USDC"?2:a.qty<1?6:4})+" "+esc(dn(a.sym)):"Not available right now";
+    const label=act?(a.sym===actSym?"Loan active":"Locked"):!S.idOk?"Verify identity to borrow":"Get loan";
+    return `<div class="asset" style="flex-wrap:wrap"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty">${sub}</div><div style="font-size:11px;font-weight:700;margin-top:2px">${tag}</div></div></div><div class="r"><div class="nm">${usd(a.val)}</div><div class="sub up">${ghs(a.val*S.px.fx)}</div></div><button class="btn" data-loan="${a.sym}" style="flex-basis:100%;margin:10px 0 0;min-height:42px" ${ok&&!act?"":"disabled"}>${label}</button></div>`}).join("");
+  $("assets").querySelectorAll("[data-loan]").forEach(b=>b.onclick=()=>S.idOk?openLoan(b.dataset.loan):location.href="kyc.html");
+  try{renderKyc()}catch(e){}$("sellBtn").style.display="none";
 }
+function openLoan(sym){S.coin=sym;applyCoin();S.sol=availOf(sym);S.unitCoin=null;$("colCoin").innerHTML=`<option value="${sym}">Collateral coin: ${dn(sym)}</option>`;prepCoins();resetFlow();$("dTitle").textContent="Loan in "+COIN_NAME[sym];$("sellFlow").style.display="";$("doneView").style.display="none";dlg.showModal();renderEst();loadFx(true).then(()=>{try{renderEst()}catch(e){}})}
+const colAmt=c=>{const q=c.colU/(S.px.sol||1);return fmt(q,S.coin==="USDC"?2:q<1?6:4)};
 
 // ---- Draw window ----
 const dlg=$("dlg");
@@ -314,20 +452,20 @@ const fdate=d=>d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"n
 function schedule(tot,m,t0){const out=[];let paid=0;const each=Math.round(tot/m*100)/100;for(let i=1;i<=m;i++){const amt=i<m?each:Math.round((tot-paid)*100)/100;paid+=amt;out.push({i,amt,d:new Date(t0+i*30*864e5)})}return out}
 function schedHtml(tot,m,t0){const s=schedule(tot,m,t0);if(m===1)return `You pay <b>${ghs(tot)}</b> by <b>${fdate(s[0].d)}</b>`;return `<ul style="margin:6px 0 0 18px;padding:0">${s.map(p=>`<li>${fdate(p.d)}: <b>${ghs(p.amt)}</b></li>`).join("")}</ul>`}
 const amtOk=()=>{const c=calc();return c.sol>0&&c.sol<=S.sol+1e-9};
-function setColLabel(){const c=calc();$("payCol").textContent=S.colPaid?"Collateral paid":(c.sol>0?"Pay collateral of "+fmt(c.colU)+" "+dn($("colCoin").value):"Pay collateral")}
+function setColLabel(){const c=calc();$("payCol").textContent=S.colPaid?"Collateral paid":(c.sol>0?"Pay collateral of "+colAmt(c)+" "+dn(S.coin):"Pay collateral")}
 $("colCoin").onchange=()=>renderEst();
 function renderEst(){
   fillMonths();const c=calc();
-  {const ok=c.sol>0&&c.sol<=S.sol+1e-9,pct=CFG.lateFeePct;
-   $("lateNote").innerHTML="<b>Overdue payments.</b> If you do not pay on the agreed date, a late fee of "+pct+"% of the missed payment"+(ok?" ("+ghs(c.mo*pct/100)+" on your "+(c.m===1?"payment":"monthly payment of "+ghs(c.mo))+")":"")+" will be charged to you.";}
+  {const fu=CFG.lateFeeUsd,fx=S.px.fx||CFG.fallbackUsdGhs;
+   $("lateNote").innerHTML="<b>Overdue payments.</b> If you do not pay on the agreed date, a flat late fee of "+usd(fu)+" ("+ghs(fu*fx)+") is charged, and your interest goes up by "+CFG.lateDailyPct+"% of the overdue amount for every extra day it stays unpaid.";}
   $("avail").textContent=fmt(S.sol,4)+" "+dn(S.coin);
   $("rateInfo").textContent=`1 ${dn(S.coin)} = ${usd(S.px.sol)} · $1 = ${ghs(S.px.fx)}`+(S.px.live?"":" · estimated rates");
-  $("colTxt").innerHTML=c.sol>0?`Pay <b style="color:#fff">${fmt(c.colU)} ${dn($("colCoin").value)}</b> collateral (<b style="color:#fff">${ghs(c.col)}</b> by mobile money). We hold it until you finish paying your loan, otherwise it will be liquidated to minimize our losses. When you finish, it is returned to you in cedis at the current trading price.`:"Enter an amount first.";setColLabel();
-  if(!c.sol){$("est").textContent="Enter an amount to see what you get and what you pay each month.";$("agreeTxt").textContent="I understand my crypto is converted to Ghana cedis and sent to my mobile money, and I will repay the full amount shown in monthly payments, and I accept the late fee and understand my collateral will be liquidated if I miss a payment."}
+  $("colTxt").innerHTML=c.sol>0?`Pay <b style="color:#fff">${colAmt(c)} ${dn(S.coin)}</b> collateral (<b style="color:#fff">${ghs(c.col)}</b> by mobile money). We hold it until you finish paying your loan, otherwise it will be liquidated to minimize our losses. When you finish, it is returned to you in cedis at the current trading price.`:"Enter an amount first.";setColLabel();
+  if(!c.sol){$("est").textContent="Enter an amount to see what you get and what you pay each month.";$("agreeTxt").textContent="I understand my crypto is converted to Ghana cedis and sent to a mobile money number or bank account in my own name, and I will repay the full amount shown in monthly payments, and I accept the late fee and daily overdue interest and understand my collateral will be liquidated if I miss a payment."}
   else if(c.sol>S.sol+1e-9){$("est").innerHTML='<span style="color:var(--red)">That is more than your available loan.</span>'}
   else{
-    $("est").innerHTML=`You get <b>${ghs(c.val)}</b> in mobile money (${fmt(c.sol,4)} ${dn(S.coin)} converted)<br>You repay <b>${ghs(c.tot)}</b> in total<br>${c.m===1?"":"Your payments:"}${schedHtml(c.tot,c.m,Date.now())}<div style="margin-top:8px">Collateral: ${ghs(c.col)}, returned when you finish repaying</div>`;
-    $("agreeTxt").textContent=`I understand my crypto is converted to Ghana cedis and sent to my mobile money, and I will repay ${ghs(c.tot)} ${c.m===1?"in 30 days":"over "+c.m+" months"}. I accept the late fee and understand my collateral will be liquidated if I miss a payment.`;
+    $("est").innerHTML=`You get <b>${ghs(c.val)}</b> to your own mobile money or bank account (${fmt(c.sol,4)} ${dn(S.coin)} converted)<br>You repay <b>${ghs(c.tot)}</b> in total<br>${c.m===1?"":"Your payments:"}${schedHtml(c.tot,c.m,Date.now())}<div style="margin-top:8px">Collateral: ${ghs(c.col)}, returned when you finish repaying</div>`;
+    $("agreeTxt").textContent=`I understand my crypto is converted to Ghana cedis and sent to a mobile money number or bank account in my own name, and I will repay ${ghs(c.tot)} ${c.m===1?"in 30 days":"over "+c.m+" months"}. I accept the late fee and daily overdue interest and understand my collateral will be liquidated if I miss a payment.`;
   }
   validate();
 }
@@ -340,17 +478,26 @@ function setLock(){
   ["amt","unit","max","months","method","accNum"].forEach(i=>$(i).disabled=S.colPaid);
 }
 const ghNum=s=>{const d=String(s).replace(/\D/g,"");return d.length===10&&d[0]==="0"?d:d.length===12&&d.startsWith("233")?"0"+d.slice(3):""};
+const norm=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z\s]/g," ").split(/\s+/).filter(Boolean);
+const kycName=()=>S.kyc?((S.kyc.first_name||"")+" "+(S.kyc.last_name||"")).trim():"";
+const nameOk=()=>{const k=norm(kycName()),n=norm($("pName").value);return k.length>1&&k.every(t=>n.includes(t))};
+const isBank=()=>$("pMethod").value==="Bank transfer";
+function payUiSync(){const b=isBank();$("pBank").style.display=b?"":"none";$("pNum").placeholder=b?"Bank account number":"Mobile money number";
+  if(!$("pName").value&&kycName())$("pName").value=kycName();
+  const bad=$("pName").value.trim()&&!nameOk();$("pName").style.borderColor=bad?"var(--red)":"";
+  $("pNameNote").style.color=bad?"var(--red)":"";$("pNameNote").textContent=bad?"The name must match your verified ID: "+kycName():"Must be in your own name"+(kycName()?": "+kycName():"")}
 function validate(){
+  payUiSync();
   $("payCol").disabled=S.colPaid||!(S.idOk&&amtOk()&&$("method").value&&ghNum($("accNum").value));
-  $("confirm").disabled=!(S.colPaid&&amtOk()&&$("pMethod").value&&$("pName").value.trim().length>1&&$("pNum").value.trim().length>=9&&$("agree").checked);
+  $("confirm").disabled=!(S.colPaid&&amtOk()&&$("pMethod").value&&nameOk()&&(isBank()?$("pBank").value&&$("pNum").value.replace(/\D/g,"").length>=10:$("pNum").value.trim().length>=9)&&$("agree").checked);
 }
-function resetFlow(){try{stopPoll();payUi("")}catch(e){}S.colPaid=false;$("amt").value="";["method","accNum","pMethod","pName","pNum"].forEach(i=>$(i).value="");$("agree").checked=false;$("sellMsg").textContent="";setLock();renderEst()}
+function resetFlow(){try{stopPoll();payUi("")}catch(e){}S.colPaid=false;$("amt").value="";["method","accNum","pMethod","pBank","pName","pNum"].forEach(i=>$(i).value="");$("agree").checked=false;$("sellMsg").textContent="";setLock();renderEst()}
 $("coinSel").onchange=()=>{S.coin=$("coinSel").value;$("amt").value="";refreshAvail()};
 $("sellBtn").onclick=()=>{resetFlow();$("sellFlow").style.display="";$("doneView").style.display="none";dlg.showModal()};
 $("close").onclick=$("doneClose").onclick=()=>dlg.close();
 $("amt").oninput=renderEst;$("months").onchange=renderEst;$("unit").onchange=()=>{$("amt").value="";renderEst()};
 $("max").onclick=()=>{const k=S.px.sol*S.px.fx;$("amt").value=S.sol>0?($("unit").value!=="GHS"?S.sol:Math.floor(S.sol*k*100)/100):"";renderEst()};
-["method","accNum","pMethod","pName","pNum","agree"].forEach(i=>{$(i).addEventListener("input",validate);$(i).addEventListener("change",validate)});
+["method","accNum","pMethod","pBank","pName","pNum","agree"].forEach(i=>{$(i).addEventListener("input",validate);$(i).addEventListener("change",validate)});
 const SB_URL="https://djkcnhlstjvozrtfcqse.supabase.co",SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqa2NuaGxzdGp2b3pydGZjcXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMDc5MDYsImV4cCI6MjEwNjg4MzkwNn0.lS_p3mV4tdFOmcOVZBTIXN52HPDOgDAHhLluxUTdX_s";
 const PROV_CODE={"MTN Mobile Money":"mtn","Telecel Cash":"vod","AirtelTigo Money":"atl"};
 let payRef="",payTimer=null;
@@ -404,7 +551,7 @@ function payViaPopup(){
     callback:r=>done(r.reference),onClose:()=>{}}).openIframe();
 }
 $("confirm").onclick=()=>{
-  const c=calc(),o={id:"NL"+Date.now().toString(36).toUpperCase(),ts:Date.now(),net:CFG.net,sol:c.sol,dcoin:S.coin,usd:c.usd,ghs:c.val,col:c.col,colU:c.colU,coin:$("colCoin").value,tot:c.tot,mo:c.mo,m:c.m,idType:(S.kyc&&S.kyc.id_type)||"",name:S.kyc?(S.kyc.first_name+" "+S.kyc.last_name):"",method:"Paystack · "+$("method").value,mm:ghNum($("accNum").value)+" ("+(S.ref||"")+")",pm:$("pMethod").value,pname:$("pName").value.trim(),pnum:$("pNum").value.trim(),status:0};
+  const c=calc(),o={id:"NL"+Date.now().toString(36).toUpperCase(),ts:Date.now(),net:CFG.net,sol:c.sol,dcoin:S.coin,usd:c.usd,ghs:c.val,col:c.col,colU:c.colU,coin:$("colCoin").value,tot:c.tot,mo:c.mo,m:c.m,idType:(S.kyc&&S.kyc.id_type)||"",name:S.kyc?(S.kyc.first_name+" "+S.kyc.last_name):"",method:"Paystack · "+$("method").value,mm:ghNum($("accNum").value)+" ("+(S.ref||"")+")",pm:$("pMethod").value,pbank:$("pBank").value||"",pname:$("pName").value.trim(),pnum:$("pNum").value.trim(),nameOk:nameOk(),phoneOk:!!(S.kyc&&S.kyc.phone&&ghNum($("pNum").value)===S.kyc.phone),status:0};
   orders.unshift(o);saveOrders();refreshAvail();renderOrders();
   $("doneAmt").textContent=ghs(o.ghs);
   $("doneInfo").innerHTML=`Draw ${esc(o.id)}<br>Sending to ${esc(o.pm)} · ${esc(o.pnum)}<br>Status: ${STAGES[0]}<br>Repay ${ghs(o.tot)} in total<br>${o.m===1?"":"Your payments:"}${schedHtml(o.tot,o.m,o.ts)}`;
@@ -463,7 +610,7 @@ $("logout").onclick=()=>{
     sb.auth.signOut().finally(()=>{location.href="landing.html"});
   }
 };
-renderTerms();renderOrders();loadOffer();loadRates();startRates();setInterval(loadOffer,60000);
+renderTerms();renderOrders();renderMk();loadMarkets();loadWallet();loadOffer();loadRates();startRates();setInterval(loadOffer,60000);
 </script>
 </body>
 </html>
