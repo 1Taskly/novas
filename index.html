@@ -70,8 +70,8 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 .h2{margin-top:6px}
 @media(min-width:900px){
  .pg{width:min(100%,1080px);padding:28px 24px 12px;display:grid;grid-template-columns:minmax(0,1fr) 390px;column-gap:28px;align-items:start;
-  grid-template-areas:"top top" "hero how" "ah how" "assets how" "mk ord" "kyc ord" "sell ord"}
- .top{grid-area:top}.hero{grid-area:hero}.how{grid-area:how}.pg>.h2{grid-area:ah}
+  grid-template-areas:"top top" "rep how" "hero how" "ah how" "assets how" "mk ord" "kyc ord" "sell ord"}
+ .top{grid-area:top}#repayCard{grid-area:rep}.hero{grid-area:hero}.how{grid-area:how}.pg>.h2{grid-area:ah}
  #assets{grid-area:assets}#mkSec{grid-area:mk}#kycCard{grid-area:kyc}#sellBtn{grid-area:sell}#ordSec{grid-area:ord}#helpSec{grid-column:1/-1}#sellBtn{margin-top:0}
  #dbg{grid-column:1/-1}
  .balance{font-size:68px}
@@ -138,6 +138,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <header class="top"><div class="brand">Nova Loan</div><button id="profile" class="avatar" aria-label="Open profile"></button></header>
   <div id="dbg" class="small" style="display:none;background:#151515;border:1px solid #282828;border-radius:14px;padding:12px;margin-bottom:14px;line-height:1.6"></div>
 
+  <section id="repayCard" class="card"><div class="title">Your loan</div><div id="repInfo"></div><button id="repBtn" class="btn" style="width:100%" disabled>Pay your loan</button></section>
   <section class="hero"><div class="label">Loan available to you</div><div id="total" class="balance">$0.00</div><div id="chg" class="chg" aria-live="polite"></div>
     </section>
 
@@ -169,6 +170,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   </div>
   <button id="logout" class="lo">Log out</button>
 </aside>
+<dialog id="repDlg" aria-labelledby="repT"><div class="dHead"><span id="repT">Pay your loan</span><button class="x" id="repX" aria-label="Close">✕</button></div><div id="repBody"></div></dialog>
 <dialog id="mkDlg" aria-labelledby="mkT"><div class="dHead"><span id="mkT"></span><button class="x" id="mkX" aria-label="Close">✕</button></div><div id="mkBody"></div></dialog>
 <dialog id="dlg" aria-labelledby="dTitle">
   <div class="dHead"><span id="dTitle">Draw amount</span><button id="close" class="x" aria-label="Close">✕</button></div>
@@ -204,9 +206,8 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
         <input id="pName" placeholder="Account name (your own name)" aria-label="Account name" autocomplete="name">
         <input id="pNum" placeholder="Mobile money number" inputmode="numeric" aria-label="Payout number or account number">
         <div id="pNameNote" class="small" style="margin:0"></div>
-        <div id="lateNote" style="padding:12px;border-radius:12px;background:#2a2112;border:1px solid #4a3a1a;color:#e7c98a;font-size:13px;line-height:1.5"></div>
         <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--muted);margin:0"><input id="agree" type="checkbox" style="width:auto;margin-top:3px"><span id="agreeTxt"></span></label>
-        <div id="amlNote" style="padding:12px;border-radius:12px;background:#12202f;border:1px solid #1f3a57;color:#9cc4f5;font-size:13px;line-height:1.5"><b>Payouts are made only in your own name.</b> Under anti-money laundering rules, we send cash only to a mobile money number or bank account registered in the same name as your verified ID. We check the name before we pay, and we cannot pay anyone else.</div>
+        <div id="lateNote" style="padding:12px;border-radius:12px;background:#2a2112;border:1px solid #4a3a1a;color:#e7c98a;font-size:13px;line-height:1.5"></div>
         <button id="confirm" class="btn" disabled>Confirm draw</button>
       </div>
     </div>
@@ -287,8 +288,6 @@ function startRates(){clearInterval(rateTimer);rateTimer=setInterval(()=>{if(wsO
 // [coingecko id, symbol, name, colour, category]
 const MK=[["bitcoin","BTC","Bitcoin","#f7931a","major"],["ethereum","ETH","Ethereum","#627eea","major"],["solana","SOL","Solana","#9945ff","major"],["tether","USDT","Tether","#26a17b","major"],["binancecoin","BNB","BNB","#f3ba2f","major"],["ripple","XRP","XRP","#5b6270","major"],["cardano","ADA","Cardano","#3468d1","major"],["tron","TRX","TRON","#e0332a","major"],["litecoin","LTC","Litecoin","#8a98a8","major"],["chainlink","LINK","Chainlink","#2a5ada","major"],["avalanche-2","AVAX","Avalanche","#e84142","major"],
 ["dogecoin","DOGE","Dogecoin","#c2a633","meme"],["shiba-inu","SHIB","Shiba Inu","#e0452f","meme"],["pepe","PEPE","Pepe","#4c8c3a","meme"],["bonk","BONK","Bonk","#f58c1f","meme"],["dogwifcoin","WIF","dogwifhat","#a7795c","meme"],["floki","FLOKI","Floki","#d9a441","meme"]];
-// Paste your testnet receive addresses here (shown on the Receive button)
-const ADDR={BTC:"",ETH:""};
 const BN={BTC:"btcusdt",ETH:"ethusdt",SOL:"solusdt",BNB:"bnbusdt",XRP:"xrpusdt",ADA:"adausdt",TRX:"trxusdt",LTC:"ltcusdt",LINK:"linkusdt",AVAX:"avaxusdt",DOGE:"dogeusdt",SHIB:"shibusdt",PEPE:"pepeusdt",BONK:"bonkusdt",WIF:"wifusdt",FLOKI:"flokiusdt"};
 const BNR=Object.fromEntries(Object.entries(BN).map(([k,v])=>[v,k]));
 S.ck={};S.ckT={};S.ckF={};S.chart="line";
@@ -318,13 +317,80 @@ function renderWallet(){const pv=pvOf();
   $("demo").innerHTML=`<div class="k">Portfolio balance</div><div class="v" id="pv">${usd(pv)}</div><div class="k">Cash ${usd(W.usd)}<button class="lnk" id="addF">Add funds</button></div><div class="acts">${A.map(x=>`<button class="act" data-a="${x[0]}"><i>${ic(x[2])}</i>${x[1]}</button>`).join("")}</div>`;
   $("addF").onclick=()=>{S.sym=null;S.step="fund";S.back="view";S.fund=50;drawMk();$("mkDlg").showModal()};
   $("demo").querySelectorAll(".act").forEach(b=>b.onclick=()=>{const a=b.dataset.a;S.sym=null;S.back=null;
-    if(a==="buy"||a==="sell"){S.side=a;S.step="pick"}else S.step=a==="receive"?"receive":"soon",S.act=a;
+    if(a==="buy"||a==="sell"){S.side=a;S.step="pick"}else S.step=a;
     drawMk();$("mkDlg").showModal()})}
 async function callTrade(body){const {data,error}=await sb.functions.invoke("trade",{body});
   if(error){let m=error.message;try{m=(await error.context.json()).error||m}catch(e){}throw new Error(m)}
   if(data&&data.error)throw new Error(data.error);return data}
+// ---- Receive / Send / Swap ----
+const WCOINS=[["BTC","Bitcoin"],["ETH","Ethereum"],["USDT","Tether (USDT)"]];
+async function callWallet(body){const {data,error}=await sb.functions.invoke("wallet",{body});
+  if(error){let m=error.message;try{m=(await error.context.json()).error||m}catch(e){}throw new Error(m)}
+  if(data&&data.error)throw new Error(data.error);return data}
+async function wcfg(){if(S.wcfg&&Date.now()-S.wcfgT<300000)return S.wcfg;
+  try{S.wcfg=await callWallet({action:"config"});S.wcfgT=Date.now()}catch(e){S.wcfg={fees:{},min:{},on:{},swapFee:.005};S.wcfgT=Date.now()-290000}return S.wcfg}
+$("mkDlg").addEventListener("close",()=>clearInterval(S.rcT));
+function bindReceive(){
+  const seg=$("mkBody").querySelectorAll("[data-rc]");
+  const show=async sym=>{S.rc=sym;seg.forEach(b=>b.classList.toggle("on",b.dataset.rc===sym));
+    const box=$("rcBody");box.innerHTML='<div class="empty">Loading…</div>';
+    const name=WCOINS.find(x=>x[0]===sym)[1],cfg=await wcfg();if(S.step!=="receive"||S.rc!==sym)return;
+    if(!cfg.on||!cfg.on[sym]){box.innerHTML='<div class="empty">Deposits for '+name+' are not available yet.</div>';return}
+    try{const r=await callWallet({action:"address",chain:sym==="BTC"?"BTC":"ETH"});if(S.step!=="receive"||S.rc!==sym)return;
+      const note=sym==="USDT"?"Send USDT on the Ethereum network (ERC-20) only. Other networks will be lost.":sym==="ETH"?"Send Ethereum (ETH) on the Ethereum network only.":"Send Bitcoin (BTC) only.";
+      box.innerHTML='<div class="step" style="margin-top:12px"><div class="stepHead"><span>Your '+name+' deposit address</span></div><div class="addr" id="rcAddr">'+esc(r.address)+'</div><button class="btn ghost" id="rcCopy" style="width:100%">Copy address</button></div><div class="small">'+note+' Deposits are added to your balance once the network confirms them (Bitcoin about 20 minutes, Ethereum a few minutes).</div><div id="rcStat" class="small" role="status"></div>';
+      $("rcCopy").onclick=async()=>{try{await navigator.clipboard.writeText(r.address);$("rcCopy").textContent="Copied"}catch(e){}}
+    }catch(e){box.innerHTML='<div class="msg">'+esc(e.message)+'</div>'}};
+  seg.forEach(b=>b.onclick=()=>show(b.dataset.rc));show(S.rc||"BTC");
+  clearInterval(S.rcT);
+  const scan=async()=>{if(S.step!=="receive"||!$("mkDlg").open){clearInterval(S.rcT);return}
+    try{const r=await callWallet({action:"scan"}),el=$("rcStat");if(!el)return;
+      const inc=(r.pending||[]).filter(p=>p.sym===S.rc);
+      if(r.credited&&r.credited.length){loadWallet();el.innerHTML='<span style="color:var(--green)">Received '+r.credited.map(c=>qf(c.amount)+" "+c.sym).join(", ")+". Added to your balance.</span>"}
+      else if(inc.length)el.textContent="Incoming "+inc.map(p=>qf(p.amount)+" "+p.sym).join(", ")+", waiting for the network to confirm"+(inc[0].sym==="BTC"?" ("+inc[0].confs+"/"+inc[0].need+")":"")+"."}catch(e){}};
+  scan();S.rcT=setInterval(scan,20000)}
+async function bindSend(){
+  const cfg=await wcfg();let sym=S.sc||"BTC",armed=false;
+  const seg=$("mkBody").querySelectorAll("[data-sc]");
+  const hist=async()=>{const el=$("sdHist");if(!el)return;
+    const {data}=await sb.from("withdrawals").select("sym,amount,status,txid,created_at").order("created_at",{ascending:false}).limit(5);
+    el.innerHTML=data&&data.length?'<div class="small" style="margin:16px 0 4px;font-weight:700;color:#fff">Recent sends</div>'+data.map(w=>'<div class="small" style="margin:2px 0">'+qf(Number(w.amount))+" "+esc(w.sym)+" · "+(w.status==="sent"?'<span style="color:var(--green)">Sent</span>':w.status==="rejected"?"Cancelled, refunded":"Processing")+(w.txid?" · "+esc(String(w.txid).slice(0,10))+"…":"")+"</div>").join(""):""};
+  const draw=()=>{S.sc=sym;seg.forEach(b=>b.classList.toggle("on",b.dataset.sc===sym));
+    const held=W.h[sym]||0,fee=cfg.fees[sym]||0,min=cfg.min[sym]||0,on=cfg.on&&cfg.on[sym],box=$("sdBody");armed=false;
+    if(!S.idOk){box.innerHTML='<div class="empty">Verify your identity in the Borrow tab to send crypto.</div>';return}
+    if(!on){box.innerHTML='<div class="empty">Sending '+sym+' is not available yet.</div>';return}
+    box.innerHTML='<div class="small" style="margin:12px 0 8px">You hold '+qf(held)+" "+sym+'</div><div class="row" style="flex-direction:row"><input id="sdAmt" type="number" min="0" step="any" inputmode="decimal" placeholder="Amount in '+sym+'" aria-label="Amount" style="flex:1;min-width:0"><button class="btn ghost" id="sdMax" style="min-width:64px">Max</button></div><input id="sdAddr" placeholder="'+(sym==="BTC"?"Bitcoin address":"Ethereum address (0x…)")+'" autocomplete="off" spellcheck="false" aria-label="Destination address" style="margin-top:9px"><div id="sdEst" class="small" style="min-height:36px"></div><button class="btn" id="sdGo" disabled>Send</button><div id="sdMsg" class="msg" role="status"></div><div id="sdHist"></div>';
+    const chk=()=>{const a=Number($("sdAmt").value),ad=$("sdAddr").value.trim();armed=false;$("sdGo").textContent="Send";
+      $("sdEst").textContent=a>0?"Network fee "+qf(fee)+" "+sym+". Total taken from your balance: "+qf(a+fee)+" "+sym+".":"Minimum "+qf(min)+" "+sym+". Network fee "+qf(fee)+" "+sym+".";
+      $("sdGo").disabled=!(a>=min&&a+fee<=held+1e-12&&ad.length>20)};
+    $("sdAmt").oninput=chk;$("sdAddr").oninput=chk;
+    $("sdMax").onclick=()=>{$("sdAmt").value=Math.max(0,Math.floor((held-fee)*1e8)/1e8)||"";chk()};
+    $("sdGo").onclick=async()=>{const a=Number($("sdAmt").value),ad=$("sdAddr").value.trim(),m=$("sdMsg");
+      if(!armed){armed=true;$("sdGo").textContent="Tap again to send "+qf(a)+" "+sym;m.className="msg";m.textContent="Check the address carefully. Crypto sent to a wrong address cannot be recovered.";return}
+      $("sdGo").disabled=true;m.textContent="";
+      try{await callWallet({action:"withdraw",sym,amount:a,address:ad});m.className="msg ok";m.textContent="Done. Your withdrawal is being processed.";$("sdAmt").value="";$("sdAddr").value="";loadWallet();hist()}
+      catch(e){m.className="msg";m.textContent=e.message;armed=false;$("sdGo").textContent="Send";$("sdGo").disabled=false}};
+    chk();hist()};
+  seg.forEach(b=>b.onclick=()=>{sym=b.dataset.sc;draw()});draw()}
+async function bindSwap(){
+  const fr=$("swFrom");if(!fr)return;const cfg=await wcfg();
+  const to=$("swTo"),fillTo=()=>{const keep=to.value||S.st;to.innerHTML=MK.filter(x=>x[1]!==fr.value).map(x=>'<option value="'+x[1]+'" '+(x[1]===keep?"selected":"")+'>'+x[2]+" ("+x[1]+")</option>").join("")};
+  const est=()=>{S.sf=fr.value;S.st=to.value;const a=Number($("swAmt").value),held=W.h[fr.value]||0,pf=(S.mk[fr.value]||{}).p,pt=(S.mk[to.value]||{}).p,e=$("swEst"),g=$("swGo");
+    if(!(a>0)||!pf||!pt){e.textContent="";g.disabled=true;return}
+    const got=a*pf*(1-(cfg.swapFee??.005))/pt;
+    e.textContent="You get about "+qf(got)+" "+to.value+" (fee "+fmt((cfg.swapFee??.005)*100,2)+"%). The final amount is set at the live price when you tap Swap.";
+    g.disabled=a>held+1e-12||a*pf<1;if(a*pf<1)e.textContent="The minimum swap is $1."};
+  fillTo();fr.onchange=()=>{fillTo();$("swAmt").value="";est()};to.onchange=est;$("swAmt").oninput=est;
+  $("swMax").onclick=()=>{$("swAmt").value=W.h[fr.value]||"";est()};
+  $("swGo").onclick=async()=>{const m=$("swMsg");$("swGo").disabled=true;m.textContent="";
+    try{const r=await callWallet({action:"swap",from:fr.value,to:to.value,qty:Number($("swAmt").value)});
+      await loadWallet();S.step="swapdone";$("mkT").textContent="Swap complete";
+      $("mkBody").innerHTML='<div class="done"><div class="label">You received</div><div class="big">'+qf(r.got)+" "+esc(to.value)+'</div><button class="btn" id="swOk" style="width:100%;margin-top:16px">Done</button></div>';$("swOk").onclick=()=>$("mkDlg").close()}
+    catch(e){m.className="msg";m.textContent=e.message;$("swGo").disabled=false}};
+  est()}
 // ---- Sheet: view -> trade (amount) -> fund (deposit) ----
 function drawMk(){
+  if(S.step!=="receive")clearInterval(S.rcT);
   const sym=S.sym,st=S.step,m=sym&&MK.find(x=>x[1]===sym),d=(sym&&S.mk[sym])||{},up=(d.chg||0)>=0,c=BORROW[sym],can=!!c&&S.idOk&&availOf(c)>0,held=(sym&&W.h[sym])||0,buy=S.side==="buy";
   const chips=(arr,k)=>`<div class="chips" id="qc">${arr.map(v=>`<button data-q="${v}">${v==="Max"?"Max":"$"+v}</button>`).join("")}</div>`;
   const bk='<button class="btn ghost" id="bk" style="margin-top:10px">Back</button>',off=W.ok?"":'<div class="msg">Trading is not switched on yet.</div>';
@@ -342,14 +408,19 @@ function drawMk(){
   else if(st==="pick"){const rows=MK.filter(x=>buy||(W.h[x[1]]||0)>0);$("mkT").textContent=buy?"Buy which asset?":"Sell which asset?";
     h=rows.length?rows.map(x=>{const e=S.mk[x[1]],u=!e||e.chg>=0;return `<button class="asset mrow" data-p="${x[1]}"><div class="l"><div class="ico">${mkIcon(x)}</div><div><div class="nm">${x[2]}</div><div class="qty">${buy?x[1]:qf(W.h[x[1]])+" "+x[1]}</div></div></div><div class="r"><div class="nm">${e?mpx(e.p):"—"}</div><div class="sub ${u?"up":"down"}">${e?pcs(e.chg):""}</div></div></button>`}).join(""):'<div class="empty">You do not hold any assets to sell yet.</div>'}
   else if(st==="receive"){$("mkT").textContent="Receive";
-    h=Object.keys(ADDR).map(k=>{const m=MK.find(x=>x[1]===k);return `<div class="step"><div class="stepHead"><span>${m[2]} (testnet)</span></div>${ADDR[k]?`<div class="addr">${esc(ADDR[k])}</div><button class="btn ghost" data-cp="${esc(ADDR[k])}" style="width:100%">Copy address</button>`:'<div class="small">Address not set yet.</div>'}</div>`}).join("")+'<div class="small">Send only testnet coins to these addresses.</div>'}
-  else if(st==="soon"){$("mkT").textContent=S.act==="swap"?"Swap":"Send";h='<div class="empty">'+(S.act==="swap"?"Swap":"Send")+' is not switched on yet.</div>'}
+    h='<div class="seg" style="margin-top:2px">'+WCOINS.map(x=>'<button data-rc="'+x[0]+'" class="'+((S.rc||"BTC")===x[0]?"on":"")+'">'+x[0]+'</button>').join("")+'</div><div id="rcBody"><div class="empty">Loading…</div></div>'}
+  else if(st==="send"){$("mkT").textContent="Send";
+    h='<div class="seg" style="margin-top:2px">'+WCOINS.map(x=>'<button data-sc="'+x[0]+'" class="'+((S.sc||"BTC")===x[0]?"on":"")+'">'+x[0]+'</button>').join("")+'</div><div id="sdBody"><div class="empty">Loading…</div></div>'}
+  else if(st==="swap"){$("mkT").textContent="Swap";
+    const mine=MK.filter(x=>(W.h[x[1]]||0)>0);
+    h=mine.length?'<div class="small" style="margin:0 0 6px">From</div><select id="swFrom" aria-label="Swap from">'+mine.map(x=>'<option value="'+x[1]+'" '+(x[1]===S.sf?"selected":"")+'>'+x[2]+' ('+x[1]+') · '+qf(W.h[x[1]])+'</option>').join("")+'</select><div class="row" style="flex-direction:row;margin-top:9px"><input id="swAmt" type="number" min="0" step="any" inputmode="decimal" placeholder="Amount" aria-label="Amount to swap" style="flex:1;min-width:0"><button class="btn ghost" id="swMax" style="min-width:64px">Max</button></div><div class="small" style="margin:14px 0 6px">To</div><select id="swTo" aria-label="Swap to"></select><div id="swEst" class="small" style="min-height:36px"></div><button class="btn" id="swGo" disabled>Swap</button><div id="swMsg" class="msg" role="status"></div>':'<div class="empty">You do not hold any assets to swap yet. Buy one first.</div>'}
   else{$("mkT").textContent="Add funds";
     h=`<div class="small" style="margin:0 0 8px">Pay with mobile money. Funds reach your balance after Paystack confirms.</div><input id="tAmt" type="number" min="5" step="any" inputmode="decimal" placeholder="$0" value="${S.fund||50}" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px">${chips([25,50,100,250])}
     <div id="tEst" class="small" style="min-height:18px;text-align:center"></div><button class="btn" id="tGo">Pay with Mobile Money</button><div id="tMsg" class="msg" role="status"></div>${off}${S.back?bk:""}`}
   $("mkBody").innerHTML=h;
   $("mkBody").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{S.sym=b.dataset.p;S.step="trade";S.back="pick";S.amt=buy?50:25;drawMk()});
   $("mkBody").querySelectorAll("[data-cp]").forEach(b=>b.onclick=()=>{try{navigator.clipboard.writeText(b.dataset.cp);b.textContent="Copied"}catch(e){}});
+  if(st==="receive")bindReceive();else if(st==="send")bindSend();else if(st==="swap")bindSwap();
   if(st==="view"&&$("chartBox")){drawChart();
     $("mkBody").querySelectorAll("[data-ch]").forEach(b=>b.onclick=()=>{S.chart=b.dataset.ch;S.ckF[sym]=false;$("mkBody").querySelectorAll("[data-ch]").forEach(x=>x.classList.toggle("on",x===b));drawChart()});
     if(S.ck[sym]&&Date.now()-S.ck[sym].t>60000)loadCandles(sym)}
@@ -491,7 +562,7 @@ function renderAssets(){
   const rows=COINS.map(sym=>{const q=availOf(sym,true);return{name:COIN_NAME[sym],sym,qty:q,icon:LOGO[sym],val:q*priceOf(sym)}});
   S.totalUsd=act?0:rows.reduce((t,r)=>t+r.val,0);
   $("assets").innerHTML=(act?`<div class="small" style="margin:0 0 6px;color:var(--amber)">You have an active ${COIN_NAME[actSym]} loan. Repay it before you borrow again.</div>`:"")+rows.map(a=>{
-    const ok=a.qty>0,live=S.liveBy[a.sym],tag=ok?(live?'<span style="color:var(--green)"><i class="liveDot"></i>Live on-chain</span>':'<span style="color:var(--amber)">● Test limit</span>'):"";
+    const ok=a.qty>0,live=S.liveBy[a.sym],tag=ok?(live?'<span style="color:var(--green)"><i class="liveDot"></i>Live on-chain</span>':''):"";
     const sub=act?(a.sym===actSym?"Active loan":"Locked until you repay"):ok?"Up to "+a.qty.toLocaleString(undefined,{maximumFractionDigits:a.sym==="USDC"?2:a.qty<1?6:4})+" "+esc(dn(a.sym)):"Not available right now";
     const label=act?(a.sym===actSym?"Loan active":"Locked"):!S.idOk?"Verify identity to borrow":"Get loan";
     return `<div class="asset" style="flex-wrap:wrap"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty" data-aq="${a.sym}">${sub}</div><div class="qty" data-ap="${a.sym}">${pxLine(a.sym)}</div><div style="font-size:11px;font-weight:700;margin-top:2px">${tag}</div></div></div><div class="r"><div class="nm" data-av="${a.sym}" data-v="${a.val}">${usd(a.val)}</div><div class="sub up" data-ag="${a.sym}">${ghs(a.val*S.px.fx)}</div></div><button class="btn" data-loan="${a.sym}" style="flex-basis:100%;margin:10px 0 0;min-height:42px" ${ok&&!act?"":"disabled"}>${label}</button></div>`}).join("");
@@ -629,9 +700,67 @@ $("confirm").onclick=()=>{
 // ---- Orders ----
 function renderOrders(){
   $("ordSec").style.display=orders.length?"":"none";
-  $("ordList").innerHTML=orders.map(o=>`<div class="ord"><div class="ordTop"><span>${esc(o.id)}</span><span class="st ${o.status>=1?"done":""}">${STAGES[Math.min(o.status,1)]}</span></div><div class="meta">${new Date(o.ts).toLocaleString()}<br>${fmt(o.sol,4)} ${esc(dn(o.dcoin||"SOL"))} → <b style="color:#fff">${ghs(o.ghs)}</b><br>Repay ${ghs(o.tot)} in total<br>${schedHtml(o.tot,o.m,o.ts)}<br>To ${esc(o.pm)} · ${esc(o.pnum)}</div></div>`).join("");
+  $("ordList").innerHTML=orders.map(o=>`<div class="ord"><div class="ordTop"><span>${esc(o.id)}</span><span class="st ${o.status>=1?"done":""}">${STAGES[Math.min(o.status,1)]}</span></div><div class="meta">${new Date(o.ts).toLocaleString()}<br>${fmt(o.sol,4)} ${esc(dn(o.dcoin||"SOL"))} → <b style="color:#fff">${ghs(o.ghs)}</b><br>Repay ${ghs(o.tot)} in total<br>${o.repaid?'<b style="color:var(--green)">Fully repaid</b><br>':(o.paid?"Paid "+ghs(o.paid)+" · Remaining <b style=\"color:#fff\">"+ghs(owed(o))+"</b><br>":"")}${schedHtml(o.tot,o.m,o.ts)}<br>To ${esc(o.pm)} · ${esc(o.pnum)}</div></div>`).join("");
+try{renderRepay()}catch(e){}
 }
 window.addEventListener("storage",e=>{if(e.key==="nova_orders"){try{orders=JSON.parse(e.newValue||"[]")}catch(x){}renderOrders()}});
+
+// ---- Repay: direct mobile-money prompt (same payment service as the collateral step) ----
+const activeOrder=()=>orders.find(o=>!o.repaid);
+const owed=o=>Math.max(0,Math.round((o.tot-(o.paid||0))*100)/100);
+function nextDue(o){const rem=owed(o),sc=schedule(o.tot,o.m,o.ts),pd=o.paid||0;let k=0,acc=0;
+  while(k<sc.length-1&&pd>=acc+sc[k].amt-.005){acc+=sc[k].amt;k++}
+  return{amt:Math.min(rem,Math.max(0,Math.round((acc+sc[k].amt-pd)*100)/100)||rem),date:sc[k].d}}
+function renderRepay(){const o=activeOrder(),b=$("repBtn"),i=$("repInfo");if(!b)return;
+  if(!o){i.innerHTML='<div class="small" style="margin:0 0 12px">You have no active loan.</div>';b.disabled=true;return}
+  const n=nextDue(o),late=n.date.getTime()<Date.now();
+  i.innerHTML=`<div class="label" style="margin-bottom:4px">Remaining to pay</div><div class="balance" style="font-size:36px">${ghs(owed(o))}</div><div class="small" style="margin:6px 0 14px">${ghs(n.amt)} due by ${fdate(n.date)}${late?' · <span style="color:var(--red)">overdue</span>':""}</div>`;
+  b.disabled=false}
+let repOid="",repAmt=0,repMode="next",repRef="",repTimer=null,repBusy=false;
+const repStop=()=>{clearInterval(repTimer);repTimer=null};
+function repUi(t,otp){$("repStatus").textContent=t||"";$("repOtpBox").style.display=otp?"":"none"}
+function repValid(){const b=$("repPay");if(b)b.disabled=repBusy||!(ghNum($("repNum").value)&&$("repNet").value)}
+function drawRep(){const o=orders.find(x=>x.id===repOid);if(!o)return;const rem=owed(o),n=nextDue(o);
+  const setAmt=()=>{repAmt=repMode==="full"||n.amt>=rem?rem:n.amt};setAmt();
+  $("repBody").innerHTML=`<div class="small" style="margin:0 0 6px">${kycName()?"Loan for <b style=\"color:#fff\">"+esc(kycName())+"</b> · ":""}${esc(o.id)}</div>
+  <div class="label" style="margin-bottom:4px">Remaining to pay</div><div class="balance" style="font-size:34px">${ghs(rem)}</div>
+  ${n.amt<rem?`<div class="seg" style="margin:14px 0 4px"><button data-rm="next" class="${repMode==="full"?"":"on"}">Next ${ghs(n.amt)}</button><button data-rm="full" class="${repMode==="full"?"on":""}">All ${ghs(rem)}</button></div>`:""}
+  <div style="display:grid;gap:9px;margin-top:12px">
+    <select id="repNet" aria-label="Mobile money network"><option value="">Choose your mobile money network</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option></select>
+    <input id="repNum" placeholder="Your mobile money number (e.g. 024 123 4567)" inputmode="tel" autocomplete="tel" aria-label="Mobile money number">
+    <button id="repPay" class="btn" disabled>Pay ${ghs(repAmt)}</button>
+    <div id="repStatus" class="small" role="status"></div>
+    <div id="repOtpBox" style="display:none"><div class="row" style="flex-direction:row"><input id="repOtp" placeholder="Enter the code" inputmode="numeric" autocomplete="one-time-code" aria-label="Verification code"><button id="repOtpBtn" class="btn">Submit</button></div></div>
+  </div>`;
+  $("repBody").querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{repMode=b.dataset.rm;setAmt();$("repBody").querySelectorAll("[data-rm]").forEach(x=>x.classList.toggle("on",x===b));$("repPay").textContent="Pay "+ghs(repAmt)});
+  ["repNet","repNum"].forEach(i=>{$(i).addEventListener("input",repValid);$(i).addEventListener("change",repValid)});
+  $("repPay").onclick=async()=>{const phone=ghNum($("repNum").value),provider=PROV_CODE[$("repNet").value],amount=Math.round(repAmt*100);
+    if(!phone||!provider)return;if(!(amount>=100)){repUi("The amount is too small to charge.");return}
+    repBusy=true;repValid();repUi("Contacting your mobile money provider\u2026");
+    try{repState(await fn({action:"start",phone,provider,amount,email:uem||"customer@novaloan.app",purpose:"repayment",loan:repOid}))}
+    catch(e){repBusy=false;repValid();repUi("Could not reach the payment service. Try again.")}};
+  $("repOtpBtn").onclick=async()=>{const otp=$("repOtp").value.trim();if(!otp)return;$("repOtpBtn").disabled=true;
+    try{const r=await fn({action:"otp",reference:repRef,otp});$("repOtp").value="";repState(r)}
+    catch(e){repUi("Could not submit the code. Try again.",true)}
+    finally{$("repOtpBtn").disabled=false}}}
+function repState(r){
+  if(!r.ok){repStop();repBusy=false;repValid();repUi(r.error||"Payment failed. Try again.");return}
+  repRef=r.reference||repRef;
+  if(r.state==="send_otp")repUi(r.text||"Enter the code sent to your phone.",true);
+  else if(r.state==="success"){repStop();repDone()}
+  else if(r.state==="failed"){repStop();repBusy=false;repValid();repUi("The payment was declined or cancelled. Try again.")}
+  else{repUi(r.text||"Approve the payment on your phone\u2026");repPoll()}}
+function repPoll(){if(repTimer)return;let n=0;
+  repTimer=setInterval(async()=>{if(++n>40){repStop();repBusy=false;repValid();repUi("Timed out waiting for approval. Try again.");return}
+    try{const r=await fn({action:"status",reference:repRef});if(r.ok&&r.state!=="pending")repState(r)}catch(e){}},3000)}
+function repDone(){const o=orders.find(x=>x.id===repOid);if(!o)return;
+  o.refs=o.refs||[];
+  if(!o.refs.includes(repRef)){o.refs.push(repRef);o.paid=Math.round(((o.paid||0)+repAmt)*100)/100;if(o.paid>=o.tot-.005){o.repaid=true;o.repaidAt=Date.now()}saveOrders()}
+  repBusy=false;refreshAvail();renderOrders();
+  $("repBody").innerHTML=`<div class="done"><div class="label">Payment received</div><div class="big">${ghs(repAmt)}</div><div class="meta">${o.repaid?"Your loan is fully paid. Thank you!":"Remaining: <b style=\"color:#fff\">"+ghs(owed(o))+"</b>"}</div><button id="repClose" class="btn" style="width:100%;margin-top:16px">Done</button></div>`;
+  $("repClose").onclick=()=>$("repDlg").close()}
+$("repBtn").onclick=()=>{const o=activeOrder();if(!o)return;repOid=o.id;repMode="next";if(!repBusy)drawRep();$("repDlg").showModal()};
+$("repX").onclick=()=>$("repDlg").close();
 
 let uem="";
 const sb=supabase.createClient(SB_URL,SB_KEY);

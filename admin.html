@@ -70,6 +70,7 @@ input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;pa
     <button class="tab active" data-p="kyc">Verifications</button>
     <button class="tab" data-p="settings">Settings</button>
     <button class="tab" data-p="loans">Loans</button>
+    <button class="tab" data-p="wallet">Wallet</button>
   </div>
 
   <div id="kyc" class="panel on">
@@ -111,6 +112,25 @@ input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;pa
   </div>
 
   <div id="loans" class="panel"><div id="loanList"></div></div>
+
+  <div id="wallet" class="panel">
+    <div class="card"><div class="title">Withdrawals waiting</div><div id="wdList"></div></div>
+    <div class="card"><div class="title">Owed to users</div><div id="owed" class="kv">Loading…</div>
+      <div class="hint">Your wallets should always hold at least this much of each coin. Buying and selling inside the app does not move coins on the blockchain, so top your wallet up when a number here grows past what you hold.</div>
+      <div class="row" style="margin-top:12px"><button class="btn ghost sm" id="scanAll">Scan all deposit addresses now</button></div><div id="scanMsg" class="msg"></div></div>
+    <div class="card"><div class="title">Wallet keys and fees</div>
+      <label for="wBtc">Bitcoin public key (xpub / zpub / tpub)</label><input id="wBtc" spellcheck="false" autocomplete="off" placeholder="Public key only. Never paste a seed phrase here.">
+      <label for="wEth">Ethereum public key (xpub)</label><input id="wEth" spellcheck="false" autocomplete="off" placeholder="Public key only. Never paste a seed phrase here.">
+      <label for="wUsdt">USDT contract on the Ethereum network</label><input id="wUsdt" spellcheck="false" autocomplete="off" placeholder="Leave empty on mainnet to use the official USDT. On the test network, paste a test token or leave empty to switch USDT off.">
+      <div class="grid"><div><label for="wcB">Bitcoin confirmations</label><input id="wcB" type="number" min="1" step="1"></div><div><label for="wcE">Ethereum confirmations</label><input id="wcE" type="number" min="1" step="1"></div></div>
+      <div class="grid"><div><label for="wfB">Send fee BTC</label><input id="wfB" type="number" min="0" step="any"></div><div><label for="wmB">Minimum send BTC</label><input id="wmB" type="number" min="0" step="any"></div>
+      <div><label for="wfE">Send fee ETH</label><input id="wfE" type="number" min="0" step="any"></div><div><label for="wmE">Minimum send ETH</label><input id="wmE" type="number" min="0" step="any"></div>
+      <div><label for="wfU">Send fee USDT</label><input id="wfU" type="number" min="0" step="any"></div><div><label for="wmU">Minimum send USDT</label><input id="wmU" type="number" min="0" step="any"></div></div>
+      <label for="wSw">Swap fee (percent)</label><input id="wSw" type="number" min="0" step="any">
+      <div class="hint">The network (test or real) follows the Network setting on the Settings tab. When you launch, switch that to Mainnet and paste your real wallet keys here. Customers then get new real addresses automatically.</div>
+      <div class="row" style="margin-top:12px"><button class="btn" id="wSave">Save wallet settings</button></div><div id="wMsg" class="msg"></div></div>
+    <div class="card"><div class="title">Recent deposits</div><div id="depList" class="kv">Loading…</div></div>
+  </div>
 </main>
 
 <script>
@@ -130,7 +150,7 @@ async function boot(){
     $("lmsg").textContent="This account is not an admin.";await sb.auth.signOut();return;
   }
   $("login").style.display="none";$("panel").style.display="";
-  loadKyc();loadSettings();loadLoans();
+  loadKyc();loadSettings();loadLoans();loadWallet();
 }
 $("go").onclick=async()=>{
   $("lmsg").textContent="";$("go").disabled=true;
@@ -256,6 +276,66 @@ async function loadLoans(){
     if(error){alert("Could not save. "+error.message);return}
     loadLoans();
   });
+}
+
+// ---------- Wallet ----------
+const WC=["BTC","ETH","USDT"];
+async function loadWallet(){
+  const {data}=await sb.from("settings").select("key,value");
+  const c=((data||[]).find(r=>r.key==="custody")||{}).value||{},f=c.fees||{},m=c.min||{},cf=c.confs||{};
+  $("wBtc").value=c.btcXpub||"";$("wEth").value=c.ethXpub||"";$("wUsdt").value=c.usdtContract||"";
+  $("wcB").value=cf.BTC??2;$("wcE").value=cf.ETH??12;
+  $("wfB").value=f.BTC??0.0001;$("wmB").value=m.BTC??0.0005;$("wfE").value=f.ETH??0.002;$("wmE").value=m.ETH??0.01;$("wfU").value=f.USDT??5;$("wmU").value=m.USDT??10;
+  $("wSw").value=c.swapFee!=null&&c.swapFee!==""?Number(c.swapFee)*100:0.5;
+  loadWd();loadOwed();loadDeps();
+}
+$("wSave").onclick=async()=>{
+  const v=id=>$(id).value.trim(),n=id=>Number($(id).value),bad=/\s/.test(v("wBtc"))||/\s/.test(v("wEth"));
+  if(bad||/^(abandon|[a-z]+ [a-z]+ [a-z]+)/.test(v("wBtc"))||/^[a-z]+ [a-z]+ [a-z]+/.test(v("wEth"))){$("wMsg").className="msg";$("wMsg").textContent="That looks like words, not a public key. Never paste a seed phrase here.";return}
+  const value={btcXpub:v("wBtc"),ethXpub:v("wEth"),usdtContract:v("wUsdt"),confs:{BTC:n("wcB"),ETH:n("wcE")},
+    fees:{BTC:n("wfB"),ETH:n("wfE"),USDT:n("wfU")},min:{BTC:n("wmB"),ETH:n("wmE"),USDT:n("wmU")},swapFee:n("wSw")/100};
+  const {error}=await sb.from("settings").upsert([{key:"custody",value}],{onConflict:"key"});
+  $("wMsg").className=error?"msg":"msg ok";$("wMsg").textContent=error?"Could not save: "+error.message:"Saved.";
+};
+$("scanAll").onclick=async()=>{
+  $("scanMsg").className="msg";$("scanMsg").textContent="Scanning…";
+  try{const {data,error}=await sb.functions.invoke("wallet",{body:{action:"scanall"}});if(error)throw error;
+    $("scanMsg").className="msg ok";$("scanMsg").textContent="Scanned "+data.scanned+" address(es), "+data.credited+" new deposit(s) credited.";loadOwed();loadDeps()}
+  catch(e){$("scanMsg").textContent="Could not scan. Check that the wallet function is deployed."}
+};
+const emOf=async()=>{const {data:ps}=await sb.from("profiles").select("id,email");return Object.fromEntries((ps||[]).map(p=>[p.id,p.email]))};
+async function loadWd(){
+  const L=$("wdList");L.innerHTML='<div class="empty">Loading…</div>';
+  const {data:rows,error}=await sb.from("withdrawals").select("*").order("created_at",{ascending:false}).limit(40);
+  if(error){L.innerHTML='<div class="empty">Could not load withdrawals.</div>';return}
+  const em=await emOf(),pend=rows.filter(r=>r.status==="pending"),done=rows.filter(r=>r.status!=="pending").slice(0,8);
+  L.innerHTML=(pend.length?pend.map(r=>`<div class="coin"><div class="head"><span>${esc(em[r.user_id]||r.user_id)}</span><span class="pill wait">waiting</span></div>
+    <div class="kv">${new Date(r.created_at).toLocaleString()}<br>Send <b>${Number(r.amount)} ${esc(r.sym)}</b> (fee ${Number(r.fee)} already taken from the user) · network: ${esc(r.net==="main"?"real":"test")}<br>To: <b style="word-break:break-all">${esc(r.address)}</b></div>
+    <div class="row" style="margin-top:12px"><button class="btn ghost sm" data-cp="${esc(r.address)}">Copy address</button><button class="btn sm" data-sent="${r.id}">Mark as sent</button><button class="btn red sm" data-rej="${r.id}">Reject and refund</button></div></div>`).join(""):'<div class="empty">No withdrawals waiting.</div>')
+   +(done.length?'<div class="hint" style="margin-top:14px">Recent: '+done.map(r=>esc(em[r.user_id]||"user")+" "+Number(r.amount)+" "+esc(r.sym)+" ("+esc(r.status)+")").join(" · ")+"</div>":"");
+  L.querySelectorAll("[data-cp]").forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(b.dataset.cp);b.textContent="Copied"}catch(e){}});
+  L.querySelectorAll("[data-sent]").forEach(b=>b.onclick=async()=>{
+    const tx=prompt("Paste the transaction ID (txid) of the payment you sent:");if(!tx||tx.trim().length<10)return;
+    const {error}=await sb.rpc("admin_mark_sent",{p_id:Number(b.dataset.sent),p_txid:tx.trim()});
+    if(error){alert("Could not save. "+error.message);return}loadWd()});
+  L.querySelectorAll("[data-rej]").forEach(b=>b.onclick=async()=>{
+    if(!confirm("Reject this withdrawal and refund the user (amount plus fee)?"))return;
+    const {error}=await sb.rpc("admin_reject_withdrawal",{p_id:Number(b.dataset.rej)});
+    if(error){alert("Could not save. "+error.message);return}loadWd();loadOwed()});
+}
+async function loadOwed(){
+  const {data,error}=await sb.from("holdings").select("sym,qty");
+  if(error){$("owed").textContent="Could not load balances.";return}
+  const t={};(data||[]).forEach(r=>{t[r.sym]=(t[r.sym]||0)+Number(r.qty)});
+  const keys=Object.keys(t).filter(k=>t[k]>0).sort((a,b)=>WC.includes(b)-WC.includes(a));
+  $("owed").innerHTML=keys.length?keys.map(k=>`${esc(k)}: <b>${t[k].toLocaleString(undefined,{maximumFractionDigits:8})}</b>${WC.includes(k)?"":" (trading balance only)"}`).join("<br>"):"Nobody holds any coins yet.";
+}
+async function loadDeps(){
+  const {data:rows,error}=await sb.from("deposits").select("*").order("created_at",{ascending:false}).limit(15);
+  if(error){$("depList").textContent="Could not load deposits.";return}
+  if(!rows.length){$("depList").textContent="No deposits yet.";return}
+  const em=await emOf();
+  $("depList").innerHTML=rows.map(r=>`${new Date(r.created_at).toLocaleString()} · ${esc(em[r.user_id]||"user")} · <b>${Number(r.amount)} ${esc(r.sym)}</b> · ${esc(r.status)}${r.status==="pending"?" ("+r.confs+" confirmations)":""}`).join("<br>");
 }
 boot();
 </script>
