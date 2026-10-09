@@ -766,7 +766,7 @@ let uem="";
 const sb=supabase.createClient(SB_URL,SB_KEY);
 function showUser(){$("uEmail").textContent=uem||"Signed in";$("profile").textContent=(uem[0]||"N").toUpperCase();$("avBig").textContent=(uem[0]||"N").toUpperCase()}
 showUser();
-const BIZ={name:"Nova Loan",whatsapp:"",phone:"",email:"",maps:"",address:"Adabraka, Accra, Ghana",hours:""}; // fill in your real details
+const BIZ={name:"Nova Loan",whatsapp:"",phone:"",email:"",maps:"https://www.google.com/maps/search/?api=1&query=HQ4X%2B593%20Accra",address:"HQ4X+593, Liberia Road, Accra",hours:""}; // fill in your real details
 function renderBiz(){
   const b=BIZ,wa=String(b.whatsapp).replace(/\D/g,"").replace(/^0/,"233"),btn='class="btn ghost" style="display:flex;align-items:center;justify-content:center;text-decoration:none;flex:1;min-width:130px"',x=[];
   if(wa)x.push(`<a ${btn} href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>`);
@@ -776,7 +776,7 @@ function renderBiz(){
   $("helpBtns").innerHTML=x.join("");
   $("helpInfo").innerHTML=[b.hours?"Support hours: "+esc(b.hours):"",""].filter(Boolean).join("<br>");
   $("helpSec").style.display=x.length?"":"none";
-  $("foot").innerHTML=(b.address?`<div class="fa"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Office: ${esc(b.address)}</span></div>`:"")+`<div class="fb">© ${new Date().getFullYear()} ${esc(b.name)}</div>`;
+  $("foot").innerHTML=(b.address?`<div class="fa"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Office: ${b.maps?`<a href="${esc(b.maps)}" target="_blank" rel="noopener" style="color:inherit">${esc(b.address)}</a>`:esc(b.address)}</span></div>`:"")+`<div class="fb">© ${new Date().getFullYear()} ${esc(b.name)}</div>`;
 }
 renderBiz();
 S.kyc=null;S.kycState="loading";
