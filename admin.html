@@ -93,7 +93,7 @@ input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;pa
       <div class="title">Loan terms</div>
       <div class="grid">
         <div><label for="cap">Most one borrower can draw (USD)</label><input id="cap" type="number" min="0" step="any" inputmode="decimal"></div>
-        <div><label for="col">Collateral (% of the draw)</label><input id="col" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div><label for="col">Default collateral (% of the draw, used when a coin below is left empty)</label><input id="col" type="number" min="0" step="any" inputmode="decimal"></div>
         <div><label for="f1">Fee for 1 month (%)</label><input id="f1" type="number" min="0" step="any" inputmode="decimal"></div>
         <div><label for="f2">Fee for 2 months (%)</label><input id="f2" type="number" min="0" step="any" inputmode="decimal"></div>
         <div><label for="f3">Fee for 3 months (%)</label><input id="f3" type="number" min="0" step="any" inputmode="decimal"></div>
@@ -105,6 +105,14 @@ input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;pa
         <div><label for="cSOL">Loan cap: Solana (USD)</label><input id="cSOL" type="number" min="0" step="any" inputmode="decimal"></div>
         <div><label for="cUSDC">Loan cap: Tether (USDT) (USD)</label><input id="cUSDC" type="number" min="0" step="any" inputmode="decimal"></div>
       </div>
+      <div class="title" style="margin-top:18px">Rules for each coin</div>
+      <table style="width:100%;border-collapse:collapse;margin-top:6px"><thead><tr style="text-align:left;font-size:12px;color:var(--muted)"><th style="padding:4px 6px 4px 0">Coin</th><th style="padding:4px 6px">Collateral (%)</th><th style="padding:4px 0 4px 6px">Longest repayment (months, 1 to 6)</th></tr></thead><tbody>
+        <tr><td style="padding:4px 6px 4px 0">BTC</td><td style="padding:4px 6px"><input id="colBTC" type="number" min="0" step="any" inputmode="decimal" aria-label="Bitcoin collateral percent"></td><td style="padding:4px 0 4px 6px"><input id="mmBTC" type="number" min="1" max="6" step="1" inputmode="numeric" aria-label="Bitcoin longest repayment in months"></td></tr>
+        <tr><td style="padding:4px 6px 4px 0">ETH</td><td style="padding:4px 6px"><input id="colETH" type="number" min="0" step="any" inputmode="decimal" aria-label="Ethereum collateral percent"></td><td style="padding:4px 0 4px 6px"><input id="mmETH" type="number" min="1" max="6" step="1" inputmode="numeric" aria-label="Ethereum longest repayment in months"></td></tr>
+        <tr><td style="padding:4px 6px 4px 0">SOL</td><td style="padding:4px 6px"><input id="colSOL" type="number" min="0" step="any" inputmode="decimal" aria-label="SOL collateral percent"></td><td style="padding:4px 0 4px 6px"><input id="mmSOL" type="number" min="1" max="6" step="1" inputmode="numeric" aria-label="SOL longest repayment in months"></td></tr>
+        <tr><td style="padding:4px 6px 4px 0">USDT</td><td style="padding:4px 6px"><input id="colUSDC" type="number" min="0" step="any" inputmode="decimal" aria-label="USDT collateral percent"></td><td style="padding:4px 0 4px 6px"><input id="mmUSDC" type="number" min="1" max="6" step="1" inputmode="numeric" aria-label="USDT longest repayment in months"></td></tr>
+      </tbody></table>
+      <div class="hint">Volatile coins should have higher collateral and shorter repayment. Customers see a note explaining this and a link to choose USDT instead. The loan fee still comes from the fee boxes above.</div>
       <button id="save" class="btn" style="width:100%;margin-top:16px">Save settings</button>
       <div id="smsg" class="msg"></div>
       <div class="hint">Saved settings apply to every user's dashboard within a minute.</div>
@@ -222,6 +230,7 @@ async function loadSettings(){
   const l=g("loan"),p=g("pool");
   $("net").value=l.net||"devnet";$("cap").value=l.capUsd??2000;$("col").value=l.colPer100??10;
   $("f1").value=l.fee1??20;$("f2").value=l.fee2??20;$("f3").value=l.fee3??20;$("f6").value=l.fee6??20;$("late").value=l.lateFeeUsd??50;$("lateD").value=l.lateDailyPct??0.5;["BTC","ETH","SOL","USDC"].forEach(k=>$("c"+k).value=(l.caps&&l.caps[k])??2000);
+  {const dc={BTC:25,ETH:30,SOL:35,USDC:l.colPer100??10},dm={BTC:3,ETH:3,SOL:2,USDC:6};["BTC","ETH","SOL","USDC"].forEach(k=>{$("col"+k).value=(l.cols&&l.cols[k])??dc[k];$("mm"+k).value=(l.maxm&&l.maxm[k])??dm[k]})}
   $("rpc").value=p.rpcUrl||"";
   const coins=Array.isArray(p.coins)?p.coins:(p.address?[{sym:"SOL",address:p.address,mint:"",snapshot:p.snapshot||0,enabled:true}]:[]);
   SYMS.forEach(s=>{const c=coins.find(x=>x.sym===s)||{};
@@ -243,7 +252,7 @@ $("save").onclick=async()=>{
   $("save").disabled=true;
   const now=new Date().toISOString();
   const {error}=await sb.from("settings").upsert([
-    {key:"loan",value:{net:$("net").value,capUsd:num("cap"),colPer100:num("col"),fee1:num("f1"),fee2:num("f2"),fee3:num("f3"),fee6:num("f6"),lateFeeUsd:num("late"),lateDailyPct:num("lateD"),caps:{BTC:num("cBTC"),ETH:num("cETH"),SOL:num("cSOL"),USDC:num("cUSDC")}},updated_at:now},
+    {key:"loan",value:{net:$("net").value,capUsd:num("cap"),colPer100:num("col"),fee1:num("f1"),fee2:num("f2"),fee3:num("f3"),fee6:num("f6"),lateFeeUsd:num("late"),lateDailyPct:num("lateD"),caps:{BTC:num("cBTC"),ETH:num("cETH"),SOL:num("cSOL"),USDC:num("cUSDC")},cols:{BTC:num("colBTC"),ETH:num("colETH"),SOL:num("colSOL"),USDC:num("colUSDC")},maxm:{BTC:Math.min(6,Math.max(1,Math.round(num("mmBTC")))),ETH:Math.min(6,Math.max(1,Math.round(num("mmETH")))),SOL:Math.min(6,Math.max(1,Math.round(num("mmSOL")))),USDC:Math.min(6,Math.max(1,Math.round(num("mmUSDC"))))}},updated_at:now},
     {key:"pool",value:{rpcUrl:rpc,coins},updated_at:now}
   ]);
   $("save").disabled=false;

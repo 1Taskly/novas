@@ -51,6 +51,16 @@ input::placeholder{color:#77777d}
 .empty{padding:14px 8px;text-align:center;color:#85858a;font-size:14px;line-height:1.5}
 dialog{background:var(--s1);color:var(--text);border:1px solid #2a2a2a;border-radius:22px;width:min(94vw,520px);max-height:92vh;padding:18px;overflow:auto}
 dialog::backdrop{background:rgba(0,0,0,.72)}
+dialog{scrollbar-width:none}dialog::-webkit-scrollbar{display:none}
+.tour{position:fixed;inset:0;z-index:1000}
+.tourRing{position:fixed;border-radius:16px;border:2px solid #fff;box-shadow:0 0 0 100vmax rgba(0,0,0,.82);pointer-events:none}
+.tourCard{position:fixed;width:min(320px,calc(100vw - 32px));box-sizing:border-box;background:#1b1b1b;border:1px solid #333;border-radius:16px;padding:16px;color:#fff;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.tourCard h3{margin:0 0 6px;font-size:17px}.tourCard p{margin:0 0 14px;font-size:14px;line-height:1.5;color:#cfcfcf}
+.tourCard .acts2{display:flex;gap:8px}.tourCard .acts2 button{flex:1}
+.tourCard .arr{position:absolute;width:14px;height:14px;background:#1b1b1b;transform:rotate(45deg);border:1px solid #333}
+#tabs button{position:relative}.tdot{position:absolute;top:6px;right:8px;width:9px;height:9px;border-radius:50%;background:var(--green)}
+@media(prefers-reduced-motion:no-preference){.tdot{animation:pulse 1.6s infinite}}
+.sb{position:fixed;width:3px;border-radius:3px;background:#fff;opacity:.85;pointer-events:none;display:none;z-index:60}
 .dHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:20px;font-weight:720}
 .x{background:var(--s2);border:1px solid #303030;border-radius:50%;width:36px;height:36px}
 .step{border:1px solid var(--line);border-radius:18px;padding:15px;margin-bottom:12px;background:#111}
@@ -221,7 +231,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 </dialog>
 
 <script>
-const CFG={colPer100:10,fee1:20,fee2:20,fee3:20,fee6:20,capUsd:2000,caps:{BTC:2000,ETH:2000,SOL:2000,USDC:2000},fallbackPx:{BTC:65000,ETH:3400},lateFeeUsd:50,lateDailyPct:0.5,balSnap:0,paystackKey:"pk_live_1530c74b9368aa99844bc2dd4c5d0ee1fd867c68",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:""};
+const CFG={colPer100:10,cols:{BTC:25,ETH:30,SOL:35},maxm:{BTC:3,ETH:3,SOL:2,USDC:6},fee1:20,fee2:20,fee3:20,fee6:20,capUsd:2000,caps:{BTC:2000,ETH:2000,SOL:2000,USDC:2000},fallbackPx:{BTC:65000,ETH:3400},lateFeeUsd:50,lateDailyPct:0.5,balSnap:0,paystackKey:"pk_live_1530c74b9368aa99844bc2dd4c5d0ee1fd867c68",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:""};
 const RPCS={devnet:"https://api.devnet.solana.com",mainnet:"https://api.mainnet-beta.solana.com"};
 const STAGES=["Sending to your mobile money","Paid out"];
 const $=id=>document.getElementById(id);
@@ -505,7 +515,7 @@ setInterval(flush,1000);
 document.addEventListener("visibilitychange",()=>{if(document.hidden){if(ws){const w=ws;ws=null;try{w.close()}catch(e){}}setLive(false)}else startWs()});
 startWs();
 // ---- Tabs: Trade (default) / Borrow ----
-function setTab(t){$("pg").dataset.tab=t;document.querySelectorAll("#tabs button").forEach(b=>{b.classList.toggle("on",b.dataset.t===t);b.setAttribute("aria-current",b.dataset.t===t?"page":"false")});$("pg").scrollTop=0}
+function setTab(t){if(t==="borrow"){try{markBorrowDot(false);localStorage.setItem(tourKey("opened"),"1")}catch(e){}}$("pg").dataset.tab=t;document.querySelectorAll("#tabs button").forEach(b=>{b.classList.toggle("on",b.dataset.t===t);b.setAttribute("aria-current",b.dataset.t===t?"page":"false")});$("pg").scrollTop=0}
 [...$("pg").children].forEach(el=>{if(!el.matches(".top"))el.dataset.v=el.id==="mkSec"?"trade":"borrow"});
 document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>setTab(b.dataset.t));setTab("trade");
 const hero=document.querySelector(".hero");if(hero)hero.style.display="none";
@@ -575,16 +585,20 @@ const colAmt=c=>{const q=c.colU/(S.px.sol||1);return fmt(q,S.coin==="USDC"?2:q<1
 // ---- Draw window ----
 const dlg=$("dlg");
 const fee100=m=>m<=3?CFG["fee"+m]:CFG.fee6;
-const maxMonths=u=>u>=2000?6:u>=1000?5:u>=500?4:3;
+const maxMonths=()=>Math.max(1,Math.min(6,Math.round(Number(CFG.maxm&&CFG.maxm[S.coin]))||3));
+const colFor=sym=>{const v=CFG.cols&&CFG.cols[sym];return v!=null&&v!==""&&Number.isFinite(Number(v))?Number(v):CFG.colPer100};
+const isVol=()=>S.coin!=="USDC"&&(colFor(S.coin)>colFor("USDC")||maxMonths()<Math.max(1,Math.min(6,Math.round(Number(CFG.maxm&&CFG.maxm.USDC))||3)));
+function volNote(){if(!isVol())return"";const mm=maxMonths();
+  return `<div style="margin-top:10px;padding:10px 12px;border-radius:12px;background:#2a2112;border:1px solid #4a3a1a;color:#e7c98a;font-size:13px;line-height:1.5">Collateral for ${esc(dn(S.coin))} is ${colFor(S.coin)}% and repayment is up to ${mm} month${mm>1?"s":""}, because its price moves a lot. Want lower collateral and longer to repay?${!S.colPaid&&availOf("USDC")>0?` <a href="#" id="toUsdt" style="color:#fff;font-weight:700">Choose USDT</a>, which stays steady.`:""}</div>`}
 const amtSol=()=>{const v=Number($("amt").value)||0;return $("unit").value!=="GHS"?v:v/(S.px.sol*S.px.fx)};
 function fillMonths(){
-  const mx=maxMonths(amtSol()*S.px.sol),sel=Number($("months").value)||3,m=$("months");
+  const mx=maxMonths(),sel=Number($("months").value)||3,m=$("months");
   if(m.options.length!==mx){m.innerHTML=Array.from({length:mx},(_,i)=>`<option value="${i+1}">Repay in ${i+1} month${i?"s":""}</option>`).join("");m.value=Math.min(sel,mx)}
 }
 function calc(){
   const v=Number($("amt").value)||0,k=S.px.sol*S.px.fx,sol=$("unit").value!=="GHS"?v:v/k,val=sol*k;
   const m=Number($("months").value)||1,u=sol*S.px.sol,totU=u+u/100*fee100(m);
-  const colU=Math.ceil(u/100*CFG.colPer100*100-1e-9)/100;
+  const colU=Math.ceil(u/100*colFor(S.coin)*100-1e-9)/100;
   return{sol,usd:u,val,m,colU,col:Math.round(colU*S.px.fx*100)/100,totU,tot:totU*S.px.fx,mo:totU/m*S.px.fx};
 }
 const fdate=d=>d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
@@ -599,7 +613,8 @@ function renderEst(){
    $("lateNote").innerHTML="<b>Overdue payments.</b> If you do not pay on the agreed date, a flat late fee of "+usd(fu)+" ("+ghs(fu*fx)+") is charged, and your interest goes up by "+CFG.lateDailyPct+"% of the overdue amount for every extra day it stays unpaid.";}
   $("avail").textContent=fmt(S.sol,4)+" "+dn(S.coin);
   $("rateInfo").textContent=`1 ${dn(S.coin)} = ${usd(S.px.sol)} · $1 = ${ghs(S.px.fx)}`+(S.px.live?"":" · estimated rates");
-  $("colTxt").innerHTML=c.sol>0?`Pay <b style="color:#fff">${colAmt(c)} ${dn(S.coin)}</b> collateral (<b style="color:#fff">${ghs(c.col)}</b> by mobile money). We hold it until you finish paying your loan, otherwise it will be liquidated to minimize our losses. When you finish, it is returned to you in cedis at the current trading price.`:"Enter an amount first.";setColLabel();
+  $("colTxt").innerHTML=(c.sol>0?`Pay <b style="color:#fff">${colAmt(c)} ${dn(S.coin)}</b> collateral (<b style="color:#fff">${ghs(c.col)}</b> by mobile money). We hold it until you finish paying your loan, otherwise it will be liquidated to minimize our losses. When you finish, it is returned to you in cedis at the current trading price.`:"Enter an amount first.")+volNote();setColLabel();
+  if($("toUsdt"))$("toUsdt").onclick=e=>{e.preventDefault();dlg.close();openLoan("USDC")};
   if(!c.sol){$("est").textContent="Enter an amount to see what you get and what you pay each month.";$("agreeTxt").textContent="I understand my crypto is converted to Ghana cedis and sent to a mobile money number or bank account in my own name, and I will repay the full amount shown in monthly payments, and I accept the late fee and daily overdue interest and understand my collateral will be liquidated if I miss a payment."}
   else if(c.sol>S.sol+1e-9){$("est").innerHTML='<span style="color:var(--red)">That is more than your available loan.</span>'}
   else{
@@ -797,7 +812,7 @@ async function loadKyc(uid){
   S.kyc=k;S.kycState=k&&["pending","approved","rejected"].includes(k.status)?k.status:"none";S.idOk=S.kycState==="approved";
   setLock();renderAssets();
 }
-sb.auth.getSession().then(({data})=>{if(!data.session){location.replace("landing.html");return}uem=data.session.user.email||"";showUser();loadKyc(data.session.user.id)});
+sb.auth.getSession().then(({data})=>{if(!data.session){location.replace("landing.html");return}uem=data.session.user.email||"";S.uid=data.session.user.id;showUser();loadKyc(data.session.user.id);startTour()});
 const side=$("side"),scrim=$("scrim");
 function sideOpen(o){side.classList.toggle("open",o);scrim.classList.toggle("on",o);side.setAttribute("aria-hidden",String(!o));if(o)$("sideClose").focus()}
 $("profile").onclick=()=>sideOpen(true);$("sideClose").onclick=scrim.onclick=()=>sideOpen(false);
@@ -807,6 +822,46 @@ $("logout").onclick=()=>{
     sb.auth.signOut().finally(()=>{location.href="landing.html"});
   }
 };
+// ---- Spotlight on the Borrow tab (shown once to every person; add #tour to the address to replay it) ----
+const tourKey=k=>"nl_"+(k||"tour")+"_"+(S.uid||uem||"anon");
+function markBorrowDot(on){const b=document.querySelector('#tabs [data-t="borrow"]');if(!b)return;let d=b.querySelector(".tdot");
+  if(on&&!d){d=document.createElement("i");d.className="tdot";d.setAttribute("aria-hidden","true");b.appendChild(d)}if(!on&&d)d.remove()}
+function tour(force){
+  const b=document.querySelector('#tabs [data-t="borrow"]');if(!b||document.querySelector(".tour"))return;
+  try{if(!force&&localStorage.getItem(tourKey()))return}catch(e){}
+  if($("pg").dataset.tab!=="trade"||document.querySelector("dialog[open]"))return;
+  const wrap=document.createElement("div");wrap.className="tour";
+  wrap.innerHTML='<div class="tourRing"></div><div class="tourCard" role="dialog" aria-modal="true" aria-labelledby="tourT"><i class="arr"></i><h3 id="tourT">New: Borrow cash</h3><p>Need money fast? Borrow straight to your mobile money in minutes. Your collateral comes back when you finish repaying.</p><div class="acts2"><button class="btn" id="tourGo">Take me there</button><button class="btn ghost" id="tourLater">Maybe later</button></div></div>';
+  document.body.appendChild(wrap);
+  const ring=wrap.querySelector(".tourRing"),card=wrap.querySelector(".tourCard"),arr=wrap.querySelector(".arr");
+  const place=()=>{const r=b.getBoundingClientRect(),vw=innerWidth,vh=innerHeight,cw=card.offsetWidth;
+    Object.assign(ring.style,{left:r.left-6+"px",top:r.top-6+"px",width:r.width+12+"px",height:r.height+12+"px"});
+    const left=Math.max(16,Math.min(vw-cw-16,r.left+r.width/2-cw/2));card.style.left=left+"px";
+    arr.style.left=Math.max(14,Math.min(cw-28,r.left+r.width/2-left-7))+"px";
+    if(r.top>vh/2){card.style.top="auto";card.style.bottom=vh-r.top+20+"px";arr.style.top="auto";arr.style.bottom="-8px";arr.style.borderWidth="0 1px 1px 0"}
+    else{card.style.bottom="auto";card.style.top=r.bottom+20+"px";arr.style.bottom="auto";arr.style.top="-8px";arr.style.borderWidth="1px 0 0 1px"}};
+  const close=go=>{try{localStorage.setItem(tourKey(),"1")}catch(e){}removeEventListener("resize",place);removeEventListener("keydown",key);wrap.remove();if(go)setTab("borrow")};
+  const key=e=>{if(e.key==="Escape")close(false)};
+  addEventListener("resize",place);addEventListener("keydown",key);
+  wrap.onclick=e=>{if(e.target===wrap)close(false)};
+  wrap.querySelector("#tourGo").onclick=()=>close(true);wrap.querySelector("#tourLater").onclick=()=>close(false);
+  place();wrap.querySelector("#tourGo").focus({preventScroll:true})}
+function startTour(){try{if(!localStorage.getItem(tourKey("opened")))markBorrowDot(true)}catch(e){}
+  if(location.hash==="#tour")tour(true);else setTimeout(()=>tour(false),900)}
+// ---- White scroll indicator on the left of every scrolling area (page and pop-ups) ----
+function scrollBar(sc,host){
+  const bar=document.createElement("i");bar.className="sb";bar.setAttribute("aria-hidden","true");host.appendChild(bar);
+  let queued=false;
+  const upd=()=>{queued=false;const r=sc.getBoundingClientRect(),h=sc.clientHeight,t=sc.scrollHeight;
+    if(t<=h+2||!r.height){bar.style.display="none";return}
+    const pad=10,tr=h-pad*2,th=Math.max(28,tr*h/t),top=r.top+pad+(tr-th)*(sc.scrollTop/(t-h));
+    bar.style.cssText="display:block;left:"+(r.left+3)+"px;top:"+top+"px;height:"+th+"px"};
+  const q=()=>{if(!queued){queued=true;requestAnimationFrame(upd)}};
+  sc.addEventListener("scroll",q,{passive:true});window.addEventListener("resize",q);
+  try{new ResizeObserver(q).observe(sc);new MutationObserver(q).observe(sc,{childList:true,subtree:true,characterData:true,attributes:true})}catch(e){}
+  q()}
+scrollBar(document.querySelector(".pg"),document.body);
+["repDlg","mkDlg","dlg"].forEach(id=>scrollBar($(id),$(id)));
 renderTerms();renderOrders();renderMk();loadMarkets();loadWallet();loadOffer();loadRates();startRates();setInterval(loadOffer,60000);
 </script>
 </body>
