@@ -137,6 +137,17 @@ input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;pa
       <label for="wSw">Swap fee (percent)</label><input id="wSw" type="number" min="0" step="any">
       <div class="hint">The network (test or real) follows the Network setting on the Settings tab. When you launch, switch that to Mainnet and paste your real wallet keys here. Customers then get new real addresses automatically.</div>
       <div class="row" style="margin-top:12px"><button class="btn" id="wSave">Save wallet settings</button></div><div id="wMsg" class="msg"></div></div>
+    <div class="card"><div class="title">Trading loans</div>
+      <div id="mgList" class="kv">Loading…</div>
+      <div class="row" style="margin-top:12px"><button class="btn ghost sm" id="mgScan">Check all loans now</button></div><div id="mgScanMsg" class="msg"></div>
+      <div class="title" style="margin-top:18px">Trading loan settings</div>
+      <label for="mgOn">Trading loans</label><select id="mgOn"><option value="1">On</option><option value="0">Off (no new loans)</option></select>
+      <div class="grid"><div><label for="mgCol">Collateral (%)</label><input id="mgCol" type="number" min="1" step="any"></div><div><label for="mgFeeD">Fee (% per day)</label><input id="mgFeeD" type="number" min="0" step="any"></div>
+      <div><label for="mgWarn">Warning at (% health)</label><input id="mgWarn" type="number" min="1" max="99" step="any"></div><div><label for="mgLiq">Close automatically at (%)</label><input id="mgLiq" type="number" min="1" max="99" step="any"></div>
+      <div><label for="mgDays">Longest loan (days)</label><input id="mgDays" type="number" min="1" step="1"></div><div><label for="mgMin">Smallest loan (USD)</label><input id="mgMin" type="number" min="1" step="any"></div>
+      <div><label for="mgCapB">Most to lend in BTC (USD)</label><input id="mgCapB" type="number" min="0" step="any"></div><div><label for="mgCapE">Most to lend in ETH (USD)</label><input id="mgCapE" type="number" min="0" step="any"></div></div>
+      <div class="hint">Health is what the person owes divided by everything they hold plus their locked collateral. At 50% collateral a new loan starts at about 67%. The loan is closed automatically at the level you set. Only BTC and ETH can be borrowed. For automatic checking while nobody is online, see SETUP.md.</div>
+      <div class="row" style="margin-top:12px"><button class="btn" id="mgSave">Save trading loan settings</button></div><div id="mgMsg2" class="msg"></div></div>
     <div class="card"><div class="title">Recent deposits</div><div id="depList" class="kv">Loading…</div></div>
   </div>
 </main>
@@ -296,7 +307,7 @@ async function loadWallet(){
   $("wcB").value=cf.BTC??2;$("wcE").value=cf.ETH??12;
   $("wfB").value=f.BTC??0.0001;$("wmB").value=m.BTC??0.0005;$("wfE").value=f.ETH??0.002;$("wmE").value=m.ETH??0.01;$("wfU").value=f.USDT??5;$("wmU").value=m.USDT??10;
   $("wSw").value=c.swapFee!=null&&c.swapFee!==""?Number(c.swapFee)*100:0.5;
-  loadWd();loadOwed();loadDeps();
+  loadWd();loadOwed();loadDeps();loadMg();
 }
 $("wSave").onclick=async()=>{
   const v=id=>$(id).value.trim(),n=id=>Number($(id).value),bad=/\s/.test(v("wBtc"))||/\s/.test(v("wEth"));
@@ -311,6 +322,38 @@ $("scanAll").onclick=async()=>{
   try{const {data,error}=await sb.functions.invoke("wallet",{body:{action:"scanall"}});if(error)throw error;
     $("scanMsg").className="msg ok";$("scanMsg").textContent="Scanned "+data.scanned+" address(es), "+data.credited+" new deposit(s) credited.";loadOwed();loadDeps()}
   catch(e){$("scanMsg").textContent="Could not scan. Check that the wallet function is deployed."}
+};
+async function loadMg(){
+  const {data}=await sb.from("settings").select("key,value");
+  const m=((data||[]).find(r=>r.key==="margin")||{}).value||{},c=m.caps||{};
+  $("mgOn").value=m.on===false?"0":"1";$("mgCol").value=m.colPct??50;$("mgFeeD").value=m.feeDay??0.1;$("mgWarn").value=m.warnPct??80;$("mgLiq").value=m.liqPct??90;
+  $("mgDays").value=m.maxDays??30;$("mgMin").value=m.minUsd??20;$("mgCapB").value=c.BTC??5000;$("mgCapE").value=c.ETH??5000;
+  loadMgList();
+}
+$("mgSave").onclick=async()=>{
+  const n=id=>Number($(id).value),warn=n("mgWarn"),liq=n("mgLiq");
+  if(!(warn<liq)){$("mgMsg2").className="msg";$("mgMsg2").textContent="The warning level must be lower than the closing level.";return}
+  const value={on:$("mgOn").value==="1",colPct:n("mgCol"),feeDay:n("mgFeeD"),warnPct:warn,liqPct:liq,maxDays:Math.round(n("mgDays")),minUsd:n("mgMin"),caps:{BTC:n("mgCapB"),ETH:n("mgCapE")}};
+  const {error}=await sb.from("settings").upsert([{key:"margin",value}],{onConflict:"key"});
+  $("mgMsg2").className=error?"msg":"msg ok";$("mgMsg2").textContent=error?"Could not save: "+error.message:"Saved.";
+};
+async function loadMgList(){
+  const L=$("mgList");
+  try{const {data,error}=await sb.functions.invoke("margin",{body:{action:"admin_list"}});if(error)throw error;
+    const em=await emOf(),ls=data.loans||[];
+    L.innerHTML=ls.length?ls.map(l=>`<div class="coin"><div class="head"><span>${esc(em[l.userId]||l.userId)}</span><span class="pill ${l.usage!=null&&l.usage>=80?"wait":""}">${l.usage==null?"no price":Math.round(l.usage)+"% health"}</span></div>
+      <div class="kv">Borrowed <b>${Number(l.borrowed)} ${esc(l.coin)}</b> · owes ${l.owe==null?"?":Number(l.owe.toFixed(8))} · collateral ${l.colKind==="coin"?Number(l.colQty)+" "+esc(l.colSym):"$"+Number(l.colUsd)} · due ${new Date(l.dueAt).toLocaleDateString()}</div>
+      <div class="row" style="margin-top:10px"><button class="btn red sm" data-mgc="${l.id}">Close now</button></div></div>`).join(""):"No open trading loans.";
+    L.querySelectorAll("[data-mgc]").forEach(b=>b.onclick=async()=>{
+      if(!confirm("Close this loan now? Their balance is used to settle it and any collateral left is returned."))return;
+      try{const {data:r,error:e}=await sb.functions.invoke("margin",{body:{action:"admin_close",id:Number(b.dataset.mgc)}});if(e)throw e;if(r&&r.error)throw new Error(r.error);loadMgList();loadOwed()}catch(x){alert("Could not close it. "+(x.message||""))}})
+  }catch(e){L.textContent="Could not load. Check that the margin function is deployed."}
+}
+$("mgScan").onclick=async()=>{
+  $("mgScanMsg").className="msg";$("mgScanMsg").textContent="Checking…";
+  try{const {data,error}=await sb.functions.invoke("margin",{body:{action:"scan"}});if(error)throw error;
+    $("mgScanMsg").className="msg ok";$("mgScanMsg").textContent="Checked "+data.checked+" loan(s), closed "+data.closed+".";loadMgList()}
+  catch(e){$("mgScanMsg").textContent="Could not check. Is the margin function deployed?"}
 };
 const emOf=async()=>{const {data:ps}=await sb.from("profiles").select("id,email");return Object.fromEntries((ps||[]).map(p=>[p.id,p.email]))};
 async function loadWd(){
