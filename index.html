@@ -157,7 +157,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <header class="top"><div class="brand">Nova Loan</div><button id="profile" class="avatar" aria-label="Open profile"></button></header>
   <div id="dbg" class="small" style="display:none;background:#151515;border:1px solid #282828;border-radius:14px;padding:12px;margin-bottom:14px;line-height:1.6"></div>
 
-  <section id="bmode" class="keep"><div class="seg" role="group" aria-label="Loan type"><button data-bm="cash" class="on" aria-pressed="true">Cash loan</button><button data-bm="trade" aria-pressed="false">Trading loan</button></div></section>
+  <section id="bmode" class="keep" style="display:none"><div class="seg" role="group" aria-label="Loan type"><button data-bm="cash" class="on" aria-pressed="true">Cash loan</button><button data-bm="trade" aria-pressed="false">Trading loan</button></div></section>
   <section id="mgSec" class="card mg"></section>
   <section id="repayCard" class="card"><div class="title">Your loan</div><div id="repInfo"></div><button id="repBtn" class="btn" style="width:100%" disabled>Pay your loan</button></section>
   <section class="hero"><div class="label">Loan available to you</div><div id="total" class="balance">$0.00</div><div id="chg" class="chg" aria-live="polite"></div>
@@ -243,7 +243,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 </dialog>
 
 <script>
-const CFG={colPer100:10,cols:{BTC:25,ETH:30,SOL:35},maxm:{BTC:3,ETH:3,SOL:2,USDC:6},fee1:20,fee2:20,fee3:20,fee6:20,capUsd:2000,caps:{BTC:2000,ETH:2000,SOL:2000,USDC:2000},fallbackPx:{BTC:65000,ETH:3400},lateFeeUsd:50,lateDailyPct:0.5,balSnap:0,paystackKey:"pk_live_1530c74b9368aa99844bc2dd4c5d0ee1fd867c68",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:""};
+const CFG={colPer100:10,cols:{BTC:25,ETH:30,SOL:35},maxm:{BTC:3,ETH:3,SOL:2,USDC:6},fee1:20,fee2:20,fee3:20,fee6:20,capUsd:2000,minUsd:100,caps:{BTC:2000,ETH:2000,SOL:2000,USDC:2000},fallbackPx:{BTC:65000,ETH:3400},lateFeeUsd:50,lateDailyPct:0.5,balSnap:0,paystackKey:"pk_live_1530c74b9368aa99844bc2dd4c5d0ee1fd867c68",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,rpcDevnet:"",rpcMainnet:""};
 const RPCS={devnet:"https://api.devnet.solana.com",mainnet:"https://api.mainnet-beta.solana.com"};
 const STAGES=["Sending to your mobile money","Paid out"];
 const $=id=>document.getElementById(id);
@@ -265,7 +265,7 @@ async function rpc(method,params=[]){
   if(j.error) throw new Error(j.error.message||"Request failed");
   return j.result;
 }
-const COINS=["BTC","ETH","SOL","USDC"],COIN_NAME={BTC:"BTC",ETH:"ETH",SOL:"SOL",USDC:"USDT",USDT:"USDT"};
+const COINS=["USDC"],COIN_NAME={BTC:"BTC",ETH:"ETH",SOL:"SOL",USDC:"USDT",USDT:"USDT"};
 // Devnet testing: USDC is used behind the scenes but shown to users as USDT. Remove SHOW before going live with real money.
 const SHOW={USDC:"USDT"},dn=c=>SHOW[c]||c;
 const LOGO={SOL:`<img src="${SOL_LOGO}" alt="SOL">`,
@@ -315,13 +315,13 @@ const BN={BTC:"btcusdt",ETH:"ethusdt",SOL:"solusdt",BNB:"bnbusdt",XRP:"xrpusdt",
 const BNR=Object.fromEntries(Object.entries(BN).map(([k,v])=>[v,k]));
 S.ck={};S.ckT={};S.ckF={};S.chart="line";
 let ws=null,wsOk=false,wsRetry=0,rt=0;const dirty=new Set();
-const BORROW={BTC:"BTC",ETH:"ETH",SOL:"SOL",USDT:"USDC"},FEE=.005;S.mk={};S.cat="all";S.side="buy";S.step="view";
+const BORROW={USDT:"USDC"},FEE=.005;S.mk={};S.cat="all";S.side="buy";S.step="view";
 const pcs=p=>(p>=0?"+":"-")+fmt(Math.abs(p),2)+"%";
 const mpx=p=>p>=1?usd(p):"$"+p.toFixed(Math.min(10,Math.max(2,2-Math.floor(Math.log10(p)))));
 const qf=q=>q.toLocaleString(undefined,{maximumFractionDigits:q<1?6:4});
 function spark(a,w,h,up,dot){if(!a||a.length<2)return"";const mn=Math.min(...a),r=(Math.max(...a)-mn)||1,st=Math.ceil(a.length/60),l=a.filter((_,i)=>i%st===0);if(l[l.length-1]!==a[a.length-1])l.push(a[a.length-1]);
   return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${l.map((v,i)=>(i/(l.length-1)*w).toFixed(1)+","+(h-2-(v-mn)/r*(h-4)).toFixed(1)).join(" ")}" fill="none" stroke="${up?"#35e875":"#ff5b5b"}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>${dot?`<i class="beat" style="top:${((h-2-(l[l.length-1]-mn)/r*(h-4))/h*100).toFixed(1)}%;background:${up?"#35e875":"#ff5b5b"}"></i>`:""}`}
-const mkIcon=m=>LOGO[BORROW[m[1]]]||`<span style="background:${m[3]};width:100%;height:100%;display:grid;place-items:center;color:#fff;font-size:${m[1].length>3?10:12}px;font-weight:800">${m[1].slice(0,4)}</span>`;
+const mkIcon=m=>LOGO[BORROW[m[1]]]||LOGO[m[1]]||`<span style="background:${m[3]};width:100%;height:100%;display:grid;place-items:center;color:#fff;font-size:${m[1].length>3?10:12}px;font-weight:800">${m[1].slice(0,4)}</span>`;
 function renderMk(){
   $("mkts").innerHTML=MK.filter(m=>S.cat==="all"||m[4]===S.cat).map(m=>{const d=S.mk[m[1]],up=!d||d.chg>=0;
     return `<button class="asset mrow" data-s="${m[1]}"><div class="l"><div class="ico">${mkIcon(m)}</div><div><div class="nm">${m[2]}</div><div class="qty">${m[1]}</div></div></div><div class="sp">${d?spark(d.sp,64,28,up,true):""}</div><div class="r"><div class="nm" data-pr>${d?mpx(d.p):"—"}</div><div class="sub ${up?"up":"down"}" data-ch>${d?pcs(d.chg):""}</div></div></button>`}).join("");
@@ -622,7 +622,8 @@ function calc(){
 const fdate=d=>d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
 function schedule(tot,m,t0){const out=[];let paid=0;const each=Math.round(tot/m*100)/100;for(let i=1;i<=m;i++){const amt=i<m?each:Math.round((tot-paid)*100)/100;paid+=amt;out.push({i,amt,d:new Date(t0+i*30*864e5)})}return out}
 function schedHtml(tot,m,t0){const s=schedule(tot,m,t0);if(m===1)return `You pay <b>${ghs(tot)}</b> by <b>${fdate(s[0].d)}</b>`;return `<ul style="margin:6px 0 0 18px;padding:0">${s.map(p=>`<li>${fdate(p.d)}: <b>${ghs(p.amt)}</b></li>`).join("")}</ul>`}
-const amtOk=()=>{const c=calc();return c.sol>0&&c.sol<=S.sol+1e-9};
+const minLoan=()=>Number(CFG.minUsd)||0;
+const amtOk=()=>{const c=calc();return c.sol>0&&c.sol<=S.sol+1e-9&&c.usd>=minLoan()-1e-9};
 function setColLabel(){const c=calc();$("payCol").textContent=S.colPaid?"Collateral paid":(c.sol>0?"Pay collateral of "+colAmt(c)+" "+dn(S.coin):"Pay collateral")}
 $("colCoin").onchange=()=>renderEst();
 function renderEst(){
@@ -635,6 +636,7 @@ function renderEst(){
   if($("toUsdt"))$("toUsdt").onclick=e=>{e.preventDefault();dlg.close();openLoan("USDC")};
   if(!c.sol){$("est").textContent="Enter an amount to see what you get and what you pay each month.";$("agreeTxt").textContent="I understand my crypto is converted to Ghana cedis and sent to a mobile money number or bank account in my own name, and I will repay the full amount shown in monthly payments, and I accept the late fee and daily overdue interest and understand my collateral will be liquidated if I miss a payment."}
   else if(c.sol>S.sol+1e-9){$("est").innerHTML='<span style="color:var(--red)">That is more than your available loan.</span>'}
+  else if(c.usd<minLoan()-1e-9){$("est").innerHTML='<span style="color:var(--red)">The smallest loan is '+usd(minLoan())+' (about '+ghs(minLoan()*(S.px.fx||CFG.fallbackUsdGhs))+').</span>'}
   else{
     $("est").innerHTML=`You get <b>${ghs(c.val)}</b> to your own mobile money or bank account (${fmt(c.sol,4)} ${dn(S.coin)} converted)<br>You repay <b>${ghs(c.tot)}</b> in total<br>${c.m===1?"":"Your payments:"}${schedHtml(c.tot,c.m,Date.now())}`;
     $("agreeTxt").textContent=`I understand my crypto is converted to Ghana cedis and sent to a mobile money number or bank account in my own name, and I will repay ${ghs(c.tot)} ${c.m===1?"in 30 days":"over "+c.m+" months"}. I accept the late fee and daily overdue interest and understand my collateral will be liquidated if I miss a payment.`;

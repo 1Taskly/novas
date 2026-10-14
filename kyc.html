@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>Nova Loan · Verify your identity</title>
+<title>Nova Loan · Paychant verification</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23c9bcff'/%3E%3Cstop offset='.55' stop-color='%23a995f5'/%3E%3Cstop offset='1' stop-color='%2335e875'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='%23000'/%3E%3Cpath d='M50 14C53 38 62 47 86 50C62 53 53 62 50 86C47 62 38 53 14 50C38 47 47 38 50 14Z' fill='url(%23g)'/%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
@@ -40,8 +40,8 @@ input.bad,select.bad{border-color:var(--red)}
 <body>
 <main class="app">
   <header class="top"><div class="brand">Nova Loan</div><button id="out" class="lo">Log out</button></header>
-  <h1>Verify your identity</h1>
-  <p class="lead">We verify every borrower before they can draw a loan. This protects you and us. Your details and photos are stored privately and only used to check who you are.</p>
+  <h1>Paychant verification</h1>
+  <p class="lead">Your loans are paid out through <b style="color:#fff">Paychant</b>, our payment partner. To process your loans, Paychant needs to know who you are and where to send your money, so we ask for your ID and mobile money details once. Your details and photos are stored privately and only used for this.</p>
 
   <form id="form" novalidate>
     <div class="card">
@@ -51,10 +51,17 @@ input.bad,select.bad{border-color:var(--red)}
         <div><label for="ln">Last name</label><input id="ln" autocomplete="family-name"></div>
       </div>
       <label for="dob">Date of birth</label><input id="dob" type="date" autocomplete="bday">
-      <label for="phone">Phone number</label><input id="phone" inputmode="tel" autocomplete="tel" placeholder="024 000 0000">
       <label for="addr">Home address (town and area)</label><input id="addr" autocomplete="street-address">
       <label for="job">What work do you do?</label><input id="job" placeholder="For example: trader, teacher, driver">
       <label for="emp">Employer or business name (optional)</label><input id="emp">
+    </div>
+
+    <div class="card">
+      <div class="title">Where Paychant sends your money</div>
+      <label for="phone">Mobile money number</label><input id="phone" inputmode="tel" autocomplete="tel" placeholder="024 000 0000">
+      <label for="net">Network</label>
+      <select id="net"><option value="">Choose your network</option><option>MTN MoMo</option><option>Telecel Cash</option><option>AirtelTigo Money</option><option>Bank account</option></select>
+      <div class="small">When you draw a loan, the payment prompt goes straight to this number. The number must be in your own name.</div>
     </div>
 
     <div class="card">
@@ -62,14 +69,20 @@ input.bad,select.bad{border-color:var(--red)}
       <label for="idType">ID type</label>
       <select id="idType"><option>Ghana Card</option><option>Driver's license</option><option>Passport</option><option>Voter ID</option></select>
       <label for="idNum">ID number</label><input id="idNum" autocomplete="off">
-      <label for="front">Photo of the front of your ID</label><input id="front" type="file" accept="image/*">
-      <label for="back">Photo of the back of your ID</label><input id="back" type="file" accept="image/*">
-      <label for="self">A clear selfie of your face</label><input id="self" type="file" accept="image/*" capture="user">
+      <label for="front">Photo of the front of your ID (take one now or choose from your gallery)</label><input id="front" type="file" accept="image/*">
+      <label for="back">Photo of the back of your ID (take one now or choose from your gallery)</label><input id="back" type="file" accept="image/*">
+      <label for="self">A clear live selfie of your face (taken now with your camera)</label><input id="self" type="file" accept="image/*" capture="user">
       <div class="small">Use good light. All text on the ID must be readable and your face must be clearly visible.</div>
     </div>
 
-    <label class="chk"><input id="agree" type="checkbox"><span>I confirm these details are true and belong to me, and I allow Nova Loan to use my ID photos to verify my identity.</span></label>
-    <button id="go" class="btn" type="submit">Submit for verification</button>
+    <div class="card" style="border-color:#342d49;background:#171421">
+      <div class="title">What happens when you draw a loan</div>
+      <div class="small" style="margin:0;color:#b9b0d6;font-size:14px">By drawing a loan, you are selling the coin to Paychant at the current market price at that moment. Paychant then sends the money, in Ghana cedis, to your mobile money or bank account.</div>
+      <label class="chk" style="margin-bottom:0"><input id="sell" type="checkbox"><span>I have read this. I understand that drawing a loan sells the coin to Paychant at the current market price, and the cedis are sent to my mobile money or bank account.</span></label>
+    </div>
+
+    <label class="chk"><input id="agree" type="checkbox"><span>I confirm these details are true and belong to me, and I allow Paychant to use my ID photos and details to verify my identity and process my loans.</span></label>
+    <button id="go" class="btn" type="submit">Submit for Paychant verification</button>
     <div id="msg" class="msg" role="status"></div>
   </form>
 </main>
@@ -117,11 +130,12 @@ $("form").addEventListener("submit",async e=>{
   e.preventDefault();const msg=$("msg");msg.className="msg";msg.textContent="";
   document.querySelectorAll(".bad").forEach(x=>x.classList.remove("bad"));
   const v={fn:$("fn").value.trim(),ln:$("ln").value.trim(),dob:$("dob").value,phone:gh($("phone").value),addr:$("addr").value.trim(),job:$("job").value.trim(),idn:$("idNum").value.trim()};
-  const need=[["fn",v.fn.length>=2],["ln",v.ln.length>=2],["dob",!!v.dob],["phone",!!v.phone],["addr",v.addr.length>=4],["job",v.job.length>=2],["idNum",v.idn.length>=6],["front",$("front").files.length],["back",$("back").files.length],["self",$("self").files.length]];
+  const need=[["fn",v.fn.length>=2],["ln",v.ln.length>=2],["dob",!!v.dob],["phone",!!v.phone],["net",!!$("net").value],["addr",v.addr.length>=4],["job",v.job.length>=2],["idNum",v.idn.length>=6],["front",$("front").files.length],["back",$("back").files.length],["self",$("self").files.length]];
   const miss=need.filter(n=>!n[1]);
   if(miss.length){miss.forEach(n=>$(n[0]).classList.add("bad"));msg.textContent="Please complete the highlighted fields.";$(miss[0][0]).focus();return}
   const age=(Date.now()-new Date(v.dob).getTime())/31557600000;
   if(!(age>=18&&age<110)){$("dob").classList.add("bad");msg.textContent="You must be at least 18 years old to borrow.";return}
+  if(!$("sell").checked){msg.textContent="Please read what happens when you draw a loan and tick the first box.";$("sell").focus();return}
   if(!$("agree").checked){msg.textContent="Please tick the box to confirm.";return}
   if(!uid){msg.textContent="Please log in again.";return}
   $("go").disabled=true;$("go").textContent="Uploading…";
@@ -129,13 +143,16 @@ $("form").addEventListener("submit",async e=>{
     const front_path=await upload($("front").files[0],"front");
     const back_path=await upload($("back").files[0],"back");
     const selfie_path=await upload($("self").files[0],"selfie");
-    const {error}=await sb.from("kyc").upsert({user_id:uid,first_name:v.fn,last_name:v.ln,date_of_birth:v.dob,phone:v.phone,address:v.addr,occupation:v.job,employer:$("emp").value.trim()||null,id_type:$("idType").value,id_number:v.idn,front_path,back_path,selfie_path,status:"pending",reject_reason:null},{onConflict:"user_id"});
+    const row={user_id:uid,first_name:v.fn,last_name:v.ln,date_of_birth:v.dob,phone:v.phone,address:v.addr,occupation:v.job,employer:$("emp").value.trim()||null,id_type:$("idType").value,id_number:v.idn,front_path,back_path,selfie_path,status:"pending",reject_reason:null};
+    // momo_network needs a column in the kyc table (see the SQL in my notes). If it is missing, save everything else so nobody is blocked.
+    let {error}=await sb.from("kyc").upsert({...row,momo_network:$("net").value},{onConflict:"user_id"});
+    if(error&&/momo_network/i.test(error.message||""))({error}=await sb.from("kyc").upsert(row,{onConflict:"user_id"}));
     if(error)throw new Error("Could not save your details. Try again.");
     msg.className="msg ok";msg.textContent="Submitted. Taking you to your dashboard…";
     setTimeout(()=>location.href="index.html",1200);
   }catch(err){
     msg.textContent=err.message||"Something went wrong. Try again.";
-    $("go").disabled=false;$("go").textContent="Submit for verification";
+    $("go").disabled=false;$("go").textContent="Submit for Paychant verification";
   }
 });
 </script>

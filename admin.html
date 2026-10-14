@@ -98,6 +98,7 @@ input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;pa
         <div><label for="f2">Fee for 2 months (%)</label><input id="f2" type="number" min="0" step="any" inputmode="decimal"></div>
         <div><label for="f3">Fee for 3 months (%)</label><input id="f3" type="number" min="0" step="any" inputmode="decimal"></div>
         <div><label for="f6">Fee for 4 to 6 months (%)</label><input id="f6" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div><label for="minL">Smallest loan one borrower can draw (USD)</label><input id="minL" type="number" min="0" step="any" inputmode="decimal"></div>
         <div><label for="late">Late fee (USD, flat)</label><input id="late" type="number" min="0" step="any" inputmode="decimal"></div>
         <div><label for="lateD">Extra interest per day overdue (%)</label><input id="lateD" type="number" min="0" step="any" inputmode="decimal"></div>
         <div><label for="cBTC">Loan cap: Bitcoin (USD)</label><input id="cBTC" type="number" min="0" step="any" inputmode="decimal"></div>
@@ -239,7 +240,7 @@ async function loadSettings(){
   const {data}=await sb.from("settings").select("key,value");
   const g=k=>((data||[]).find(r=>r.key===k)||{}).value||{};
   const l=g("loan"),p=g("pool");
-  $("net").value=l.net||"devnet";$("cap").value=l.capUsd??2000;$("col").value=l.colPer100??10;
+  $("net").value=l.net||"devnet";$("cap").value=l.capUsd??2000;$("minL").value=l.minUsd??100;$("col").value=l.colPer100??10;
   $("f1").value=l.fee1??20;$("f2").value=l.fee2??20;$("f3").value=l.fee3??20;$("f6").value=l.fee6??20;$("late").value=l.lateFeeUsd??50;$("lateD").value=l.lateDailyPct??0.5;["BTC","ETH","SOL","USDC"].forEach(k=>$("c"+k).value=(l.caps&&l.caps[k])??2000);
   {const dc={BTC:25,ETH:30,SOL:35,USDC:l.colPer100??10},dm={BTC:3,ETH:3,SOL:2,USDC:6};["BTC","ETH","SOL","USDC"].forEach(k=>{$("col"+k).value=(l.cols&&l.cols[k])??dc[k];$("mm"+k).value=(l.maxm&&l.maxm[k])??dm[k]})}
   $("rpc").value=p.rpcUrl||"";
@@ -249,7 +250,7 @@ async function loadSettings(){
 }
 $("save").onclick=async()=>{
   const m=$("smsg");m.className="msg";m.textContent="";
-  const ids=["cap","col","f1","f2","f3","f6","late"];
+  const ids=["cap","minL","col","f1","f2","f3","f6","late"];
   if(ids.some(i=>!($(i).value!==""&&num(i)>=0))){m.textContent="Numbers must be zero or more.";return}
   const rpc=$("rpc").value.trim();
   if(rpc&&!/^https:\/\//.test(rpc)){m.textContent="The RPC URL must start with https://";return}
@@ -263,7 +264,7 @@ $("save").onclick=async()=>{
   $("save").disabled=true;
   const now=new Date().toISOString();
   const {error}=await sb.from("settings").upsert([
-    {key:"loan",value:{net:$("net").value,capUsd:num("cap"),colPer100:num("col"),fee1:num("f1"),fee2:num("f2"),fee3:num("f3"),fee6:num("f6"),lateFeeUsd:num("late"),lateDailyPct:num("lateD"),caps:{BTC:num("cBTC"),ETH:num("cETH"),SOL:num("cSOL"),USDC:num("cUSDC")},cols:{BTC:num("colBTC"),ETH:num("colETH"),SOL:num("colSOL"),USDC:num("colUSDC")},maxm:{BTC:Math.min(6,Math.max(1,Math.round(num("mmBTC")))),ETH:Math.min(6,Math.max(1,Math.round(num("mmETH")))),SOL:Math.min(6,Math.max(1,Math.round(num("mmSOL")))),USDC:Math.min(6,Math.max(1,Math.round(num("mmUSDC"))))}},updated_at:now},
+    {key:"loan",value:{net:$("net").value,capUsd:num("cap"),minUsd:num("minL"),colPer100:num("col"),fee1:num("f1"),fee2:num("f2"),fee3:num("f3"),fee6:num("f6"),lateFeeUsd:num("late"),lateDailyPct:num("lateD"),caps:{BTC:num("cBTC"),ETH:num("cETH"),SOL:num("cSOL"),USDC:num("cUSDC")},cols:{BTC:num("colBTC"),ETH:num("colETH"),SOL:num("colSOL"),USDC:num("colUSDC")},maxm:{BTC:Math.min(6,Math.max(1,Math.round(num("mmBTC")))),ETH:Math.min(6,Math.max(1,Math.round(num("mmETH")))),SOL:Math.min(6,Math.max(1,Math.round(num("mmSOL")))),USDC:Math.min(6,Math.max(1,Math.round(num("mmUSDC"))))}},updated_at:now},
     {key:"pool",value:{rpcUrl:rpc,coins},updated_at:now}
   ]);
   $("save").disabled=false;
