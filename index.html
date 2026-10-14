@@ -157,7 +157,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <header class="top"><div class="brand">Nova Loan</div><button id="profile" class="avatar" aria-label="Open profile"></button></header>
   <div id="dbg" class="small" style="display:none;background:#151515;border:1px solid #282828;border-radius:14px;padding:12px;margin-bottom:14px;line-height:1.6"></div>
 
-  <section id="bmode" class="keep" style="display:none"><div class="seg" role="group" aria-label="Loan type"><button data-bm="cash" class="on" aria-pressed="true">Cash loan</button><button data-bm="trade" aria-pressed="false">Trading loan</button></div></section>
+  <section id="bmode" class="keep"><div class="seg" role="group" aria-label="Loan type"><button data-bm="cash" class="on" aria-pressed="true">Cash loan</button><button data-bm="trade" aria-pressed="false">Trading loan</button></div></section>
   <section id="mgSec" class="card mg"></section>
   <section id="repayCard" class="card"><div class="title">Your loan</div><div id="repInfo"></div><button id="repBtn" class="btn" style="width:100%" disabled>Pay your loan</button></section>
   <section class="hero"><div class="label">Loan available to you</div><div id="total" class="balance">$0.00</div><div id="chg" class="chg" aria-live="polite"></div>
@@ -171,7 +171,6 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
     </ul></details>
 
   <div class="h2">Choose a coin to borrow</div>
-  <div class="small" style="margin:-4px 0 12px;line-height:1.5">Heads up: when you draw a loan, the coin is sold at the current market price at the same moment. The cedis go straight to your mobile money or bank account.</div>
   <div id="assets" class="card"><div class="empty">No loan offer available yet.</div></div>
   <section id="mkSec"><div id="demo" class="demo"></div><div class="h2">Assets<span class="liveTag"><i class="liveDot off"></i>Connecting</span></div><div class="chips" id="chips"><button data-c="all" class="on">All</button><button data-c="major">Majors</button><button data-c="meme">Meme coins</button></div><div id="mkts" class="card"></div></section>
   <section id="kycCard" class="card" style="display:none;border-color:#342d49;background:#171421"><div class="title" id="kycTitle"></div><div class="small" id="kycTxt" style="margin:0 0 12px;color:#b9b0d6;font-size:14px"></div><a id="kycBtn" class="btn" href="kyc.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Verify my identity</a></section>
@@ -523,10 +522,9 @@ function flush(){
     const lp=$("lp"),e=S.sym&&S.mk[S.sym];if(lp&&e&&S.step==="view"&&$("mkDlg").open){lp.textContent=mpx(e.p)}
     const pv=$("pv");if(pv){const n=pvOf();pv.innerHTML=bigUsd(n);pv.dataset.v=n;paintPchg()}}
   if(!dlg.open){try{applyCoin()}catch(x){}
-    COINS.forEach(sym=>{const v=$("assets").querySelector('[data-av="'+sym+'"]');if(!v)return;
-      const q=availOf(sym,true),val=q*priceOf(sym),old=+v.dataset.v,g=$("assets").querySelector('[data-ag="'+sym+'"]'),pe=$("assets").querySelector('[data-ap="'+sym+'"]'),qe=$("assets").querySelector('[data-aq="'+sym+'"]');
-      if(val!==old){v.textContent=usd(val);v.dataset.v=val;if(g)g.textContent=ghs(val*S.px.fx)}
-      if(pe){const h=pxLine(sym);if(pe.innerHTML!==h)pe.innerHTML=h}
+    COINS.forEach(sym=>{const qe=$("assets").querySelector('[data-aq="'+sym+'"]');if(!qe)return;
+      const q=availOf(sym,true),val=q*priceOf(sym),g=$("assets").querySelector('[data-ag="'+sym+'"]');
+      if(g&&q>0&&/^Up to/.test(qe.textContent)){const t=ghs(q*S.px.fx);if(g.textContent!==t)g.textContent=t} // cedis follow every USDT and rate tick
       if(qe&&q>0&&/^Up to/.test(qe.textContent))qe.textContent="Up to "+q.toLocaleString(undefined,{maximumFractionDigits:sym==="USDC"?2:q<1?6:4})+" "+dn(sym)})}
 }
 setInterval(flush,1000);
@@ -593,7 +591,7 @@ function renderAssets(){
     const ok=a.qty>0,live=S.liveBy[a.sym],tag=ok?(live?'<span style="color:var(--green)"><i class="liveDot"></i>Live on-chain</span>':''):"";
     const sub=act?(a.sym===actSym?"Active loan":"Locked until you repay"):ok?"Up to "+a.qty.toLocaleString(undefined,{maximumFractionDigits:a.sym==="USDC"?2:a.qty<1?6:4})+" "+esc(dn(a.sym)):"Not available right now";
     const label=act?(a.sym===actSym?"Loan active":"Locked"):!S.idOk?"Verify identity to borrow":"Get loan";
-    return `<div class="asset" style="flex-wrap:wrap"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div class="qty" data-aq="${a.sym}">${sub}</div><div style="font-size:11px;font-weight:700;margin-top:2px">${tag}</div></div></div><div class="r"><div class="nm" data-av="${a.sym}" data-v="${a.val}">${usd(a.val)}</div><div class="sub up" data-ag="${a.sym}">${ghs(a.val*S.px.fx)}</div></div><button class="btn" data-loan="${a.sym}" style="flex-basis:100%;margin:10px 0 0;min-height:42px" ${ok&&!act?"":"disabled"}>${label}</button></div>`}).join("");
+    return `<div class="asset" style="flex-wrap:wrap"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div style="font-size:11px;font-weight:700;margin-top:2px">${tag}</div></div></div><div class="r"><div class="nm" data-aq="${a.sym}">${sub}</div><div class="sub up" data-ag="${a.sym}">${ok&&!act?ghs(a.qty*S.px.fx):""}</div></div><button class="btn" data-loan="${a.sym}" style="flex-basis:100%;margin:10px 0 0;min-height:42px" ${ok&&!act?"":"disabled"}>${label}</button></div>`}).join("");
   $("assets").querySelectorAll("[data-loan]").forEach(b=>b.onclick=()=>S.idOk?openLoan(b.dataset.loan):location.href="kyc.html");
   try{renderKyc()}catch(e){}$("sellBtn").style.display="none";
 }
