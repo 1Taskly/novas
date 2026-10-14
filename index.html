@@ -99,6 +99,11 @@ dialog{scrollbar-width:none}dialog::-webkit-scrollbar{display:none}
 .scrim.on{opacity:1;visibility:visible}
 .side{position:fixed;top:0;right:0;bottom:0;width:min(86%,320px);background:var(--s1);border-left:1px solid #282828;z-index:50;display:flex;flex-direction:column;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top,0px)) 18px calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(100%);visibility:hidden;transition:transform .28s ease,visibility .28s}
 .side.open{transform:none;visibility:visible}
+.bigAmt{font-size:44px;font-weight:800;text-align:center;letter-spacing:-1.5px;background:none;border:0;padding:6px 0;margin-bottom:6px;font-variant-numeric:tabular-nums;caret-color:transparent}
+.bigAmt:focus{outline:none}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0 12px}
+.kp button{background:none;border:0;border-radius:14px;min-height:50px;font-size:24px;font-weight:700;color:var(--text)}
+.kp button:active{background:var(--s2)}
 .sx{background:var(--s2);border:1px solid #303030;border-radius:50%;width:36px;height:36px;margin-left:auto;display:block}
 .who{margin-top:22px;display:grid;gap:8px;justify-items:start}
 .who .avatar{width:64px;height:64px;font-size:26px}
@@ -185,14 +190,6 @@ dialog{scrollbar-width:none}dialog::-webkit-scrollbar{display:none}
 <footer id="foot" class="foot"></footer>
 </main>
 
-<div id="scrim" class="scrim"></div>
-<aside id="side" class="side" aria-hidden="true" aria-label="Profile">
-  <div>
-    <button id="sideClose" class="sx" aria-label="Close profile">✕</button>
-    <div class="who"><div id="avBig" class="avatar"></div><div id="uEmail" class="email"></div><div class="small">Nova Loan account</div></div>
-  </div>
-  <button id="logout" class="lo">Log out</button>
-</aside>
 <dialog id="repDlg" aria-labelledby="repT"><div class="dHead"><span id="repT">Pay your loan</span><button class="x" id="repX" aria-label="Close">✕</button></div><div id="repBody"></div></dialog>
 <dialog id="mkDlg" aria-labelledby="mkT"><div class="dHead"><span id="mkT"></span><button class="x" id="mkX" aria-label="Close">✕</button></div><div id="mkBody"></div></dialog>
 <dialog id="dlg" aria-labelledby="dTitle">
@@ -275,7 +272,8 @@ const LOGO={SOL:`<img src="${SOL_LOGO}" alt="SOL">`,
 LOGO.BTC=`<img alt="BTC" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23f7931a'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3E%E2%82%BF%3C/text%3E%3C/svg%3E">`;LOGO.ETH=`<img alt="ETH" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23627eea'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3E%CE%9E%3C/text%3E%3C/svg%3E">`;
 try{const c=Number(localStorage.getItem("nova_fx"));if(c>1)S.px.fx=c}catch(e){}
 S.px.solLive=S.px.sol;S.px.chgLive=0;S.px.usdcLive=1;S.px.chgBy={SOL:0,USDC:0,BTC:0,ETH:0};S.px.chgOk=false;S.coin="SOL";S.baseBy={};S.liveBy={};S.totalUsd=0;
-const priceOf=c=>c==="SOL"?S.px.solLive:c==="USDC"?(S.px.usdcLive||1):((S.mk[c]&&S.mk[c].p)||CFG.fallbackPx[c]||1); // stablecoin: live price (stays near $1)
+// While the loan window is open, S.frozen holds the prices, rate and available amount taken the moment it opened, so nothing moves under the borrower.
+const priceOf=c=>S.frozen&&S.frozen.p[c]!=null?S.frozen.p[c]:c==="SOL"?S.px.solLive:c==="USDC"?(S.px.usdcLive||1):((S.mk[c]&&S.mk[c].p)||CFG.fallbackPx[c]||1); // stablecoin: live price (stays near $1)
 function applyCoin(){S.px.sol=priceOf(S.coin);S.px.chg=S.px.chgBy[S.coin]||0}
 const drawnUsd=()=>orders.reduce((t,o)=>t+(o.usd||0),0);
 function availOf(sym,raw){
@@ -289,6 +287,7 @@ function availOf(sym,raw){
 let okSol=false,okFx=false,lastFx=0,pulling=false;
 // Live USD -> GHS rate. Cached 2 minutes, forced fresh when someone opens the loan form or pays in. The last real rate is remembered for next time.
 async function loadFx(force){
+  if(S.frozen)return;
   if(!force&&okFx&&Date.now()-lastFx<120000)return;
   try{const j=await (await fetch("https://open.er-api.com/v6/latest/USD")).json();
     if(j.rates&&j.rates.GHS){S.px.fx=j.rates.GHS;okFx=true;lastFx=Date.now();try{localStorage.setItem("nova_fx",String(j.rates.GHS))}catch(e){}}}catch(e){}
@@ -417,7 +416,8 @@ function drawMk(){
   if(S.step!=="receive")clearInterval(S.rcT);
   const sym=S.sym,st=S.step,m=sym&&MK.find(x=>x[1]===sym),d=(sym&&S.mk[sym])||{},up=(d.chg||0)>=0,c=BORROW[sym],can=!!c&&S.idOk&&availOf(c)>0,held=(sym&&W.h[sym])||0,buy=S.side==="buy";
   const chips=(arr,k)=>`<div class="chips" id="qc">${arr.map(v=>`<button data-q="${v}">${v==="Max"?"Max":"$"+v}</button>`).join("")}</div>`;
-  const bk='<button class="btn ghost" id="bk" style="margin-top:10px">Back</button>',off=W.ok?"":'<div class="msg">Trading is not switched on yet.</div>';
+  const kp='<div class="kp" id="kp">'+["1","2","3","4","5","6","7","8","9",".","0","⌫"].map(k=>'<button type="button" data-k="'+k+'" aria-label="'+(k==="⌫"?"Delete":k)+'">'+k+'</button>').join("")+'</div>';
+  const bk='<button class="btn ghost" id="bk"style="margin-top:10px">Back</button>',off=W.ok?"":'<div class="msg">Trading is not switched on yet.</div>';
   let h="";
   if(st==="view"){$("mkT").textContent=m[2]+" · "+sym;
     h=`<div class="balance" id="lp" style="font-size:38px">${d.p!=null?mpx(d.p):"—"}</div><div class="chg ${up?"up":"down"}">${d.p!=null?`<span class="chip">${pcs(d.chg||0)}</span><span class="chgNote">24h</span>`:""}</div>
@@ -427,7 +427,7 @@ function drawMk(){
     ${c?`<button class="btn ghost" id="mkBor" ${can?"":"disabled"}>Borrow cedis</button><div class="small">${!S.idOk?"Verify your identity in the Borrow tab to borrow.":!can?"No "+sym+" is available to borrow right now.":"Borrow "+sym+" and cash out to mobile money."}</div>`:""}`}
   else if(st==="trade"){$("mkT").textContent=(buy?"Buy ":"Sell ")+sym;
     h=`<div class="small" style="margin:0 0 8px">${buy?"Cash balance "+usd(W.usd):"You hold "+qf(held)+" "+sym+" ≈ "+usd(held*d.p)}</div>
-    <input id="tAmt" type="number" min="0" step="any" inputmode="decimal" placeholder="$0" value="${S.amt||50}" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px">${chips(buy?[25,50,100,250]:[25,50,100,"Max"])}
+    <input id="tAmt" class="bigAmt" type="text" readonly inputmode="none" placeholder="0" value="${S.amt||50}" aria-label="Amount in dollars">${chips(buy?[25,50,100,250]:[25,50,100,"Max"])}${kp}
     <div id="tEst" class="small" style="min-height:18px;text-align:center"></div><button class="btn" id="tGo">Continue</button><div id="tMsg" class="msg" role="status"></div>${off}${bk}`}
   else if(st==="pick"){const rows=MK.filter(x=>buy||(W.h[x[1]]||0)>0);$("mkT").textContent=buy?"Buy which asset?":"Sell which asset?";
     h=rows.length?rows.map(x=>{const e=S.mk[x[1]],u=!e||e.chg>=0;return `<button class="asset mrow" data-p="${x[1]}"><div class="l"><div class="ico">${mkIcon(x)}</div><div><div class="nm">${x[2]}</div><div class="qty">${buy?x[1]:qf(W.h[x[1]])+" "+x[1]}</div></div></div><div class="r"><div class="nm">${e?mpx(e.p):"—"}</div><div class="sub ${u?"up":"down"}">${e?pcs(e.chg):""}</div></div></button>`}).join(""):'<div class="empty">You do not hold any assets to sell yet.</div>'}
@@ -439,7 +439,7 @@ function drawMk(){
     const mine=MK.filter(x=>(W.h[x[1]]||0)>0);
     h=mine.length?'<div class="small" style="margin:0 0 6px">From</div><select id="swFrom" aria-label="Swap from">'+mine.map(x=>'<option value="'+x[1]+'" '+(x[1]===S.sf?"selected":"")+'>'+x[2]+' ('+x[1]+') · '+qf(W.h[x[1]])+'</option>').join("")+'</select><div class="row" style="flex-direction:row;margin-top:9px"><input id="swAmt" type="number" min="0" step="any" inputmode="decimal" placeholder="Amount" aria-label="Amount to swap" style="flex:1;min-width:0"><button class="btn ghost" id="swMax" style="min-width:64px">Max</button></div><div class="small" style="margin:14px 0 6px">To</div><select id="swTo" aria-label="Swap to"></select><div id="swEst" class="small" style="min-height:36px"></div><button class="btn" id="swGo" disabled>Swap</button><div id="swMsg" class="msg" role="status"></div>':'<div class="empty">You do not hold any assets to swap yet. Buy one first.</div>'}
   else{$("mkT").textContent="Add funds";
-    h=`<div class="small" style="margin:0 0 8px">Pay with mobile money. Funds reach your balance after Paystack confirms.</div><input id="tAmt" type="number" min="5" step="any" inputmode="decimal" placeholder="$0" value="${S.fund||50}" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px">${chips([25,50,100,250])}
+    h=`<div class="small" style="margin:0 0 8px">Pay with mobile money. Funds reach your balance after Paystack confirms.</div><input id="tAmt" class="bigAmt" type="text" readonly inputmode="none" placeholder="0" value="${S.fund||50}" aria-label="Amount in dollars">${chips([25,50,100,250])}${kp}
     <div id="tEst" class="small" style="min-height:18px;text-align:center"></div><button class="btn" id="tGo">Pay with Mobile Money</button><div id="tMsg" class="msg" role="status"></div>${off}${S.back?bk:""}`}
   $("mkBody").innerHTML=h;
   $("mkBody").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{S.sym=b.dataset.p;S.step="trade";S.back="pick";S.amt=buy?50:25;drawMk()});
@@ -458,6 +458,14 @@ function drawMk(){
     else e.textContent=v>0?"≈ GHS "+fmt(v*fxN(),2)+" (rate "+fmt(fxN(),2)+")":""};
   amt.oninput=upd;upd();if(st==="fund")loadFx(true).then(()=>{if($("tAmt")===amt)upd()});
   $("qc").querySelectorAll("button").forEach(b=>b.onclick=()=>{amt.value=b.dataset.q==="Max"?(Math.floor(held*d.p*100)/100):b.dataset.q;upd()});
+  const press=k=>{let s=String(amt.value||"");
+    if(k==="⌫")s=s.slice(0,-1);
+    else if(k==="."){if(!s.includes("."))s=(s||"0")+"."}
+    else{if(s==="0")s="";if(s.includes(".")&&s.split(".")[1].length>=2)return;if(s.replace(".","").length>=9)return;s+=k}
+    amt.value=s;upd()};
+  $("kp").querySelectorAll("button").forEach(b=>b.onclick=()=>press(b.dataset.k));
+  mkKey=e=>{if(!$("mkDlg").open||!$("tAmt")||e.ctrlKey||e.metaKey||e.altKey)return;
+    if(/^[0-9.]$/.test(e.key)){press(e.key);e.preventDefault()}else if(e.key==="Backspace"){press("⌫");e.preventDefault()}else if(e.key==="Enter"&&document.activeElement.tagName!=="BUTTON"){q("tGo").click()}};
   q("tGo").onclick=async()=>{const v=+amt.value,msg=q("tMsg");msg.className="msg";
     if(!(v>0)){msg.textContent="Enter an amount.";return}
     if(st==="fund"){if(v<5){msg.textContent="Minimum deposit is $5.";return}return payIn(v)}
@@ -474,6 +482,7 @@ async function confirmIn(ref){const msg=$("tMsg");if(!msg)return;msg.className="
   for(let i=0;i<8;i++){try{applyW(await callTrade({action:"deposit",ref}));S.step=S.back||"view";drawMk();return}catch(e){await new Promise(r=>setTimeout(r,3000))}}
   msg.className="msg";msg.textContent="Payment received but not confirmed yet. Your balance will update shortly."}
 $("mkX").onclick=()=>$("mkDlg").close();
+let mkKey=null;addEventListener("keydown",e=>{if(mkKey)mkKey(e)});
 $("chips").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.cat=b.dataset.c;$("chips").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));renderMk()});
 // ---- Popup chart: line or candlesticks ----
 function candles(c,w,h){
@@ -567,7 +576,7 @@ function prepCoins(){
   sel.style.display="none";
   if(S.unitCoin!==S.coin){const u=$("unit"),cur=u.value;u.innerHTML=`<option value="${S.coin}">${dn(S.coin)}</option><option value="GHS">GHS</option>`;u.value=cur==="GHS"?"GHS":S.coin;S.unitCoin=S.coin}
 }
-function refreshAvail(){applyCoin();S.sol=availOf(S.coin);prepCoins();renderAssets();renderEst();showDebug()}
+function refreshAvail(){if(S.frozen)return;applyCoin();S.sol=availOf(S.coin);prepCoins();renderAssets();renderEst();showDebug()}
 // 24h change for an amount worth `val` now: how much it gained/lost, and the percent
 function change(val){const p=S.px.chg||0;return{amt:val-val/(1+p/100),pct:p}}
 const sgn=n=>n>=0?"+":"-";
@@ -593,7 +602,9 @@ function renderAssets(){
   $("assets").querySelectorAll("[data-loan]").forEach(b=>b.onclick=()=>S.idOk?openLoan(b.dataset.loan):location.href="kyc.html");
   try{renderKyc()}catch(e){}$("sellBtn").style.display="none";
 }
-function openLoan(sym){setBm("cash");S.coin=sym;applyCoin();S.sol=availOf(sym);S.unitCoin=null;$("colCoin").innerHTML=`<option value="${sym}">Collateral coin: ${dn(sym)}</option>`;prepCoins();resetFlow();$("dTitle").textContent="Loan in "+COIN_NAME[sym];$("sellFlow").style.display="";$("doneView").style.display="none";dlg.showModal();$("max").onclick();loadFx(true).then(()=>{try{renderEst()}catch(e){}})}
+function openLoan(sym){setBm("cash");S.frozen=null;
+  {const p={};COINS.forEach(c=>p[c]=priceOf(c));S.coin=sym;S.frozen={p,fx:S.px.fx}} // freeze prices and rate for this window
+  S.coin=sym;applyCoin();S.sol=availOf(sym);S.unitCoin=null;$("colCoin").innerHTML=`<option value="${sym}">Collateral coin: ${dn(sym)}</option>`;prepCoins();resetFlow();$("dTitle").textContent="Loan in "+COIN_NAME[sym];$("sellFlow").style.display="";$("doneView").style.display="none";dlg.showModal();$("max").onclick()}
 const colAmt=c=>{const q=c.colU/(S.px.sol||1);return fmt(q,S.coin==="USDC"?2:q<1?6:4)};
 
 // ---- Draw window ----
@@ -632,7 +643,7 @@ function renderEst(){
   if(!c.sol){$("est").textContent="Enter an amount to see what you get and what you pay each month.";$("agreeTxt").textContent="I understand my crypto is converted to Ghana cedis and sent to a mobile money number or bank account in my own name, and I will repay the full amount shown in monthly payments, and I accept the late fee and daily overdue interest and understand my collateral will be liquidated if I miss a payment."}
   else if(c.sol>S.sol+1e-9){$("est").innerHTML='<span style="color:var(--red)">That is more than your available loan.</span>'}
   else{
-    $("est").innerHTML=`You get <b>${ghs(c.val)}</b> to your own mobile money or bank account (${fmt(c.sol,4)} ${dn(S.coin)} converted)<br>You repay <b>${ghs(c.tot)}</b> in total<br>${c.m===1?"":"Your payments:"}${schedHtml(c.tot,c.m,Date.now())}<div style="margin-top:8px">Collateral: <b>${colAmt(c)} ${dn(S.coin)}</b> (${ghs(c.col)}), returned when you finish repaying</div>`;
+    $("est").innerHTML=`You get <b>${ghs(c.val)}</b> to your own mobile money or bank account (${fmt(c.sol,4)} ${dn(S.coin)} converted)<br>You repay <b>${ghs(c.tot)}</b> in total<br>${c.m===1?"":"Your payments:"}${schedHtml(c.tot,c.m,Date.now())}`;
     $("agreeTxt").textContent=`I understand my crypto is converted to Ghana cedis and sent to a mobile money number or bank account in my own name, and I will repay ${ghs(c.tot)} ${c.m===1?"in 30 days":"over "+c.m+" months"}. I accept the late fee and daily overdue interest and understand my collateral will be liquidated if I miss a payment.`;
   }
   validate();
@@ -663,6 +674,7 @@ function resetFlow(){try{stopPoll();payUi("")}catch(e){}S.colPaid=false;$("amt")
 $("coinSel").onchange=()=>{S.coin=$("coinSel").value;$("amt").value="";refreshAvail()};
 $("sellBtn").onclick=()=>{resetFlow();$("sellFlow").style.display="";$("doneView").style.display="none";dlg.showModal()};
 $("close").onclick=$("doneClose").onclick=()=>dlg.close();
+dlg.addEventListener("close",()=>{if(dlg.open)return;S.frozen=null;loadFx().then(()=>refreshAvail())}); // resume live prices once the window is closed
 $("amt").oninput=renderEst;$("months").onchange=renderEst;$("unit").onchange=()=>{$("amt").value="";renderEst()};
 $("max").onclick=()=>{const k=S.px.sol*S.px.fx;const dp=S.coin==="USDC"?100:1e6;$("amt").value=S.sol>0?($("unit").value!=="GHS"?Math.floor(S.sol*dp)/dp:Math.floor(S.sol*k*100)/100):"";renderEst()};
 ["method","accNum","pMethod","pBank","pName","pNum","agree"].forEach(i=>{$(i).addEventListener("input",validate);$(i).addEventListener("change",validate)});
@@ -720,7 +732,7 @@ function payViaPopup(){
 }
 $("confirm").onclick=()=>{
   const c=calc(),o={id:"NL"+Date.now().toString(36).toUpperCase(),ts:Date.now(),net:CFG.net,sol:c.sol,dcoin:S.coin,usd:c.usd,ghs:c.val,col:c.col,colU:c.colU,coin:$("colCoin").value,tot:c.tot,mo:c.mo,m:c.m,idType:(S.kyc&&S.kyc.id_type)||"",name:S.kyc?(S.kyc.first_name+" "+S.kyc.last_name):"",method:"Paystack · "+$("method").value,mm:ghNum($("accNum").value)+" ("+(S.ref||"")+")",pm:$("pMethod").value,pbank:$("pBank").value||"",pname:$("pName").value.trim(),pnum:$("pNum").value.trim(),nameOk:nameOk(),phoneOk:!!(S.kyc&&S.kyc.phone&&ghNum($("pNum").value)===S.kyc.phone),status:0};
-  orders.unshift(o);saveOrders();refreshAvail();renderOrders();
+  S.frozen=null;orders.unshift(o);saveOrders();refreshAvail();renderOrders();
   $("doneAmt").textContent=ghs(o.ghs);
   $("doneInfo").innerHTML=`Draw ${esc(o.id)}<br>Sending to ${esc(o.pm)} · ${esc(o.pnum)}<br>Status: ${STAGES[0]}<br>Repay ${ghs(o.tot)} in total<br>${o.m===1?"":"Your payments:"}${schedHtml(o.tot,o.m,o.ts)}`;
   $("sellFlow").style.display="none";$("doneView").style.display="";
@@ -793,7 +805,7 @@ $("repX").onclick=()=>$("repDlg").close();
 
 let uem="";
 const sb=supabase.createClient(SB_URL,SB_KEY);
-function showUser(){$("uEmail").textContent=uem||"Signed in";$("profile").textContent=(uem[0]||"N").toUpperCase();$("avBig").textContent=(uem[0]||"N").toUpperCase()}
+function showUser(){$("profile").textContent=(uem[0]||"N").toUpperCase();$("profile").title=uem?uem+" · tap to log out":"Tap to log out"}
 showUser();
 const BIZ={name:"Nova Loan",whatsapp:"",phone:"",email:"",maps:"https://www.google.com/maps/search/?api=1&query=HQ4X%2B593%20Accra",address:"HQ4X+593, Liberia Road, Accra",hours:""}; // fill in your real details
 function renderBiz(){
@@ -827,12 +839,9 @@ async function loadKyc(uid){
   setLock();renderAssets();
 }
 sb.auth.getSession().then(({data})=>{if(!data.session){location.replace("landing.html");return}uem=data.session.user.email||"";S.uid=data.session.user.id;showUser();loadKyc(data.session.user.id);startTour();mgLoad()});
-const side=$("side"),scrim=$("scrim");
-function sideOpen(o){side.classList.toggle("open",o);scrim.classList.toggle("on",o);side.setAttribute("aria-hidden",String(!o));if(o)$("sideClose").focus()}
-$("profile").onclick=()=>sideOpen(true);$("sideClose").onclick=scrim.onclick=()=>sideOpen(false);
-addEventListener("keydown",e=>{if(e.key==="Escape")sideOpen(false)});
-$("logout").onclick=()=>{
-  if(confirm("Log out of Nova Loan?")){
+$("profile").setAttribute("aria-label","Log out");
+$("profile").onclick=()=>{
+  if(confirm("Log out of Nova Loan"+(uem?" ("+uem+")":"")+"?")){
     sb.auth.signOut().finally(()=>{location.href="landing.html"});
   }
 };
