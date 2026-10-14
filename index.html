@@ -99,11 +99,6 @@ dialog{scrollbar-width:none}dialog::-webkit-scrollbar{display:none}
 .scrim.on{opacity:1;visibility:visible}
 .side{position:fixed;top:0;right:0;bottom:0;width:min(86%,320px);background:var(--s1);border-left:1px solid #282828;z-index:50;display:flex;flex-direction:column;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top,0px)) 18px calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(100%);visibility:hidden;transition:transform .28s ease,visibility .28s}
 .side.open{transform:none;visibility:visible}
-.bigAmt{font-size:44px;font-weight:800;text-align:center;letter-spacing:-1.5px;background:none;border:0;padding:6px 0;margin-bottom:6px;font-variant-numeric:tabular-nums;caret-color:transparent}
-.bigAmt:focus{outline:none}
-.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0 12px}
-.kp button{background:none;border:0;border-radius:14px;min-height:50px;font-size:24px;font-weight:700;color:var(--text)}
-.kp button:active{background:var(--s2)}
 .sx{background:var(--s2);border:1px solid #303030;border-radius:50%;width:36px;height:36px;margin-left:auto;display:block}
 .who{margin-top:22px;display:grid;gap:8px;justify-items:start}
 .who .avatar{width:64px;height:64px;font-size:26px}
@@ -139,6 +134,9 @@ dialog{scrollbar-width:none}dialog::-webkit-scrollbar{display:none}
 .demo .v .cur{font-size:.46em;font-weight:700;letter-spacing:0;color:var(--accent);vertical-align:.9em;margin-right:4px}
 .demo .v .dec{font-size:.44em;font-weight:700;letter-spacing:0;color:var(--muted)}
 .demo .cash{font-size:12px;color:var(--muted);margin-top:12px}
+.pchg{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:5px 12px;border-radius:999px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.pchg.pu{color:var(--green);background:rgba(53,232,117,.13)}.pchg.pd{color:var(--red);background:rgba(255,91,91,.13)}
+.demo .v .cur{color:#fff;opacity:.7}
 .acts{margin-top:26px}
 .acts{display:flex;justify-content:space-between;gap:4px;margin-top:20px}
 .act{flex:1;background:none;border:0;color:var(--text);display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12px;font-weight:700;min-width:0}
@@ -190,6 +188,14 @@ dialog{scrollbar-width:none}dialog::-webkit-scrollbar{display:none}
 <footer id="foot" class="foot"></footer>
 </main>
 
+<div id="scrim" class="scrim"></div>
+<aside id="side" class="side" aria-hidden="true" aria-label="Profile">
+  <div>
+    <button id="sideClose" class="sx" aria-label="Close profile">✕</button>
+    <div class="who"><div id="avBig" class="avatar"></div><div id="uEmail" class="email"></div><div class="small">Nova Loan account</div></div>
+  </div>
+  <button id="logout" class="lo">Log out</button>
+</aside>
 <dialog id="repDlg" aria-labelledby="repT"><div class="dHead"><span id="repT">Pay your loan</span><button class="x" id="repX" aria-label="Close">✕</button></div><div id="repBody"></div></dialog>
 <dialog id="mkDlg" aria-labelledby="mkT"><div class="dHead"><span id="mkT"></span><button class="x" id="mkX" aria-label="Close">✕</button></div><div id="mkBody"></div></dialog>
 <dialog id="dlg" aria-labelledby="dTitle">
@@ -272,9 +278,8 @@ const LOGO={SOL:`<img src="${SOL_LOGO}" alt="SOL">`,
 LOGO.BTC=`<img alt="BTC" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23f7931a'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3E%E2%82%BF%3C/text%3E%3C/svg%3E">`;LOGO.ETH=`<img alt="ETH" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23627eea'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3E%CE%9E%3C/text%3E%3C/svg%3E">`;
 try{const c=Number(localStorage.getItem("nova_fx"));if(c>1)S.px.fx=c}catch(e){}
 S.px.solLive=S.px.sol;S.px.chgLive=0;S.px.usdcLive=1;S.px.chgBy={SOL:0,USDC:0,BTC:0,ETH:0};S.px.chgOk=false;S.coin="SOL";S.baseBy={};S.liveBy={};S.totalUsd=0;
-// While the loan window is open, S.frozen holds the prices, rate and available amount taken the moment it opened, so nothing moves under the borrower.
-const priceOf=c=>S.frozen&&S.frozen.p[c]!=null?S.frozen.p[c]:c==="SOL"?S.px.solLive:c==="USDC"?(S.px.usdcLive||1):((S.mk[c]&&S.mk[c].p)||CFG.fallbackPx[c]||1); // stablecoin: live price (stays near $1)
-function applyCoin(){S.px.sol=priceOf(S.coin);S.px.chg=S.px.chgBy[S.coin]||0}
+const priceOf=c=>c==="SOL"?S.px.solLive:c==="USDC"?(S.px.usdcLive||1):((S.mk[c]&&S.mk[c].p)||CFG.fallbackPx[c]||1); // stablecoin: live price (stays near $1)
+function applyCoin(){if(S.frozen)return;S.px.sol=priceOf(S.coin);S.px.chg=S.px.chgBy[S.coin]||0}
 const drawnUsd=()=>orders.reduce((t,o)=>t+(o.usd||0),0);
 function availOf(sym,raw){
   if(!raw&&orders.some(o=>!o.repaid))return 0; // one loan at a time: nothing is available until the active loan is repaid
@@ -287,13 +292,12 @@ function availOf(sym,raw){
 let okSol=false,okFx=false,lastFx=0,pulling=false;
 // Live USD -> GHS rate. Cached 2 minutes, forced fresh when someone opens the loan form or pays in. The last real rate is remembered for next time.
 async function loadFx(force){
-  if(S.frozen)return;
   if(!force&&okFx&&Date.now()-lastFx<120000)return;
   try{const j=await (await fetch("https://open.er-api.com/v6/latest/USD")).json();
     if(j.rates&&j.rates.GHS){S.px.fx=j.rates.GHS;okFx=true;lastFx=Date.now();try{localStorage.setItem("nova_fx",String(j.rates.GHS))}catch(e){}}}catch(e){}
 }
 async function loadRates(){
-  if(pulling)return;pulling=true;
+  if(S.frozen||pulling)return;pulling=true;
   try{
     try{const j=await (await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana,usd-coin&vs_currencies=usd&include_24hr_change=true")).json();
       if(j.solana&&j.solana.usd&&!wsOk){S.px.solLive=j.solana.usd;S.px.chgLive=Number(j.solana.usd_24h_change)||0;S.px.chgBy.SOL=S.px.chgLive;okSol=true}
@@ -333,12 +337,17 @@ async function loadMarkets(){try{const r=await (await fetch("https://api.coingec
 let W={usd:0,h:{},ok:true};
 const applyW=r=>{W={usd:Number(r.usd)||0,h:Object.fromEntries((r.h||[]).map(x=>[x.sym,Number(x.qty)])),ok:true};renderWallet()};
 async function loadWallet(){try{const [w,h]=await Promise.all([sb.from("wallets").select("usd").maybeSingle(),sb.from("holdings").select("sym,qty")]);if(w.error||h.error)throw 0;applyW({usd:w.data?w.data.usd:0,h:h.data})}catch(e){W.ok=false;renderWallet()}}
+function pvChg(){let d=0,base=W.usd;for(const k in W.h){const e=S.mk[k];if(e&&e.p){const prev=e.p/(1+(e.chg||0)/100);d+=W.h[k]*(e.p-prev);base+=W.h[k]*prev}}return{d,pct:base>0?d/base*100:0}}
+function paintPchg(){const el=$("pchg");if(!el)return;const pv=pvOf();
+  if(!(pv>0.005)||!Object.keys(W.h).some(k=>W.h[k]>0)){el.style.display="none";return}
+  const c=pvChg(),up=c.d>=0;el.style.display="";el.className="pchg "+(up?"pu":"pd");
+  el.textContent=(up?"▲ ":"▼ ")+usd(Math.abs(c.d))+" ("+fmt(Math.abs(c.pct),2)+"%) today"}
 function pvOf(){let pv=W.usd;for(const k in W.h){const d=S.mk[k];if(d)pv+=W.h[k]*d.p}return pv}
 function renderWallet(){const pv=pvOf();
   const ic=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${p}"/></svg>`,
   A=[["buy","Buy","M12 5v14M5 12h14"],["sell","Sell","M5 12h14"],["swap","Swap","M7 4v14M3 14l4 4 4-4M17 20V6M13 10l4-4 4 4"],["receive","Receive","M12 4v12M6 11l6 6 6-6M5 20h14"],["send","Send","M12 20V8M6 13l6-6 6 6M5 4h14"]];
-  $("demo").innerHTML=`<div class="lbl">Portfolio balance</div><div class="v" id="pv">${bigUsd(pv)}</div>${W.usd>0.005?`<div class="cash">Cash ${usd(W.usd)}</div>`:""}<div id="mgBanner"></div><div class="acts">${A.map(x=>`<button class="act" data-a="${x[0]}"><i>${ic(x[2])}</i>${x[1]}</button>`).join("")}</div>`;
-  paintMgBanner();
+  $("demo").innerHTML=`<div class="lbl">Portfolio balance</div><div class="v" id="pv">${bigUsd(pv)}</div><div class="pchg" id="pchg" style="display:none"></div>${W.usd>0.005?`<div class="cash">Cash ${usd(W.usd)}</div>`:""}<div id="mgBanner"></div><div class="acts">${A.map(x=>`<button class="act" data-a="${x[0]}"><i>${ic(x[2])}</i>${x[1]}</button>`).join("")}</div>`;
+  paintPchg();paintMgBanner();
   $("demo").querySelectorAll(".act").forEach(b=>b.onclick=()=>{const a=b.dataset.a;S.sym=null;S.back=null;
     if(a==="buy"||a==="sell"){S.side=a;S.step="pick"}else S.step=a;
     drawMk();$("mkDlg").showModal()})}
@@ -416,8 +425,7 @@ function drawMk(){
   if(S.step!=="receive")clearInterval(S.rcT);
   const sym=S.sym,st=S.step,m=sym&&MK.find(x=>x[1]===sym),d=(sym&&S.mk[sym])||{},up=(d.chg||0)>=0,c=BORROW[sym],can=!!c&&S.idOk&&availOf(c)>0,held=(sym&&W.h[sym])||0,buy=S.side==="buy";
   const chips=(arr,k)=>`<div class="chips" id="qc">${arr.map(v=>`<button data-q="${v}">${v==="Max"?"Max":"$"+v}</button>`).join("")}</div>`;
-  const kp='<div class="kp" id="kp">'+["1","2","3","4","5","6","7","8","9",".","0","⌫"].map(k=>'<button type="button" data-k="'+k+'" aria-label="'+(k==="⌫"?"Delete":k)+'">'+k+'</button>').join("")+'</div>';
-  const bk='<button class="btn ghost" id="bk"style="margin-top:10px">Back</button>',off=W.ok?"":'<div class="msg">Trading is not switched on yet.</div>';
+  const bk='<button class="btn ghost" id="bk" style="margin-top:10px">Back</button>',off=W.ok?"":'<div class="msg">Trading is not switched on yet.</div>';
   let h="";
   if(st==="view"){$("mkT").textContent=m[2]+" · "+sym;
     h=`<div class="balance" id="lp" style="font-size:38px">${d.p!=null?mpx(d.p):"—"}</div><div class="chg ${up?"up":"down"}">${d.p!=null?`<span class="chip">${pcs(d.chg||0)}</span><span class="chgNote">24h</span>`:""}</div>
@@ -427,7 +435,7 @@ function drawMk(){
     ${c?`<button class="btn ghost" id="mkBor" ${can?"":"disabled"}>Borrow cedis</button><div class="small">${!S.idOk?"Verify your identity in the Borrow tab to borrow.":!can?"No "+sym+" is available to borrow right now.":"Borrow "+sym+" and cash out to mobile money."}</div>`:""}`}
   else if(st==="trade"){$("mkT").textContent=(buy?"Buy ":"Sell ")+sym;
     h=`<div class="small" style="margin:0 0 8px">${buy?"Cash balance "+usd(W.usd):"You hold "+qf(held)+" "+sym+" ≈ "+usd(held*d.p)}</div>
-    <input id="tAmt" class="bigAmt" type="text" readonly inputmode="none" placeholder="0" value="${S.amt||50}" aria-label="Amount in dollars">${chips(buy?[25,50,100,250]:[25,50,100,"Max"])}${kp}
+    <input id="tAmt" type="number" min="0" step="any" inputmode="decimal" placeholder="$0" value="${S.amt||50}" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px">${chips(buy?[25,50,100,250]:[25,50,100,"Max"])}
     <div id="tEst" class="small" style="min-height:18px;text-align:center"></div><button class="btn" id="tGo">Continue</button><div id="tMsg" class="msg" role="status"></div>${off}${bk}`}
   else if(st==="pick"){const rows=MK.filter(x=>buy||(W.h[x[1]]||0)>0);$("mkT").textContent=buy?"Buy which asset?":"Sell which asset?";
     h=rows.length?rows.map(x=>{const e=S.mk[x[1]],u=!e||e.chg>=0;return `<button class="asset mrow" data-p="${x[1]}"><div class="l"><div class="ico">${mkIcon(x)}</div><div><div class="nm">${x[2]}</div><div class="qty">${buy?x[1]:qf(W.h[x[1]])+" "+x[1]}</div></div></div><div class="r"><div class="nm">${e?mpx(e.p):"—"}</div><div class="sub ${u?"up":"down"}">${e?pcs(e.chg):""}</div></div></button>`}).join(""):'<div class="empty">You do not hold any assets to sell yet.</div>'}
@@ -439,7 +447,7 @@ function drawMk(){
     const mine=MK.filter(x=>(W.h[x[1]]||0)>0);
     h=mine.length?'<div class="small" style="margin:0 0 6px">From</div><select id="swFrom" aria-label="Swap from">'+mine.map(x=>'<option value="'+x[1]+'" '+(x[1]===S.sf?"selected":"")+'>'+x[2]+' ('+x[1]+') · '+qf(W.h[x[1]])+'</option>').join("")+'</select><div class="row" style="flex-direction:row;margin-top:9px"><input id="swAmt" type="number" min="0" step="any" inputmode="decimal" placeholder="Amount" aria-label="Amount to swap" style="flex:1;min-width:0"><button class="btn ghost" id="swMax" style="min-width:64px">Max</button></div><div class="small" style="margin:14px 0 6px">To</div><select id="swTo" aria-label="Swap to"></select><div id="swEst" class="small" style="min-height:36px"></div><button class="btn" id="swGo" disabled>Swap</button><div id="swMsg" class="msg" role="status"></div>':'<div class="empty">You do not hold any assets to swap yet. Buy one first.</div>'}
   else{$("mkT").textContent="Add funds";
-    h=`<div class="small" style="margin:0 0 8px">Pay with mobile money. Funds reach your balance after Paystack confirms.</div><input id="tAmt" class="bigAmt" type="text" readonly inputmode="none" placeholder="0" value="${S.fund||50}" aria-label="Amount in dollars">${chips([25,50,100,250])}${kp}
+    h=`<div class="small" style="margin:0 0 8px">Pay with mobile money. Funds reach your balance after Paystack confirms.</div><input id="tAmt" type="number" min="5" step="any" inputmode="decimal" placeholder="$0" value="${S.fund||50}" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px">${chips([25,50,100,250])}
     <div id="tEst" class="small" style="min-height:18px;text-align:center"></div><button class="btn" id="tGo">Pay with Mobile Money</button><div id="tMsg" class="msg" role="status"></div>${off}${S.back?bk:""}`}
   $("mkBody").innerHTML=h;
   $("mkBody").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{S.sym=b.dataset.p;S.step="trade";S.back="pick";S.amt=buy?50:25;drawMk()});
@@ -458,14 +466,6 @@ function drawMk(){
     else e.textContent=v>0?"≈ GHS "+fmt(v*fxN(),2)+" (rate "+fmt(fxN(),2)+")":""};
   amt.oninput=upd;upd();if(st==="fund")loadFx(true).then(()=>{if($("tAmt")===amt)upd()});
   $("qc").querySelectorAll("button").forEach(b=>b.onclick=()=>{amt.value=b.dataset.q==="Max"?(Math.floor(held*d.p*100)/100):b.dataset.q;upd()});
-  const press=k=>{let s=String(amt.value||"");
-    if(k==="⌫")s=s.slice(0,-1);
-    else if(k==="."){if(!s.includes("."))s=(s||"0")+"."}
-    else{if(s==="0")s="";if(s.includes(".")&&s.split(".")[1].length>=2)return;if(s.replace(".","").length>=9)return;s+=k}
-    amt.value=s;upd()};
-  $("kp").querySelectorAll("button").forEach(b=>b.onclick=()=>press(b.dataset.k));
-  mkKey=e=>{if(!$("mkDlg").open||!$("tAmt")||e.ctrlKey||e.metaKey||e.altKey)return;
-    if(/^[0-9.]$/.test(e.key)){press(e.key);e.preventDefault()}else if(e.key==="Backspace"){press("⌫");e.preventDefault()}else if(e.key==="Enter"&&document.activeElement.tagName!=="BUTTON"){q("tGo").click()}};
   q("tGo").onclick=async()=>{const v=+amt.value,msg=q("tMsg");msg.className="msg";
     if(!(v>0)){msg.textContent="Enter an amount.";return}
     if(st==="fund"){if(v<5){msg.textContent="Minimum deposit is $5.";return}return payIn(v)}
@@ -482,7 +482,6 @@ async function confirmIn(ref){const msg=$("tMsg");if(!msg)return;msg.className="
   for(let i=0;i<8;i++){try{applyW(await callTrade({action:"deposit",ref}));S.step=S.back||"view";drawMk();return}catch(e){await new Promise(r=>setTimeout(r,3000))}}
   msg.className="msg";msg.textContent="Payment received but not confirmed yet. Your balance will update shortly."}
 $("mkX").onclick=()=>$("mkDlg").close();
-let mkKey=null;addEventListener("keydown",e=>{if(mkKey)mkKey(e)});
 $("chips").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.cat=b.dataset.c;$("chips").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));renderMk()});
 // ---- Popup chart: line or candlesticks ----
 function candles(c,w,h){
@@ -526,7 +525,7 @@ function flush(){
       if(sp)sp.innerHTML=spark(e.sp,64,28,up,true)});
     if(S.sym&&ks.includes(S.sym)&&S.step==="view"&&$("mkDlg").open)drawChart();
     const lp=$("lp"),e=S.sym&&S.mk[S.sym];if(lp&&e&&S.step==="view"&&$("mkDlg").open){lp.textContent=mpx(e.p)}
-    const pv=$("pv");if(pv){const n=pvOf();pv.innerHTML=bigUsd(n);pv.dataset.v=n}}
+    const pv=$("pv");if(pv){const n=pvOf();pv.innerHTML=bigUsd(n);pv.dataset.v=n;paintPchg()}}
   if(!dlg.open){try{applyCoin()}catch(x){}
     COINS.forEach(sym=>{const v=$("assets").querySelector('[data-av="'+sym+'"]');if(!v)return;
       const q=availOf(sym,true),val=q*priceOf(sym),old=+v.dataset.v,g=$("assets").querySelector('[data-ag="'+sym+'"]'),pe=$("assets").querySelector('[data-ap="'+sym+'"]'),qe=$("assets").querySelector('[data-aq="'+sym+'"]');
@@ -602,9 +601,7 @@ function renderAssets(){
   $("assets").querySelectorAll("[data-loan]").forEach(b=>b.onclick=()=>S.idOk?openLoan(b.dataset.loan):location.href="kyc.html");
   try{renderKyc()}catch(e){}$("sellBtn").style.display="none";
 }
-function openLoan(sym){setBm("cash");S.frozen=null;
-  {const p={};COINS.forEach(c=>p[c]=priceOf(c));S.coin=sym;S.frozen={p,fx:S.px.fx}} // freeze prices and rate for this window
-  S.coin=sym;applyCoin();S.sol=availOf(sym);S.unitCoin=null;$("colCoin").innerHTML=`<option value="${sym}">Collateral coin: ${dn(sym)}</option>`;prepCoins();resetFlow();$("dTitle").textContent="Loan in "+COIN_NAME[sym];$("sellFlow").style.display="";$("doneView").style.display="none";dlg.showModal();$("max").onclick()}
+function openLoan(sym){setBm("cash");S.coin=sym;applyCoin();S.sol=availOf(sym);S.unitCoin=null;$("colCoin").innerHTML=`<option value="${sym}">Collateral coin: ${dn(sym)}</option>`;prepCoins();resetFlow();$("dTitle").textContent="Loan in "+COIN_NAME[sym];$("sellFlow").style.display="";$("doneView").style.display="none";dlg.showModal();$("max").onclick();S.frozen=true;loadFx(true).then(()=>{try{renderEst()}catch(e){}})}
 const colAmt=c=>{const q=c.colU/(S.px.sol||1);return fmt(q,S.coin==="USDC"?2:q<1?6:4)};
 
 // ---- Draw window ----
@@ -674,7 +671,7 @@ function resetFlow(){try{stopPoll();payUi("")}catch(e){}S.colPaid=false;$("amt")
 $("coinSel").onchange=()=>{S.coin=$("coinSel").value;$("amt").value="";refreshAvail()};
 $("sellBtn").onclick=()=>{resetFlow();$("sellFlow").style.display="";$("doneView").style.display="none";dlg.showModal()};
 $("close").onclick=$("doneClose").onclick=()=>dlg.close();
-dlg.addEventListener("close",()=>{if(dlg.open)return;S.frozen=null;loadFx().then(()=>refreshAvail())}); // resume live prices once the window is closed
+dlg.addEventListener("close",()=>{S.frozen=false;refreshAvail()});
 $("amt").oninput=renderEst;$("months").onchange=renderEst;$("unit").onchange=()=>{$("amt").value="";renderEst()};
 $("max").onclick=()=>{const k=S.px.sol*S.px.fx;const dp=S.coin==="USDC"?100:1e6;$("amt").value=S.sol>0?($("unit").value!=="GHS"?Math.floor(S.sol*dp)/dp:Math.floor(S.sol*k*100)/100):"";renderEst()};
 ["method","accNum","pMethod","pBank","pName","pNum","agree"].forEach(i=>{$(i).addEventListener("input",validate);$(i).addEventListener("change",validate)});
@@ -732,7 +729,7 @@ function payViaPopup(){
 }
 $("confirm").onclick=()=>{
   const c=calc(),o={id:"NL"+Date.now().toString(36).toUpperCase(),ts:Date.now(),net:CFG.net,sol:c.sol,dcoin:S.coin,usd:c.usd,ghs:c.val,col:c.col,colU:c.colU,coin:$("colCoin").value,tot:c.tot,mo:c.mo,m:c.m,idType:(S.kyc&&S.kyc.id_type)||"",name:S.kyc?(S.kyc.first_name+" "+S.kyc.last_name):"",method:"Paystack · "+$("method").value,mm:ghNum($("accNum").value)+" ("+(S.ref||"")+")",pm:$("pMethod").value,pbank:$("pBank").value||"",pname:$("pName").value.trim(),pnum:$("pNum").value.trim(),nameOk:nameOk(),phoneOk:!!(S.kyc&&S.kyc.phone&&ghNum($("pNum").value)===S.kyc.phone),status:0};
-  S.frozen=null;orders.unshift(o);saveOrders();refreshAvail();renderOrders();
+  orders.unshift(o);saveOrders();refreshAvail();renderOrders();
   $("doneAmt").textContent=ghs(o.ghs);
   $("doneInfo").innerHTML=`Draw ${esc(o.id)}<br>Sending to ${esc(o.pm)} · ${esc(o.pnum)}<br>Status: ${STAGES[0]}<br>Repay ${ghs(o.tot)} in total<br>${o.m===1?"":"Your payments:"}${schedHtml(o.tot,o.m,o.ts)}`;
   $("sellFlow").style.display="none";$("doneView").style.display="";
@@ -805,7 +802,7 @@ $("repX").onclick=()=>$("repDlg").close();
 
 let uem="";
 const sb=supabase.createClient(SB_URL,SB_KEY);
-function showUser(){$("profile").textContent=(uem[0]||"N").toUpperCase();$("profile").title=uem?uem+" · tap to log out":"Tap to log out"}
+function showUser(){$("uEmail").textContent=uem||"Signed in";$("profile").textContent=(uem[0]||"N").toUpperCase();$("avBig").textContent=(uem[0]||"N").toUpperCase()}
 showUser();
 const BIZ={name:"Nova Loan",whatsapp:"",phone:"",email:"",maps:"https://www.google.com/maps/search/?api=1&query=HQ4X%2B593%20Accra",address:"HQ4X+593, Liberia Road, Accra",hours:""}; // fill in your real details
 function renderBiz(){
@@ -839,9 +836,12 @@ async function loadKyc(uid){
   setLock();renderAssets();
 }
 sb.auth.getSession().then(({data})=>{if(!data.session){location.replace("landing.html");return}uem=data.session.user.email||"";S.uid=data.session.user.id;showUser();loadKyc(data.session.user.id);startTour();mgLoad()});
-$("profile").setAttribute("aria-label","Log out");
-$("profile").onclick=()=>{
-  if(confirm("Log out of Nova Loan"+(uem?" ("+uem+")":"")+"?")){
+const side=$("side"),scrim=$("scrim");
+function sideOpen(o){side.classList.toggle("open",o);scrim.classList.toggle("on",o);side.setAttribute("aria-hidden",String(!o));if(o)$("sideClose").focus()}
+$("profile").onclick=()=>sideOpen(true);$("sideClose").onclick=scrim.onclick=()=>sideOpen(false);
+addEventListener("keydown",e=>{if(e.key==="Escape")sideOpen(false)});
+$("logout").onclick=()=>{
+  if(confirm("Log out of Nova Loan?")){
     sb.auth.signOut().finally(()=>{location.href="landing.html"});
   }
 };
