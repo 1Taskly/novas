@@ -623,13 +623,13 @@ function renderEst(){
    $("lateNote").innerHTML="<b>Overdue payments.</b> If you do not pay on the agreed date, a flat late fee of "+usd(fu)+" ("+ghs(fu*fx)+") is charged, and your interest goes up by "+CFG.lateDailyPct+"% of the overdue amount for every extra day it stays unpaid.";}
   $("avail").textContent="Up to "+ghs(Math.floor(S.sol*S.px.sol*S.px.fx));
   $("rateInfo").textContent=`1 ${dn(S.coin)} = ${usd(S.px.sol)} · $1 = ${ghs(S.px.fx)}`+(S.px.live?"":" · estimated rates");
-  $("colTxt").innerHTML=(c.sol>0?`Pay <b style="color:#fff">${colAmt(c)} ${dn(S.coin)}</b> collateral (<b style="color:#fff">${ghs(c.col)}</b> by mobile money). We hold it until you finish paying your loan, otherwise it will be liquidated to minimize our losses. When you finish, it is returned to you in cedis at the current trading price.`:"Enter an amount first.")+volNote();setColLabel();
+  $("colTxt").innerHTML=(c.sol>0?`Place <b style="color:#fff">${colAmt(c)} ${dn(S.coin)}</b> collateral (<b style="color:#fff">${ghs(c.col)}</b>). We hold it until you finish paying your loan, otherwise it will be liquidated to minimize our losses. When you finish, it is returned to you in cedis at the current trading price.`:"Enter an amount first.")+volNote();setColLabel();
   if($("toUsdt"))$("toUsdt").onclick=e=>{e.preventDefault();dlg.close();openLoan("USDC")};
   if(!c.sol){$("est").textContent="Enter an amount to see what you get and what you pay each month.";$("agreeTxt").textContent="I understand my crypto is converted to Ghana cedis and sent to a mobile money number or bank account in my own name, and I will repay the full amount shown in monthly payments, and I accept the late fee and daily overdue interest and understand my collateral will be liquidated if I miss a payment."}
   else if(c.sol>S.sol+1e-9){$("est").innerHTML='<span style="color:var(--red)">That is more than your available loan.</span>'}
   else if(c.usd<minLoan()-1e-9){$("est").innerHTML='<span style="color:var(--red)">The smallest loan is '+ghs(Math.ceil(minLoan()*(S.px.fx||CFG.fallbackUsdGhs)))+'.</span>'}
   else{
-    $("est").innerHTML=`You get <b>${ghs(c.val)}</b> to your own mobile money or bank account<br>You repay <b>${ghs(c.tot)}</b> in total<br>${c.m===1?"":"Your payments:"}${schedHtml(c.tot,c.m,Date.now())}`;
+    $("est").innerHTML=`You get <b>${fmt(c.sol,S.coin==="USDC"?2:4)} ${dn(S.coin)}</b> <b>(${ghs(c.val)})</b>, paid in cedis to your own mobile money or bank account<br>You repay <b>${ghs(c.tot)}</b> in total<br>${c.m===1?"":"Your payments:"}${schedHtml(c.tot,c.m,Date.now())}`;
     $("agreeTxt").textContent=`I understand my crypto is converted to Ghana cedis and sent to a mobile money number or bank account in my own name, and I will repay ${ghs(c.tot)} ${c.m===1?"in 30 days":"over "+c.m+" months"}. I accept the late fee and daily overdue interest and understand my collateral will be liquidated if I miss a payment.`;
   }
   validate();
