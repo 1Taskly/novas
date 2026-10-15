@@ -199,12 +199,12 @@ async function loadKyc(){
   if(!rows.length){L.innerHTML='<div class="empty">Nobody is waiting for review.</div>';return}
   const cards=await Promise.all(rows.map(async k=>{
     let urls=[];
-    try{const {data}=await sb.storage.from("kyc").createSignedUrls([k.front_path,k.back_path,k.selfie_path].filter(Boolean),600);urls=(data||[]).map(d=>d.signedUrl)}catch(e){}
+    try{const {data}=await sb.storage.from("kyc").createSignedUrls([k.front_path,k.back_path,k.selfie_path,k.momo_statement_path].filter(Boolean),600);urls=(data||[]).map(d=>d.signedUrl)}catch(e){}
     const cls=k.status==="approved"?"ok":k.status==="rejected"?"no":"wait";
     return `<div class="card">
       <div class="head"><span>${esc(k.first_name)} ${esc(k.last_name)}</span><span class="pill ${cls}">${esc(k.status)}</span></div>
       <div class="kv">${esc(em[k.user_id]||"")}<br>Phone: <b>${esc(k.phone)}</b> · Born: <b>${esc(k.date_of_birth)}</b><br>Address: <b>${esc(k.address)}</b><br>Work: <b>${esc(k.occupation)}</b>${k.employer?" at <b>"+esc(k.employer)+"</b>":""}<br>${esc(k.id_type)}: <b>${esc(k.id_number)}</b>${k.reject_reason?"<br>Reason given: "+esc(k.reject_reason):""}</div>
-      <div class="photos">${urls.map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="ID photo"></a>`).join("")||"<span class='hint'>No photos</span>"}</div>
+      <div class="photos">${urls.map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="KYC photo"></a>`).join("")||"<span class='hint'>No photos</span>"}</div>
       <div class="row"><button class="btn sm" data-a="approve" data-u="${esc(k.user_id)}"${k.status==="approved"?" disabled":""}>Approve</button><button class="btn red sm" data-a="reject" data-u="${esc(k.user_id)}">Reject</button></div>
     </div>`;
   }));
