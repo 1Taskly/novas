@@ -47,7 +47,7 @@ input::placeholder{color:#77777d}
 .ico{width:42px;height:42px;border-radius:50%;background:#080808;border:1px solid #292929;display:grid;place-items:center;font-weight:800;margin-right:12px;overflow:hidden}.ico img{width:100%;height:100%;display:block}
 .sub.up{color:var(--green)}.sub.down{color:var(--red)}
 .l{display:flex;align-items:center;min-width:0}.nm{font-weight:700}.qty{color:#99999e;font-size:13px;margin-top:3px}
-.r{text-align:right}.sub{font-size:13px;color:var(--muted);margin-top:3px}
+.sellNote{flex-basis:100%;margin:10px 0 0;padding:12px 13px;border-radius:14px;background:#2a1212;border:1px solid #6b2626;color:#ffb3b3;font-size:13px;line-height:1.55}.sellNote b{color:#fff}.r{text-align:right}.sub{font-size:13px;color:var(--muted);margin-top:3px}
 .empty{padding:14px 8px;text-align:center;color:#85858a;font-size:14px;line-height:1.5}
 dialog{background:var(--s1);color:var(--text);border:1px solid #2a2a2a;border-radius:22px;width:min(94vw,520px);max-height:92vh;padding:18px;overflow:auto}
 dialog::backdrop{background:rgba(0,0,0,.72)}
@@ -84,7 +84,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 .h2{margin-top:6px}
 @media(min-width:900px){
  .pg{width:min(100%,1080px);padding:28px 24px 12px;display:grid;grid-template-columns:minmax(0,1fr) 390px;column-gap:28px;align-items:start;
-  grid-template-areas:"top top" "mode mode" "rep how" "hero how" "ah how" "assets how" "mk ord" "kyc ord" "sell ord"}
+  grid-template-areas:"top top" "mode mode" "rep ord" "hero ord" "ah ord" "assets ord" "mk ord" "kyc ord" "sell ord"}
  .top{grid-area:top}#repayCard{grid-area:rep}.hero{grid-area:hero}.how{grid-area:how}.pg>.h2{grid-area:ah}
  #assets{grid-area:assets}#mkSec{grid-area:mk}#kycCard{grid-area:kyc}#sellBtn{grid-area:sell}#ordSec{grid-area:ord}#helpSec{grid-column:1/-1}#sellBtn{margin-top:0}
  #dbg{grid-column:1/-1}
@@ -163,14 +163,6 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <section class="hero"><div class="label">Loan available to you</div><div id="total" class="balance">$0.00</div><div id="chg" class="chg" aria-live="polite"></div>
     </section>
 
-  <details class="card how"><summary>How a crypto loan works</summary>
-    <ul class="steps">
-      <li><div><b>Draw crypto</b><span>Draw crypto and we convert it to Ghana cedis.</span></div></li>
-      <li><div><b>Collateral</b><span>You place collateral in USDT. We hold it until you finish paying your loan.</span></div></li>
-      <li><div><b>Get your cash</b><span>The cedis go straight to your mobile money.</span></div></li>
-    </ul></details>
-
-  <div class="h2">Choose a coin to borrow</div>
   <div id="assets" class="card"><div class="empty">No loan offer available yet.</div></div>
   <section id="mkSec"><div id="demo" class="demo"></div><div class="h2">Assets<span class="liveTag"><i class="liveDot off"></i>Connecting</span></div><div class="chips" id="chips"><button data-c="all" class="on">All</button><button data-c="major">Majors</button><button data-c="meme">Meme coins</button></div><div id="mkts" class="card"></div></section>
   <section id="kycCard" class="card" style="display:none;border-color:#342d49;background:#171421"><div class="title" id="kycTitle"></div><div class="small" id="kycTxt" style="margin:0 0 12px;color:#b9b0d6;font-size:14px"></div><a id="kycBtn" class="btn" href="kyc.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Verify my identity</a></section>
@@ -197,13 +189,13 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <div class="dHead"><span id="dTitle">Draw amount</span><button id="close" class="x" aria-label="Close">✕</button></div>
   <div id="sellFlow">
     <div class="step">
-      <div class="stepHead"><span>1. Amount and months</span><span id="avail" class="pill"></span></div>
+      <div class="stepHead"><span>1. How much do you need?</span><span id="avail" class="pill"></span></div>
       <select id="coinSel" aria-label="Coin to draw" style="margin-bottom:9px;display:none"></select>
-      <div class="row" style="flex-direction:row"><input id="amt" type="number" min="0" step="any" placeholder="Amount" inputmode="decimal" aria-label="Amount to draw"><select id="unit" aria-label="Currency" style="width:92px;flex:none"><option>SOL</option><option>GHS</option></select><button id="max" class="btn ghost" style="min-height:46px">Max</button></div>
+      <div class="row" style="flex-direction:row"><input id="amt" type="number" min="0" step="any" placeholder="Amount" inputmode="decimal" aria-label="Amount to borrow"><select id="unit" aria-label="Currency" style="width:104px;flex:none"><option value="GHS">GHS</option></select><button id="max" class="btn ghost" style="min-height:46px">Max</button></div>
       <select id="months" aria-label="Months to repay" style="margin-top:9px"><option value="1">Repay in 1 month</option><option value="2">Repay in 2 months</option><option value="3" selected>Repay in 3 months</option></select>
       <div class="small">Bigger draws unlock longer repayment, up to 6 months.</div>
       <div class="est" id="est"></div>
-      <div class="small" id="rateInfo"></div>
+      <div class="small" id="rateInfo" style="display:none"></div>
     </div>
     <div id="colStep" class="step lockable locked" aria-disabled="true">
       <div class="stepHead"><span>2. Place collateral</span><span id="colPill" class="pill">Locked until ID is verified</span></div>
@@ -524,6 +516,7 @@ function flush(){
   if(!dlg.open){try{applyCoin()}catch(x){}
     COINS.forEach(sym=>{const qe=$("assets").querySelector('[data-aq="'+sym+'"]');if(!qe)return;
       const q=availOf(sym,true),val=q*priceOf(sym),g=$("assets").querySelector('[data-ag="'+sym+'"]');
+      {const nr=$("assets").querySelector('[data-nr="'+sym+'"]');if(nr){const t=ghs(priceOf(sym)*S.px.fx);if(nr.textContent!==t)nr.textContent=t}}
       if(g&&q>0&&/^Up to/.test(qe.textContent)){const t=ghs(q*S.px.fx);if(g.textContent!==t)g.textContent=t} // cedis follow every USDT and rate tick
       if(qe&&q>0&&/^Up to/.test(qe.textContent))qe.textContent="Up to "+q.toLocaleString(undefined,{maximumFractionDigits:sym==="USDC"?2:q<1?6:4})+" "+dn(sym)})}
 }
@@ -567,7 +560,7 @@ function prepCoins(){
   const list=COINS.filter(c=>availOf(c)>0),sel=$("coinSel");
   sel.innerHTML=(list.length?list:[S.coin]).map(c=>`<option value="${c}">${dn(c)}</option>`).join("");sel.value=S.coin;
   sel.style.display="none";
-  if(S.unitCoin!==S.coin){const u=$("unit"),cur=u.value;u.innerHTML=`<option value="${S.coin}">${dn(S.coin)}</option><option value="GHS">GHS</option>`;u.value=cur==="GHS"?"GHS":S.coin;S.unitCoin=S.coin}
+  if(S.unitCoin!==S.coin){const u=$("unit"),cur=u.value;u.innerHTML=`<option value="GHS">GHS (cedis)</option><option value="${S.coin}">${dn(S.coin)} ($)</option>`;u.value=cur===S.coin?S.coin:"GHS";S.unitCoin=S.coin}
 }
 function refreshAvail(){if(S.frozen)return;applyCoin();S.sol=availOf(S.coin);prepCoins();renderAssets();renderEst();showDebug()}
 // 24h change for an amount worth `val` now: how much it gained/lost, and the percent
@@ -591,11 +584,11 @@ function renderAssets(){
     const ok=a.qty>0,live=S.liveBy[a.sym],tag=ok?(live?'<span style="color:var(--green)"><i class="liveDot"></i>Live on-chain</span>':''):"";
     const sub=act?(a.sym===actSym?"Active loan":"Locked until you repay"):ok?"Up to "+a.qty.toLocaleString(undefined,{maximumFractionDigits:a.sym==="USDC"?2:a.qty<1?6:4})+" "+esc(dn(a.sym)):"Not available right now";
     const label=act?(a.sym===actSym?"Loan active":"Locked"):!S.idOk?"Verify identity to borrow":"Get loan";
-    return `<div class="asset" style="flex-wrap:wrap"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div style="font-size:11px;font-weight:700;margin-top:2px">${tag}</div></div></div><div class="r"><div class="nm" data-aq="${a.sym}">${sub}</div><div class="sub up" data-ag="${a.sym}">${ok&&!act?ghs(a.qty*S.px.fx):""}</div></div><button class="btn" data-loan="${a.sym}" style="flex-basis:100%;margin:10px 0 0;min-height:42px" ${ok&&!act?"":"disabled"}>${label}</button></div>`}).join("");
+    return `<div class="asset" style="flex-wrap:wrap"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div style="font-size:11px;font-weight:700;margin-top:2px">${tag}</div></div></div><div class="r"><div class="nm" data-aq="${a.sym}">${sub}</div><div class="sub up" data-ag="${a.sym}">${ok&&!act?ghs(a.qty*S.px.fx):""}</div></div><button class="btn" data-loan="${a.sym}" style="flex-basis:100%;margin:10px 0 0;min-height:42px" ${ok&&!act?"":"disabled"}>${label}</button>${ok&&!act?`<div class="sellNote">By clicking <b>Get loan</b>, you are selling our ${esc(dn(a.sym))} tokens to <b>Paychant</b> at the current market price.<br><b>1 ${esc(dn(a.sym))} = <span data-nr="${a.sym}">${ghs(priceOf(a.sym)*S.px.fx)}</span></b></div>`:""}</div>`}).join("");
   $("assets").querySelectorAll("[data-loan]").forEach(b=>b.onclick=()=>S.idOk?openLoan(b.dataset.loan):location.href="kyc.html");
   try{renderKyc()}catch(e){}$("sellBtn").style.display="none";
 }
-function openLoan(sym){setBm("cash");S.coin=sym;applyCoin();S.sol=availOf(sym);S.unitCoin=null;$("colCoin").innerHTML=`<option value="${sym}">Collateral coin: ${dn(sym)}</option>`;prepCoins();resetFlow();$("dTitle").textContent="Loan in "+COIN_NAME[sym];$("sellFlow").style.display="";$("doneView").style.display="none";dlg.showModal();$("max").onclick();S.frozen=true;loadFx(true).then(()=>{try{renderEst()}catch(e){}})}
+function openLoan(sym){setBm("cash");S.coin=sym;applyCoin();S.sol=availOf(sym);S.unitCoin=null;$("colCoin").innerHTML=`<option value="${sym}">Collateral coin: ${dn(sym)}</option>`;prepCoins();resetFlow();$("dTitle").textContent="Get a loan";$("sellFlow").style.display="";$("doneView").style.display="none";dlg.showModal();$("unit").value="GHS";$("max").onclick();const first=$("amt").value;S.frozen=true;loadFx(true).then(()=>{try{if($("amt").value===first)$("max").onclick();else renderEst()}catch(e){}})}
 const colAmt=c=>{const q=c.colU/(S.px.sol||1);return fmt(q,S.coin==="USDC"?2:q<1?6:4)};
 
 // ---- Draw window ----
@@ -628,15 +621,15 @@ function renderEst(){
   fillMonths();const c=calc();
   {const fu=CFG.lateFeeUsd,fx=S.px.fx||CFG.fallbackUsdGhs;
    $("lateNote").innerHTML="<b>Overdue payments.</b> If you do not pay on the agreed date, a flat late fee of "+usd(fu)+" ("+ghs(fu*fx)+") is charged, and your interest goes up by "+CFG.lateDailyPct+"% of the overdue amount for every extra day it stays unpaid.";}
-  $("avail").textContent=fmt(S.sol,4)+" "+dn(S.coin);
+  $("avail").textContent="Up to "+ghs(Math.floor(S.sol*S.px.sol*S.px.fx));
   $("rateInfo").textContent=`1 ${dn(S.coin)} = ${usd(S.px.sol)} · $1 = ${ghs(S.px.fx)}`+(S.px.live?"":" · estimated rates");
   $("colTxt").innerHTML=(c.sol>0?`Pay <b style="color:#fff">${colAmt(c)} ${dn(S.coin)}</b> collateral (<b style="color:#fff">${ghs(c.col)}</b> by mobile money). We hold it until you finish paying your loan, otherwise it will be liquidated to minimize our losses. When you finish, it is returned to you in cedis at the current trading price.`:"Enter an amount first.")+volNote();setColLabel();
   if($("toUsdt"))$("toUsdt").onclick=e=>{e.preventDefault();dlg.close();openLoan("USDC")};
   if(!c.sol){$("est").textContent="Enter an amount to see what you get and what you pay each month.";$("agreeTxt").textContent="I understand my crypto is converted to Ghana cedis and sent to a mobile money number or bank account in my own name, and I will repay the full amount shown in monthly payments, and I accept the late fee and daily overdue interest and understand my collateral will be liquidated if I miss a payment."}
   else if(c.sol>S.sol+1e-9){$("est").innerHTML='<span style="color:var(--red)">That is more than your available loan.</span>'}
-  else if(c.usd<minLoan()-1e-9){$("est").innerHTML='<span style="color:var(--red)">The smallest loan is '+usd(minLoan())+' (about '+ghs(minLoan()*(S.px.fx||CFG.fallbackUsdGhs))+').</span>'}
+  else if(c.usd<minLoan()-1e-9){$("est").innerHTML='<span style="color:var(--red)">The smallest loan is '+ghs(Math.ceil(minLoan()*(S.px.fx||CFG.fallbackUsdGhs)))+'.</span>'}
   else{
-    $("est").innerHTML=`You get <b>${ghs(c.val)}</b> to your own mobile money or bank account (${fmt(c.sol,4)} ${dn(S.coin)} converted)<br>You repay <b>${ghs(c.tot)}</b> in total<br>${c.m===1?"":"Your payments:"}${schedHtml(c.tot,c.m,Date.now())}`;
+    $("est").innerHTML=`You get <b>${ghs(c.val)}</b> to your own mobile money or bank account<br>You repay <b>${ghs(c.tot)}</b> in total<br>${c.m===1?"":"Your payments:"}${schedHtml(c.tot,c.m,Date.now())}`;
     $("agreeTxt").textContent=`I understand my crypto is converted to Ghana cedis and sent to a mobile money number or bank account in my own name, and I will repay ${ghs(c.tot)} ${c.m===1?"in 30 days":"over "+c.m+" months"}. I accept the late fee and daily overdue interest and understand my collateral will be liquidated if I miss a payment.`;
   }
   validate();
@@ -668,8 +661,8 @@ $("coinSel").onchange=()=>{S.coin=$("coinSel").value;$("amt").value="";refreshAv
 $("sellBtn").onclick=()=>{resetFlow();$("sellFlow").style.display="";$("doneView").style.display="none";dlg.showModal()};
 $("close").onclick=$("doneClose").onclick=()=>dlg.close();
 dlg.addEventListener("close",()=>{S.frozen=false;refreshAvail()});
-$("amt").oninput=renderEst;$("months").onchange=renderEst;$("unit").onchange=()=>{$("amt").value="";renderEst()};
-$("max").onclick=()=>{const k=S.px.sol*S.px.fx;const dp=S.coin==="USDC"?100:1e6;$("amt").value=S.sol>0?($("unit").value!=="GHS"?Math.floor(S.sol*dp)/dp:Math.floor(S.sol*k*100)/100):"";renderEst()};
+$("amt").oninput=renderEst;$("months").onchange=renderEst;$("unit").onchange=()=>{const v=Number($("amt").value),k=S.px.sol*S.px.fx;if(v>0)$("amt").value=$("unit").value==="GHS"?Math.floor(v*k):Math.floor(v/k*100)/100;renderEst()};
+$("max").onclick=()=>{const k=S.px.sol*S.px.fx;const dp=S.coin==="USDC"?100:1e6;$("amt").value=S.sol>0?($("unit").value!=="GHS"?Math.floor(S.sol*dp)/dp:Math.floor(S.sol*k)):"";renderEst()};
 ["method","accNum","pMethod","pBank","pName","pNum","agree"].forEach(i=>{$(i).addEventListener("input",validate);$(i).addEventListener("change",validate)});
 const SB_URL="https://djkcnhlstjvozrtfcqse.supabase.co",SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqa2NuaGxzdGp2b3pydGZjcXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMDc5MDYsImV4cCI6MjEwNjg4MzkwNn0.lS_p3mV4tdFOmcOVZBTIXN52HPDOgDAHhLluxUTdX_s";
 const PROV_CODE={"MTN Mobile Money":"mtn","Telecel Cash":"vod","AirtelTigo Money":"atl"};
