@@ -41,7 +41,7 @@ button,input,select{font:inherit;color:inherit}button{cursor:pointer}
 input,select{background:var(--s2);border:1px solid var(--bd);border-radius:14px;padding:13px;width:100%}
 input::placeholder{color:var(--soft)}
 .row input{flex:1;min-width:0}
-.btn{border:0;border-radius:14px;background:var(--accent);color:var(--strong)fff;font-weight:750;padding:0 18px;min-height:48px}
+.btn{border:0;border-radius:14px;background:var(--accent);color:#fff;font-weight:750;padding:0 18px;min-height:48px}
 .btn.ghost{background:var(--s2);color:var(--text);border:1px solid var(--bd)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .msg{font-size:13px;margin-top:10px;color:var(--red);line-height:1.45}
@@ -96,7 +96,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
  dialog{width:min(94vw,640px)}
 }
 @media(prefers-reduced-motion:no-preference){.lockable{transition:opacity .25s,filter .25s}}
-.avatar{width:38px;height:38px;border-radius:50%;border:1px solid var(--bd);background:var(--accent);color:var(--strong)fff;font-weight:750;font-size:16px;display:grid;place-items:center}
+.avatar{width:38px;height:38px;border-radius:50%;border:1px solid var(--bd);background:var(--accent);color:#fff;font-weight:750;font-size:16px;display:grid;place-items:center}
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;visibility:hidden;transition:opacity .25s;z-index:40}
 .scrim.on{opacity:1;visibility:visible}
 .side{position:fixed;top:0;right:0;bottom:0;width:min(86%,320px);background:var(--s1);border-left:1px solid var(--line);z-index:50;display:flex;flex-direction:column;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top,0px)) 18px calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(100%);visibility:hidden;transition:transform .28s ease,visibility .28s}
@@ -112,7 +112,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 .how[open] summary::after{content:"\2212"}
 .how .steps{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:14px;counter-reset:s}
 .how .steps li{display:flex;gap:12px;align-items:flex-start;counter-increment:s}
-.how .steps li::before{content:counter(s);flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--strong)fff;font-weight:750;font-size:14px;display:grid;place-items:center}
+.how .steps li::before{content:counter(s);flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-weight:750;font-size:14px;display:grid;place-items:center}
 .how .steps b{display:block;font-size:16px;color:var(--accent)}
 .how .steps span{font-size:14px;color:var(--muted)}
 .mrow{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;border-bottom:1px solid var(--line);color:inherit;font:inherit;text-align:left}.mrow:active{opacity:.7}.mrow .sp{width:64px;height:28px;flex:none}.mrow .sp svg{width:100%;height:100%}.mrow .l{flex:1}.mrow .r{min-width:84px}
@@ -124,7 +124,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 .chips{display:flex;gap:8px;margin:0 0 12px;overflow-x:auto}
 .chips button,.seg button{border:0;font-weight:700;color:var(--muted)}
 .chips button{background:var(--s2);border:1px solid var(--bd);border-radius:999px;padding:7px 14px;font-size:13px;white-space:nowrap}
-.chips button.on,.seg button.on{background:var(--accent);color:var(--strong)fff}
+.chips button.on,.seg button.on{background:var(--accent);color:#fff}
 .seg{display:flex;background:var(--s2);border-radius:12px;padding:3px;margin:0 0 10px}.seg button{flex:1;background:none;border-radius:10px;padding:9px}
 .btn.ghost{background:var(--s2);color:var(--text);border:1px solid var(--bd)}
 .pill{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.6px;color:var(--amber);border:1px solid var(--amber);border-radius:999px;padding:2px 8px;margin-left:8px;vertical-align:middle}
@@ -154,6 +154,13 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 @media(min-width:900px){.pg[data-tab=trade]{grid-template-areas:"top" "mk";grid-template-columns:1fr}}
 .card{margin-bottom:22px}#repayCard{margin-bottom:24px}#sellNoteBox{margin-top:16px}#sellBtn{margin-top:8px;margin-bottom:10px}#kycCard{margin-top:6px}.hero{margin-bottom:6px}@media(max-height:760px){.card{margin-bottom:18px}}
 #helpFab{position:absolute;right:14px;bottom:130px;z-index:30;display:none;align-items:center;gap:7px;height:42px;padding:0 16px 0 13px;border:0;border-radius:999px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.28)}#helpFab svg{width:19px;height:19px}#helpFab:active{opacity:.85}
+.addfw{margin-top:14px;display:flex;justify-content:center;gap:8px}.addf.g{background:var(--s2);color:var(--text);border:1px solid var(--bd)}
+.avatar{overflow:hidden;padding:0}.avatar svg{width:100%;height:100%;display:block}
+.addf{display:inline-flex;align-items:center;gap:7px;border:0;border-radius:999px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;padding:9px 18px 9px 14px}.addf svg{width:16px;height:16px}.addf:active{opacity:.8}
+.rateTf{font-size:13px;font-weight:500;color:var(--soft);margin-left:8px;letter-spacing:0}
+.nada{display:flex;align-items:center;gap:14px}.asset+.nada{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.nada .cn{flex:none;width:54px;height:54px}.nada .tx{flex:1;min-width:0}.nada .tt{font-weight:700;font-size:15px}.nada .ms{font-size:13px;color:var(--muted);line-height:1.45;margin-top:2px}.nada .bt{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.eBtn{border:1px solid var(--bd);background:var(--s2);color:var(--text);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700}.eBtn.p{background:var(--accent);border-color:var(--accent);color:#fff}
 </style>
 <script src="https://js.paystack.co/v1/inline.js"></script>
 </head>
@@ -170,7 +177,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
     </section>
 
   <div id="assetsWrap"><div id="assets" class="card"><div class="empty">No loan offer available yet.</div></div><div id="sellNoteBox"></div></div>
-  <section id="mkSec"><div id="demo" class="demo"></div><div id="myAssets"></div><div class="h2">24h exchange rates<span class="liveTag"><i class="liveDot off"></i>Connecting</span></div><div class="chips" id="chips"><button data-c="all" class="on">All</button><button data-c="major">Majors</button><button data-c="meme">Meme coins</button></div><div id="mkts" class="card"></div></section>
+  <section id="mkSec"><div id="demo" class="demo"></div><div id="myAssets"></div><div class="h2">Exchange rates<span class="rateTf">24h</span></div><div class="chips" id="chips"><button data-c="all" class="on">All</button><button data-c="major">Majors</button><button data-c="meme">Meme coins</button></div><div id="mkts" class="card"></div></section>
   <section id="kycCard" class="card" style="display:none;border-color:var(--infobd);background:var(--infobg)"><div class="title" id="kycTitle"></div><div class="small" id="kycTxt" style="margin:0 0 12px;color:var(--infotx);font-size:14px"></div><a id="kycBtn" class="btn" href="kyc.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Verify my identity</a></section>
   <button id="sellBtn" class="btn" style="width:100%" disabled>Draw amount</button>
 
@@ -340,19 +347,19 @@ function pvOf(){let pv=W.usd;for(const k in W.h){const d=S.mk[k];if(d)pv+=W.h[k]
 function renderWallet(){const pv=pvOf();
   const ic=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${p}"/></svg>`,
   A=[["buy","Buy","M12 5v14M5 12h14"],["sell","Sell","M5 12h14"],["swap","Swap","M7 4v14M3 14l4 4 4-4M17 20V6M13 10l4-4 4 4"],["receive","Receive","M12 4v12M6 11l6 6 6-6M5 20h14"],["send","Send","M12 20V8M6 13l6-6 6 6M5 4h14"]];
-  $("demo").innerHTML=`<div class="lbl">Portfolio balance</div><div class="v" id="pv">${bigUsd(pv)}</div><div class="pchg" id="pchg" style="display:none"></div><div id="mgBanner"></div><div class="acts">${A.map(x=>`<button class="act" data-a="${x[0]}"><i>${ic(x[2])}</i>${x[1]}</button>`).join("")}</div>`;
-  paintPchg();paintMgBanner();renderMine();
+  $("demo").innerHTML=`<div class="lbl">Portfolio balance</div><div class="v" id="pv">${bigUsd(pv)}</div><div class="pchg" id="pchg" style="display:none"></div><div class="addfw"><button class="addf" id="addFunds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add funds</button><button class="addf g" id="cashOut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Withdraw</button></div><div id="mgBanner"></div><div class="acts">${A.map(x=>`<button class="act" data-a="${x[0]}"><i>${ic(x[2])}</i>${x[1]}</button>`).join("")}</div>`;
+  paintPchg();paintMgBanner();renderMine();$("addFunds").onclick=openFund;$("cashOut").onclick=()=>{S.sym=null;S.back=null;S.step="cashout";drawMk();$("mkDlg").showModal()};
   $("demo").querySelectorAll(".act").forEach(b=>b.onclick=()=>{const a=b.dataset.a;S.sym=null;S.back=null;
     if(a==="buy"||a==="sell"){S.side=a;S.step="pick"}else S.step=a;
     drawMk();$("mkDlg").showModal()})}
 function openFund(){S.sym=null;S.back=null;S.step="fund";S.fund=50;drawMk();$("mkDlg").showModal()}
 function renderMine(){const el=$("myAssets");if(!el)return;
   const mine=MK.filter(m=>(W.h[m[1]]||0)>0);
-  const cash=`<div class="asset"><div class="l"><div class="ico" style="background:var(--s2);color:var(--strong);display:grid;place-items:center;font-weight:800;font-size:18px">$</div><div><div class="nm">US Dollar</div><div class="qty">Cash balance</div></div></div><div class="r"><div class="nm">${usd(W.usd)}</div><div style="margin-top:4px"><button class="ctl" data-addf>Add funds</button></div></div></div>`;
+  const cash=W.usd>0.005?`<div class="asset"><div class="l"><div class="ico" style="background:var(--s2);color:var(--strong);display:grid;place-items:center;font-weight:800;font-size:18px">$</div><div><div class="nm">US Dollar</div><div class="qty">Cash balance</div></div></div><div class="r"><div class="nm">${usd(W.usd)}</div></div></div>`:"";
   const rows=mine.map(m=>{const d=S.mk[m[1]],q=W.h[m[1]],up=!d||d.chg>=0;return `<button class="asset mrow" data-hs="${m[1]}"><div class="l"><div class="ico">${mkIcon(m)}</div><div><div class="nm">${m[2]}</div><div class="qty">${qf(q)} ${m[1]}</div></div></div><div class="r"><div class="nm">${d?usd(q*d.p):"—"}</div><div class="sub ${up?"up":"down"}">${d?pcs(d.chg):""}</div></div></button>`}).join("");
-  const empty=mine.length?"":`<div class="empty" style="padding:14px 0 4px">You do not own any crypto yet. Buy or receive coins and they will show here.</div><div style="display:flex;gap:8px;justify-content:center;margin-top:8px"><button class="ctl" data-ea="buy">Buy crypto</button><button class="ctl" data-ea="receive">Receive crypto</button></div>`;
-  el.innerHTML=`<div class="h2">Your assets</div><div class="card" style="margin-bottom:6px">${cash}${rows}${empty}</div>`;
-  el.querySelectorAll("[data-addf]").forEach(b=>b.onclick=openFund);
+  const coin='<svg class="cn" viewBox="0 0 54 54" aria-hidden="true"><circle cx="27" cy="27" r="25" style="fill:var(--s2);stroke:var(--bd)" stroke-width="1.5"/><circle cx="27" cy="27" r="18" fill="none" style="stroke:var(--accent)" stroke-width="1.6" stroke-dasharray="2.5 4" opacity=".55"/><circle cx="21" cy="24" r="2.3" style="fill:var(--text)"/><circle cx="33" cy="24" r="2.3" style="fill:var(--text)"/><circle cx="16.5" cy="30" r="2.8" style="fill:var(--accent)" opacity=".22"/><circle cx="37.5" cy="30" r="2.8" style="fill:var(--accent)" opacity=".22"/><path d="M21 30.5c1.9 3.2 3.9 4.5 6 4.5s4.1-1.3 6-4.5" fill="none" style="stroke:var(--text)" stroke-width="2.2" stroke-linecap="round"/></svg>';
+  const empty=mine.length?"":`<div class="nada">${coin}<div class="tx"><div class="tt">No crypto yet</div><div class="ms">Everyone starts somewhere. Grab your first coin and it will show up here.</div><div class="bt"><button class="eBtn p" data-ea="buy">Buy crypto</button><button class="eBtn" data-ea="receive">Receive</button></div></div></div>`;
+  el.innerHTML=`<div class="h2">Your crypto</div><div class="card" style="margin-bottom:6px">${cash}${rows}${empty}</div>`;
   el.querySelectorAll("[data-hs]").forEach(b=>b.onclick=()=>{S.sym=b.dataset.hs;S.step="view";drawMk();$("mkDlg").showModal()});
   el.querySelectorAll("[data-ea]").forEach(b=>b.onclick=()=>{const a=b.dataset.ea;S.sym=null;S.back=null;if(a==="buy"){S.side="buy";S.step="pick"}else S.step="receive";drawMk();$("mkDlg").showModal()})}
 async function callTrade(body){const {data,error}=await sb.functions.invoke("trade",{body});
@@ -408,6 +415,31 @@ async function bindSend(){
       catch(e){m.className="msg";m.textContent=e.message;armed=false;$("sdGo").textContent="Send";$("sdGo").disabled=false}};
     chk();hist()};
   seg.forEach(b=>b.onclick=()=>{sym=b.dataset.sc;draw()});draw()}
+function bindCashout(){const box=$("cwBody");if(!box)return;
+  if(!S.idOk){box.innerHTML='<div class="empty">Verify your identity in the Borrow tab to withdraw funds.</div>';return}
+  const fxN=()=>S.px.fx||CFG.fallbackUsdGhs,MIN=5;let armed=false;
+  box.innerHTML='<div class="small" style="margin:0 0 8px">Cash balance '+usd(W.usd)+'. Money goes to a mobile money wallet in your own name.</div>'+
+    '<input id="cwAmt" type="number" min="0" step="any" inputmode="decimal" placeholder="$0" aria-label="Amount in dollars" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px"><div class="chips" id="cwQ">'+[25,50,100,"Max"].map(v=>'<button data-q="'+v+'">'+(v==="Max"?"Max":"$"+v)+'</button>').join("")+'</div>'+
+    '<div id="cwEst" class="small" style="min-height:18px;text-align:center"></div>'+
+    '<div style="display:grid;gap:9px;margin-top:8px"><select id="cwNet" aria-label="Mobile money network"><option value="">Choose your mobile money network</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option></select>'+
+    '<input id="cwNum" placeholder="Mobile money number (e.g. 024 123 4567)" inputmode="tel" autocomplete="tel" aria-label="Mobile money number"><input id="cwName" placeholder="Account name (your own name)" autocomplete="name" aria-label="Account name"><div id="cwNote" class="small" style="margin:0"></div></div>'+
+    '<button class="btn" id="cwGo" style="width:100%;margin-top:12px" disabled>Withdraw</button><div id="cwMsg" class="msg" role="status"></div>';
+  $("cwName").value=kycName();
+  const nOk=()=>{const k=norm(kycName()),n=norm($("cwName").value);return k.length>1&&k.every(t=>n.includes(t))};
+  const chk=()=>{const v=+$("cwAmt").value,net=$("cwNet").value,over=v>W.usd+.005,bad=$("cwName").value.trim()&&!nOk();armed=false;$("cwGo").textContent="Withdraw";
+    const e=$("cwEst");e.style.color=over?"var(--red)":"";e.textContent=over?"That is more than your cash balance.":v>0?"≈ GHS "+fmt(v*fxN(),2)+" (rate "+fmt(fxN(),2)+")":"Minimum $"+MIN;
+    $("cwName").style.borderColor=bad?"var(--red)":"";$("cwNote").style.color=bad?"var(--red)":"";$("cwNote").textContent=bad?"The name must match your verified ID: "+kycName():"Must be in your own name"+(kycName()?": "+kycName():"");
+    $("cwGo").disabled=!(v>=MIN&&!over&&PROV_CODE[net]&&ghNum($("cwNum").value)&&nOk())};
+  ["cwAmt","cwNum","cwName"].forEach(i=>$(i).addEventListener("input",chk));$("cwNet").addEventListener("change",chk);
+  $("cwQ").querySelectorAll("button").forEach(b=>b.onclick=()=>{$("cwAmt").value=b.dataset.q==="Max"?Math.floor(W.usd*100)/100:b.dataset.q;chk()});
+  $("cwGo").onclick=async()=>{const v=+$("cwAmt").value,m=$("cwMsg"),net=$("cwNet").value;
+    if(!armed){armed=true;$("cwGo").textContent="Tap again to withdraw "+usd(v);m.className="msg";m.textContent="Check the number. Money sent to a wrong number may not be recoverable.";return}
+    $("cwGo").disabled=true;m.textContent="";
+    try{await callTrade({action:"cashout",usd:v,provider:PROV_CODE[net],phone:ghNum($("cwNum").value),name:$("cwName").value.trim()});await loadWallet();
+      S.step="cashdone";$("mkT").textContent="Withdrawal requested";
+      $("mkBody").innerHTML='<div class="done"><div class="label">Sending to your mobile money</div><div class="big">'+ghs(v*fxN())+'</div><div class="meta">'+esc(net)+" · "+esc($("cwNum").value.trim())+'<br>It usually arrives within a few minutes.</div><button class="btn" id="cwOk" style="width:100%;margin-top:16px">Done</button></div>';$("cwOk").onclick=()=>$("mkDlg").close()}
+    catch(e){m.className="msg";m.textContent=e.message;armed=false;$("cwGo").textContent="Withdraw";$("cwGo").disabled=false}};
+  chk()}
 async function bindSwap(){
   const fr=$("swFrom");if(!fr)return;const cfg=await wcfg();
   const to=$("swTo"),fillTo=()=>{const keep=to.value||S.st;to.innerHTML=MK.filter(x=>x[1]!==fr.value).map(x=>'<option value="'+x[1]+'" '+(x[1]===keep?"selected":"")+'>'+x[2]+" ("+x[1]+")</option>").join("")};
@@ -450,13 +482,14 @@ function drawMk(){
   else if(st==="swap"){$("mkT").textContent="Swap";
     const mine=MK.filter(x=>(W.h[x[1]]||0)>0);
     h=mine.length?'<div class="small" style="margin:0 0 6px">From</div><select id="swFrom" aria-label="Swap from">'+mine.map(x=>'<option value="'+x[1]+'" '+(x[1]===S.sf?"selected":"")+'>'+x[2]+' ('+x[1]+') · '+qf(W.h[x[1]])+'</option>').join("")+'</select><div class="row" style="flex-direction:row;margin-top:9px"><input id="swAmt" type="number" min="0" step="any" inputmode="decimal" placeholder="Amount" aria-label="Amount to swap" style="flex:1;min-width:0"><button class="btn ghost" id="swMax" style="min-width:64px">Max</button></div><div class="small" style="margin:14px 0 6px">To</div><select id="swTo" aria-label="Swap to"></select><div id="swEst" class="small" style="min-height:36px"></div><button class="btn" id="swGo" disabled>Swap</button><div id="swMsg" class="msg" role="status"></div>':'<div class="empty">You do not hold any assets to swap yet. Buy one first.</div>'}
+  else if(st==="cashout"){$("mkT").textContent="Withdraw funds";h='<div id="cwBody"></div>'}
   else{$("mkT").textContent="Add funds";
     h=`<div class="small" style="margin:0 0 8px">Pay with mobile money. Funds reach your balance after Paystack confirms.</div><input id="tAmt" type="number" min="5" step="any" inputmode="decimal" placeholder="$0" value="${S.fund||50}" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px">${chips([25,50,100,250])}
     <div id="tEst" class="small" style="min-height:18px;text-align:center"></div><button class="btn" id="tGo">Pay with Mobile Money</button><div id="tMsg" class="msg" role="status"></div>${off}${S.back?bk:""}`}
   $("mkBody").innerHTML=h;
   $("mkBody").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{S.sym=b.dataset.p;S.step="trade";S.back="pick";S.amt=buy?50:25;drawMk()});
   $("mkBody").querySelectorAll("[data-cp]").forEach(b=>b.onclick=()=>{try{navigator.clipboard.writeText(b.dataset.cp);b.textContent="Copied"}catch(e){}});
-  if(st==="receive")bindReceive();else if(st==="send")bindSend();else if(st==="swap")bindSwap();
+  if(st==="receive")bindReceive();else if(st==="send")bindSend();else if(st==="swap")bindSwap();else if(st==="cashout")bindCashout();
   if(st==="view"&&$("chartBox")){drawChart();
     $("mkBody").querySelectorAll("[data-ch]").forEach(b=>b.onclick=()=>{S.chart=b.dataset.ch;S.ckF[sym]=false;$("mkBody").querySelectorAll("[data-ch]").forEach(x=>x.classList.toggle("on",x===b));drawChart()});
     $("mkBody").querySelectorAll("[data-tf]").forEach(b=>b.onclick=()=>{CH.tf=b.dataset.tf;S.ckF[sym]=false;CH.src="";$("mkBody").querySelectorAll("[data-tf]").forEach(x=>x.classList.toggle("on",x===b));drawChart()});
@@ -883,7 +916,34 @@ $("repX").onclick=()=>$("repDlg").close();
 
 let uem="";
 const sb=supabase.createClient(SB_URL,SB_KEY);
-function showUser(){$("uEmail").textContent=uem||"Signed in";$("profile").textContent=(uem[0]||"N").toUpperCase();$("avBig").textContent=(uem[0]||"N").toUpperCase()}
+let avN=0;
+function avRng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+// Random avatar: a little cartoon critter (ears, eyes, mouth, extras all picked from the person's account ID, so it never changes)
+function avSvg(seed){let a=2166136261;for(const ch of String(seed)){a^=ch.charCodeAt(0);a=Math.imul(a,16777619)}
+  const r=avRng(a),pk=n=>Math.floor(r()*n),id="av"+(++avN),hs=(h,s,l)=>"hsl("+h+","+s+"%,"+l+"%)";
+  const hb=pk(360),hc=(hb+140+pk(80))%360,fur=hs(hc,70,64+pk(8)),furD=hs(hc,65,54),ink=hs(hc,45,16),pink=hs(350,85,80);
+  const ear=pk(5),eye=pk(4),mouth=pk(4),hw=27+pk(5);let extra=pk(3);if(extra===2&&(ear===2||ear===3))extra=0;
+  let o='<svg viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+hs(hb,80,84)+'"/><stop offset="1" stop-color="'+hs((hb+30)%360,80,76)+'"/></linearGradient></defs><rect width="100" height="100" fill="url(#'+id+')"/><g transform="translate(50 64) scale(1.12) translate(-50 -64)">';
+  o+='<ellipse cx="50" cy="104" rx="32" ry="24" fill="'+furD+'"/>';
+  if(ear===0)o+='<polygon points="25,42 27,15 47,29" fill="'+fur+'"/><polygon points="75,42 73,15 53,29" fill="'+fur+'"/><polygon points="30,36 30,22 40,30" fill="'+pink+'"/><polygon points="70,36 70,22 60,30" fill="'+pink+'"/>';
+  else if(ear===1)o+='<circle cx="28" cy="30" r="9" fill="'+fur+'"/><circle cx="72" cy="30" r="9" fill="'+fur+'"/><circle cx="28" cy="30" r="4.6" fill="'+pink+'"/><circle cx="72" cy="30" r="4.6" fill="'+pink+'"/>';
+  else if(ear===2)o+='<ellipse cx="37" cy="18" rx="7" ry="16" transform="rotate(-10 37 18)" fill="'+fur+'"/><ellipse cx="63" cy="18" rx="7" ry="16" transform="rotate(10 63 18)" fill="'+fur+'"/><ellipse cx="37" cy="19" rx="3.4" ry="10.5" transform="rotate(-10 37 19)" fill="'+pink+'"/><ellipse cx="63" cy="19" rx="3.4" ry="10.5" transform="rotate(10 63 19)" fill="'+pink+'"/>';
+  else if(ear===3)o+='<line x1="50" y1="32" x2="50" y2="13" stroke="'+furD+'" stroke-width="2.6" stroke-linecap="round"/><circle cx="50" cy="11" r="4.6" fill="'+hs((hc+180)%360,85,62)+'"/>';
+  else o+='<path d="M43 30q3-11 11-8q-3 3-2 9z" fill="'+furD+'"/>';
+  o+='<ellipse cx="50" cy="54" rx="'+hw+'" ry="27" fill="'+fur+'"/><circle cx="32" cy="61" r="4.2" fill="'+pink+'" opacity=".6"/><circle cx="68" cy="61" r="4.2" fill="'+pink+'" opacity=".6"/>';
+  if(extra===1)o+='<g fill="'+ink+'" opacity=".4"><circle cx="35" cy="56" r="1"/><circle cx="39" cy="58.5" r="1"/><circle cx="33" cy="59" r="1"/><circle cx="65" cy="56" r="1"/><circle cx="61" cy="58.5" r="1"/><circle cx="67" cy="59" r="1"/></g>';
+  else if(extra===2)o+='<path d="M50 28q0-7 4-10" fill="none" stroke="'+hs(130,50,38)+'" stroke-width="2" stroke-linecap="round"/><ellipse cx="57" cy="17" rx="6.5" ry="3.6" transform="rotate(-35 57 17)" fill="'+hs(125,60,52)+'"/>';
+  const st='fill="none" stroke="'+ink+'" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"';
+  if(eye===0)o+='<circle cx="40" cy="52" r="3.3" fill="'+ink+'"/><circle cx="60" cy="52" r="3.3" fill="'+ink+'"/>';
+  else if(eye===1)o+='<circle cx="40" cy="52" r="4.8" fill="'+ink+'"/><circle cx="60" cy="52" r="4.8" fill="'+ink+'"/><circle cx="41.5" cy="50.4" r="1.7" fill="#fff"/><circle cx="61.5" cy="50.4" r="1.7" fill="#fff"/>';
+  else if(eye===2)o+='<path d="M35.5 53q4.5-6 9 0M55.5 53q4.5-6 9 0" '+st+'/>';
+  else o+='<circle cx="40" cy="52" r="3.3" fill="'+ink+'"/><path d="M55.5 53q4.5-6 9 0" '+st+'/>';
+  if(mouth===0)o+='<path d="M44 61q6 6 12 0" '+st+'/>';
+  else if(mouth===1)o+='<path d="M43 60h14a7 7 0 0 1-14 0z" fill="'+ink+'"/><ellipse cx="50" cy="65.8" rx="3.6" ry="2" fill="'+hs(350,80,68)+'"/>';
+  else if(mouth===2)o+='<path d="M44 61q3 4 6 0q3 4 6 0" '+st+'/>';
+  else o+='<ellipse cx="50" cy="62.6" rx="2.6" ry="3.1" fill="'+ink+'"/>';
+  return o+'</g></svg>'}
+function showUser(){$("uEmail").textContent=uem||"Signed in";if(S.uid){$("profile").innerHTML=avSvg(S.uid);$("avBig").innerHTML=avSvg(S.uid)}}
 showUser();
 const BIZ={name:"Nova Loan",whatsapp:"",phone:"",email:"",maps:"https://www.google.com/maps/search/?api=1&query=HQ4X%2B593%20Accra",address:"HQ4X+593, Liberia Road, Accra",hours:""}; // fill in your real details
 function placeFab(){const f=$("helpFab"),t=$("tabs"),o=$("foot");if(f)f.style.bottom=((t?t.offsetHeight:56)+(o?o.offsetHeight:50)+14)+"px"}
