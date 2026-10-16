@@ -535,7 +535,7 @@ function dpState(r){const go=$("tGo");
   dpRef=r.reference||dpRef;
   if(r.state==="send_otp")dpUi(r.text||"Enter the code sent to your phone.",true);
   else if(r.state==="success"){dpStop();dpUi("");confirmIn(r.credited)}
-  else if(r.state==="failed"){dpStop();dpUi("The payment was declined or cancelled. Try again.");if(go)go.disabled=false}
+  else if(r.state==="failed"){dpStop();dpUi(r.reason||r.error||"The payment was declined or cancelled. Try again.");if(go)go.disabled=false}
   else{dpUi(r.text||"Approve the payment on your phone\u2026");dpPoll()}}
 function dpPoll(){if(dpTimer)return;let n=0;
   dpTimer=setInterval(async()=>{if(!$("mkDlg").open){dpStop();return}
