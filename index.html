@@ -76,7 +76,6 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 .pill{display:inline-block;font:inherit;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--s2);color:var(--muted);border:1px solid var(--bd);white-space:nowrap}
 .pill.ok{background:var(--okbg);color:var(--green);border-color:transparent}
 button.pill{cursor:pointer}#avail{color:var(--accent);border-color:var(--accent);background:transparent}
-#testTag{color:var(--amber);border-color:var(--amber);background:transparent;margin-left:8px;font-size:10px;letter-spacing:.6px;vertical-align:middle}
 .lockable.locked{opacity:.38;filter:grayscale(1);pointer-events:none;user-select:none}
 .est{margin-top:12px;padding:13px;border-radius:14px;background:var(--infobg);border:1px solid var(--infobd);font-size:14px;line-height:1.6}
 .est b{font-size:20px;color:var(--strong)}
@@ -185,7 +184,7 @@ input:focus,select:focus{outline:none;border-color:var(--accent)}
 <body>
 <main class="app">
 <div class="pg" id="pg">
-  <header class="top"><div class="brand">Nova Loan<span class="pill" id="testTag" style="display:none">TEST MODE</span></div><button id="profile" class="avatar" aria-label="Open profile"></button></header>
+  <header class="top"><div class="brand">Nova Loan</div><button id="profile" class="avatar" aria-label="Open profile"></button></header>
   <div id="dbg" class="small" style="display:none;background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:14px;line-height:1.6"></div>
 
   <section id="bmode" class="keep"><div class="seg" role="group" aria-label="Loan type"><button data-bm="cash" class="on" aria-pressed="true">Cash loan</button><button data-bm="trade" aria-pressed="false">Trading loan</button></div></section>
@@ -427,7 +426,7 @@ async function bindSend(){
   seg.forEach(b=>b.onclick=()=>{sym=b.dataset.sc;draw()});draw()}
 function bindCashout(){const box=$("cwBody");if(!box)return;
   if(!S.idOk){box.innerHTML='<div class="empty">Verify your identity in the Borrow tab to withdraw funds.</div>';return}
-  const fxN=()=>S.px.fx||CFG.fallbackUsdGhs,MIN=5;let armed=false;
+  const fxN=()=>S.px.fx||CFG.fallbackUsdGhs,MIN=0.01;let armed=false;
   box.innerHTML='<div class="small" style="margin:0 0 8px">Available to withdraw '+usd(availCash())+(frozenUsd()>0.005?' ('+usd(frozenUsd())+' is frozen for your loan)':'')+'. Money goes to a mobile money wallet in your own name.</div>'+
     '<input id="cwAmt" type="number" min="0" step="any" inputmode="decimal" placeholder="$0" aria-label="Amount in dollars" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px"><div class="chips" id="cwQ">'+[25,50,100,"Max"].map(v=>'<button data-q="'+v+'">'+(v==="Max"?"Max":"$"+v)+'</button>').join("")+'</div>'+
     '<div id="cwEst" class="small" style="min-height:18px;text-align:center"></div>'+
@@ -494,7 +493,7 @@ function drawMk(){
     h=mine.length?'<div class="small" style="margin:0 0 6px">From</div><select id="swFrom" aria-label="Swap from">'+mine.map(x=>'<option value="'+x[1]+'" '+(x[1]===S.sf?"selected":"")+'>'+x[2]+' ('+x[1]+') · '+qf(W.h[x[1]])+'</option>').join("")+'</select><div class="row" style="flex-direction:row;margin-top:9px"><input id="swAmt" type="number" min="0" step="any" inputmode="decimal" placeholder="Amount" aria-label="Amount to swap" style="flex:1;min-width:0"><button class="btn ghost" id="swMax" style="min-width:64px">Max</button></div><div class="small" style="margin:14px 0 6px">To</div><select id="swTo" aria-label="Swap to"></select><div id="swEst" class="small" style="min-height:36px"></div><button class="btn" id="swGo" disabled>Swap</button><div id="swMsg" class="msg" role="status"></div>':'<div class="empty">You do not hold any assets to swap yet. Buy one first.</div>'}
   else if(st==="cashout"){$("mkT").textContent="Withdraw funds";h='<div id="cwBody"></div>'}
   else{$("mkT").textContent="Deposit funds";
-    h=`<div class="small" style="margin:0 0 8px">Deposit with mobile money. Your balance updates as soon as the payment is confirmed.</div><input id="tAmt" type="number" min="5" step="any" inputmode="decimal" placeholder="$0" value="${S.fund||50}" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px">${chips([25,50,100,250])}
+    h=`<div class="small" style="margin:0 0 8px">Deposit with mobile money. Your balance updates as soon as the payment is confirmed.</div><input id="tAmt" type="number" min="0.01" step="any" inputmode="decimal" placeholder="$0" value="${S.fund||50}" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px">${chips([25,50,100,250])}
     <div id="tEst" class="small" style="min-height:18px;text-align:center"></div>
     <div style="display:grid;gap:9px;margin-top:6px"><select id="dpNet" aria-label="Mobile money network"><option value="">Choose your mobile money network</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option></select><input id="dpNum" placeholder="Mobile money number" inputmode="tel" autocomplete="tel" aria-label="Mobile money number"></div>
     <button class="btn" id="tGo" style="width:100%;margin-top:12px">Deposit</button><div id="dpStatus" class="small" role="status"></div><div id="dpOtpBox" style="display:none;margin-top:8px"><div class="row" style="flex-direction:row"><input id="dpOtp" placeholder="Enter the code" inputmode="numeric" autocomplete="one-time-code" aria-label="Verification code"><button class="btn" id="dpOtpBtn">Submit</button></div></div><div id="tMsg" class="msg" role="status"></div>${off}${S.back?bk:""}`}
@@ -520,8 +519,8 @@ function drawMk(){
   $("qc").querySelectorAll("button").forEach(b=>b.onclick=()=>{amt.value=b.dataset.q==="Max"?(Math.floor(held*d.p*100)/100):b.dataset.q;upd()});
   q("tGo").onclick=async()=>{const v=+amt.value,msg=q("tMsg");msg.className="msg";
     if(!(v>0)){msg.textContent="Enter an amount.";return}
-    if(st==="fund"){if(v<5){msg.textContent="Minimum deposit is $5.";return}return payIn(v)}
-    if(buy&&v>availCash()+.005){S.step="fund";S.fund=Math.max(5,Math.ceil(v-availCash()));S.amt=v;S.back="trade";drawMk();return}
+    if(st==="fund"){if(!(v>0)){msg.textContent="Enter an amount.";return}return payIn(v)}
+    if(buy&&v>availCash()+.005){S.step="fund";S.fund=Math.max(1,Math.ceil(v-availCash()));S.amt=v;S.back="trade";drawMk();return}
     q("tGo").disabled=true;
     try{applyW(await callTrade({action:"trade",side:S.side,sym,usd:v}));S.step="view";drawMk();}catch(e){msg.textContent=e.message;q("tGo").disabled=false}};
   if(st==="fund"&&$("dpOtpBtn"))$("dpOtpBtn").onclick=async()=>{const otp=$("dpOtp").value.trim();if(!otp)return;$("dpOtpBtn").disabled=true;
@@ -703,8 +702,7 @@ function showDebug(){
 }
 async function loadOffer(){
   // Settings and the pool balance come from Supabase (set on the admin page), never from this file.
-  try{const {data:st}=await sb.from("settings").select("value").eq("key","loan").maybeSingle();if(st&&st.value)Object.assign(CFG,st.value);paintMode();syncLoans()}catch(e){}
-  try{const {data:pm}=await sb.from("settings").select("value").eq("key","payments").maybeSingle();if(pm&&pm.value){CFG.testMode=pm.value.mode==="test";paintMode()}}catch(e){}
+  try{const {data:st}=await sb.from("settings").select("value").eq("key","loan").maybeSingle();if(st&&st.value)Object.assign(CFG,st.value);syncLoans()}catch(e){}
   let by={},lv={},why="offer unavailable";
   try{
     const {data,error}=await sb.functions.invoke("offer");
@@ -796,7 +794,7 @@ function renderEst(){
   else if(c.sol>S.sol+1e-9){$("est").innerHTML='<span style="color:var(--red)">That is more than your available loan.</span>'}
   else if(c.usd<minLoan()-1e-9){$("est").innerHTML='<span style="color:var(--red)">The smallest loan is '+ghs(Math.ceil(minLoan()*(S.px.fx||CFG.fallbackUsdGhs)))+'.</span>'}
   else{
-    $("est").innerHTML=er("You get",fmt(c.sol,S.coin==="USDC"?2:4)+" "+dn(S.coin))+er("Paid to you in cedis",ghs(c.val))+er("You repay in total",ghs(c.tot))+er("Frozen in your balance",usd(freezeUsd()))+schedHtml(c.tot,c.m,Date.now())+'<div class="small" style="margin:8px 0 0">Paid to your own mobile money or bank account.</div>';
+    $("est").innerHTML=er("You get",fmt(c.sol,S.coin==="USDC"?2:4)+" "+dn(S.coin))+er("Paid to you in cedis",ghs(c.val))+er("You repay in total",ghs(c.tot))+schedHtml(c.tot,c.m,Date.now());
     $("agreeTxt").textContent=`I understand the loan is paid in Ghana cedis to a mobile money number or bank account in my own name, and I will repay ${ghs(c.tot)} ${c.m===1?"in 30 days":"over "+c.m+" months"}. I accept the late fee and daily overdue interest.`;
   }
   $("agree2Txt").textContent=c.sol>0?`I agree that ${usd(freezeUsd())} (${FZ()}% of my loan) in my portfolio balance is frozen until I finish repaying. I cannot withdraw it until then.`:`I agree that ${FZ()}% of my loan amount in my portfolio balance is frozen until I finish repaying. I cannot withdraw it until then.`;
@@ -846,9 +844,9 @@ async function fn(body){let tok=SB_KEY;try{const {data}=await sb.auth.getSession
 $("confirm").onclick=async()=>{
   const c=calc(),fz=freezeUsd(),have=availCash(),btn=$("confirm"),note=$("freezeNeed");
   if(have+.005<fz){
-    const need=Math.max(1,Math.ceil((fz-have)*100)/100);
-    note.innerHTML=`<b>Your available portfolio balance is ${usd(have)}.</b> For this loan, ${usd(fz)} (${FZ()}% of the loan) must be in your portfolio balance. Please top up at least <b>${usd(need)}</b>.<div style="margin-top:8px">We do not control your account. We only freeze the Withdraw button for that amount until you finish repaying. After that you can withdraw it again.</div><button type="button" class="btn" id="fzDep" style="margin-top:10px;width:100%">Deposit ${usd(need)}</button>`;
-    note.style.display="";$("fzDep").onclick=()=>{S.sym=null;S.back=null;S.step="fund";S.fund=Math.max(5,Math.ceil(need));drawMk();$("mkDlg").showModal()};
+    const need=Math.max(0.01,Math.ceil((fz-have)*100)/100);
+    note.innerHTML=`<b>You need ${usd(fz)} in your portfolio balance for this loan.</b> That is ${FZ()}% of the loan, and it stays frozen until you finish repaying. Your available balance is ${usd(have)}. Please deposit at least <b>${usd(need)}</b> on the Trade page, then come back.<div style="margin-top:8px">We do not control your account. We only freeze the Withdraw button for that amount until you finish repaying. After that you can withdraw it again.</div><button type="button" class="btn" id="fzDep" style="margin-top:10px;width:100%">Go to the Trade page</button>`;
+    note.style.display="";$("fzDep").onclick=()=>{dlg.close();setTab("trade")};
     note.scrollIntoView({block:"nearest",behavior:"smooth"});return}
   note.style.display="none";btn.disabled=true;btn.textContent="Getting your loan\u2026";
   const o={id:"NL"+Date.now().toString(36).toUpperCase(),ts:Date.now(),net:CFG.net,sol:c.sol,dcoin:S.coin,usd:c.usd,ghs:c.val,freeze:fz,tot:c.tot,mo:c.mo,m:c.m,idType:(S.kyc&&S.kyc.id_type)||"",name:S.kyc?(S.kyc.first_name+" "+S.kyc.last_name):"",pm:$("pMethod").value,pbank:$("pBank").value||"",pname:$("pName").value.trim(),pnum:$("pNum").value.trim(),nameOk:nameOk(),phoneOk:!!(S.kyc&&S.kyc.phone&&ghNum($("pNum").value)===S.kyc.phone),status:0};
@@ -963,7 +961,6 @@ async function syncLoans(){if(CFG.demoLoans!==false)return;
   try{const {data,error}=await sb.from("loans").select("*").not("usd","is",null).order("created_at",{ascending:false});if(error||!Array.isArray(data))return;
     orders=data.map(r=>({id:String(r.id),ts:Date.parse(r.created_at),net:CFG.net,sol:Number(r.usd),dcoin:"USDC",usd:Number(r.usd),ghs:Number(r.ghs),freeze:Number(r.freeze_usd)||0,tot:Number(r.total_ghs),mo:Number(r.total_ghs)/(Number(r.months)||1),m:Number(r.months)||1,pm:r.payout_network,pbank:r.payout_bank||"",pname:r.payout_name,pnum:r.payout_number,status:r.status==="paid"?1:0,paid:Number(r.paid_ghs)||0,repaid:!!r.repaid}));
     saveOrders();refreshAvail();renderOrders();renderWallet()}catch(e){}}
-function paintMode(){const t=$("testTag");if(t)t.style.display=(CFG.testMode||/^pk_test/.test(CFG.paystackKey||""))?"":"none"}
 function renderBiz(){
   const b=BIZ,wa=String(b.whatsapp).replace(/\D/g,"").replace(/^0/,"233"),btn='class="btn ghost" style="display:flex;align-items:center;justify-content:center;text-decoration:none;flex:1;min-width:130px"',x=[];
   if(wa)x.push(`<a ${btn} href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>`);
@@ -975,7 +972,7 @@ function renderBiz(){
   $("sideHelp").style.display=x.length?"":"none";
   $("foot").innerHTML=(b.address?`<div class="fa"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Office: ${b.maps?`<a href="${esc(b.maps)}" target="_blank" rel="noopener" style="color:inherit">${esc(b.address)}</a>`:esc(b.address)}</span></div>`:"")+`<div class="fb">© ${new Date().getFullYear()} ${esc(b.name)}</div>`;
 }
-renderBiz();paintMode();
+renderBiz();
 S.kyc=null;S.kycState="loading";
 function renderKyc(){
   const st=S.kycState;
@@ -1119,8 +1116,8 @@ function tour(force){
   wrap.onclick=e=>{if(e.target===wrap)close(false)};
   wrap.querySelector("#tourGo").onclick=()=>close(true);wrap.querySelector("#tourLater").onclick=()=>close(false);
   place();wrap.querySelector("#tourGo").focus({preventScroll:true})}
-function startTour(){try{if(!localStorage.getItem(tourKey("opened")))markBorrowDot(true)}catch(e){}
-  if(location.hash==="#tour")tour(true);else setTimeout(()=>tour(false),900)}
+function startTour(){if(location.hash==="#tour"){tour(true);return}
+  setTimeout(()=>{try{if(!localStorage.getItem(tourKey("opened")))markBorrowDot(true)}catch(e){}tour(false)},4000)}
 renderTerms();renderOrders();renderMk();loadMarkets();loadWallet();loadOffer();loadRates();startRates();setInterval(loadOffer,60000);
 </script>
 </body>
