@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-<title>NodeTray · Identity verification</title>
+<title>NodeTray · Paychant verification</title>
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-96.png" type="image/png" sizes="96x96">
@@ -44,13 +44,37 @@ input.bad,select.bad{border-color:var(--red)}
 .chk input{width:auto;margin-top:3px}
 @media(max-width:480px){.two{grid-template-columns:1fr}}
 .brand{display:flex;align-items:center;gap:9px}.bmk{width:28px;height:28px;flex:none;border-radius:7px}
+.lab{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
+.slot{border:1px solid var(--bd);background:var(--s2);border-radius:16px;padding:12px;margin-top:12px;scroll-margin-top:16px}
+.slot.bad{border-color:var(--red)}
+.slot .lab{margin:0 0 8px;color:var(--text);font-weight:650}
+.sbox{border-radius:12px;overflow:hidden;background:var(--bg);display:flex;align-items:center;justify-content:center}
+.sbox[hidden]{display:none}
+.sbox img{display:block;width:100%;max-height:240px;object-fit:contain;background:#000}
+.sch{display:block;width:100%;height:auto}
+.sch .cf{fill:var(--bg);stroke:var(--bd);stroke-width:2}
+.sch .fl{fill:var(--s2)}
+.sch .ph{fill:var(--s2);stroke:var(--bd);stroke-width:1.5}
+.sch .pf{fill:var(--bd)}
+.sch .bar{fill:var(--bd)}
+.sch .key{fill:color-mix(in srgb,var(--accent) 20%,transparent);stroke:var(--accent);stroke-width:1.5}
+.sch .tx{fill:var(--muted);font-size:10px;font-family:inherit}
+.sch .sg{stroke:var(--bd);stroke-width:1.5;fill:none}
+.scap{font-size:12px;color:var(--soft);line-height:1.5;margin-top:8px}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.acts.one{grid-template-columns:1fr}
+.act{display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;border-radius:12px;border:1px solid var(--bd);background:var(--bg);font-weight:700;font-size:14px}
+.act.cam{border-color:var(--accent);color:var(--accent)}
+.act svg{width:18px;height:18px;flex:none}
+.sname{font-size:12px;color:var(--green);margin-top:8px;word-break:break-all}
+.sname:empty{display:none}
 </style>
 </head>
 <body>
 <main class="app">
   <header class="top"><div class="brand"><svg class="bmk" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="ngB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b9bff"/><stop offset="1" stop-color="#35e875"/></linearGradient></defs><rect width="100" height="100" rx="23" fill="#070b14"/><path d="M50 27L31 49M50 27L69 49M31 49H69" stroke="url(#ngB)" stroke-width="3.4" stroke-linecap="round" fill="none" opacity=".8"/><circle cx="50" cy="26" r="9" fill="url(#ngB)"/><circle cx="30" cy="50" r="8" fill="url(#ngB)"/><circle cx="70" cy="50" r="8" fill="url(#ngB)"/><path d="M20 62V69Q20 79 30 79H70Q80 79 80 69V62" stroke="url(#ngB)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><span>NodeTray</span></div><button id="out" class="lo">Log out</button></header>
-  <h1>Identity verification</h1>
-  <p class="lead">To keep NodeTray safe and to process your loans and withdrawals, we need to know who you are and where to send your money, so we ask for your ID and mobile money details once. Your details and photos are stored privately and only used for this.</p>
+  <h1>Paychant verification</h1>
+  <p class="lead">Your loans are paid out through <b style="color:var(--strong)">Paychant</b>, our payment partner. To process your loans, Paychant needs to know who you are and where to send your money, so we ask for your ID and mobile money details once. Your details and photos are stored privately and only used for this.</p>
 
   <form id="form" novalidate>
     <div class="card">
@@ -66,16 +90,16 @@ input.bad,select.bad{border-color:var(--red)}
     </div>
 
     <div class="card">
-      <div class="title">Where we send your money</div>
+      <div class="title">Where Paychant sends your money</div>
       <label for="phone">Mobile money number</label><input id="phone" inputmode="tel" autocomplete="tel" placeholder="024 000 0000">
       <label for="net">Network</label>
       <select id="net"><option value="">Choose your network</option><option>MTN MoMo</option><option>Telecel Cash</option><option>AirtelTigo Money</option><option>Bank account</option></select>
-      <div class="small">When you take a loan or withdraw, we send the money to this number. The number must be in your own name.</div>
+      <div class="small">When you draw a loan, the payment prompt goes straight to this number. The number must be in your own name.</div>
     </div>
 
     <div class="card">
       <div class="title">Mobile money statement</div>
-      <label for="stmt">Screenshot of your mobile money statement (take one now or choose from your gallery)</label><input id="stmt" type="file" accept="image/*">
+      <div class="slot" id="stmt" tabindex="-1"><div class="lab" id="stmtLbl">Photo or screenshot of your mobile money statement</div><div class="sbox" id="stmtBox"></div><div class="scap" id="stmtCap"></div><div class="acts"><button type="button" class="act cam" data-pick="stmt" data-how="cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>Take photo</button><button type="button" class="act" data-pick="stmt" data-how="up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload</button></div><input type="file" accept="image/*" capture="environment" hidden id="stmt_cam"><input type="file" accept="image/*" hidden id="stmt_up"><div class="sname" id="stmtName"></div></div>
       <div class="small">We use it to check your mobile money activity before approving your loan.</div>
     </div>
 
@@ -84,14 +108,20 @@ input.bad,select.bad{border-color:var(--red)}
       <label for="idType">ID type</label>
       <select id="idType"><option>Ghana Card</option><option>Driver's license</option><option>Passport</option><option>Voter ID</option></select>
       <label for="idNum">ID number</label><input id="idNum" autocomplete="off">
-      <label for="front">Photo of the front of your ID (take one now or choose from your gallery)</label><input id="front" type="file" accept="image/*">
-      <label for="back">Photo of the back of your ID (take one now or choose from your gallery)</label><input id="back" type="file" accept="image/*">
-      <label for="self">A clear live selfie of your face (taken now with your camera)</label><input id="self" type="file" accept="image/*" capture="user">
+      <div class="slot" id="front" tabindex="-1"><div class="lab" id="frontLbl">Front of your ID</div><div class="sbox" id="frontBox"></div><div class="scap" id="frontCap"></div><div class="acts"><button type="button" class="act cam" data-pick="front" data-how="cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>Take photo</button><button type="button" class="act" data-pick="front" data-how="up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload</button></div><input type="file" accept="image/*" capture="environment" hidden id="front_cam"><input type="file" accept="image/*" hidden id="front_up"><div class="sname" id="frontName"></div></div>
+      <div class="slot" id="back" tabindex="-1"><div class="lab" id="backLbl">Back of your ID</div><div class="sbox" id="backBox"></div><div class="scap" id="backCap"></div><div class="acts"><button type="button" class="act cam" data-pick="back" data-how="cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>Take photo</button><button type="button" class="act" data-pick="back" data-how="up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload</button></div><input type="file" accept="image/*" capture="environment" hidden id="back_cam"><input type="file" accept="image/*" hidden id="back_up"><div class="sname" id="backName"></div></div>
+      <div class="slot" id="self" tabindex="-1"><div class="lab" id="selfLbl">A clear live selfie of your face</div><div class="sbox" id="selfBox"></div><div class="scap" id="selfCap">Taken now with your camera. Face the camera in good light.</div><div class="acts one"><button type="button" class="act cam" data-pick="self" data-how="cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>Take selfie</button></div><input type="file" accept="image/*" capture="user" hidden id="self_cam"><div class="sname" id="selfName"></div></div>
       <div class="small">Use good light. All text on the ID must be readable and your face must be clearly visible.</div>
     </div>
 
-    <label class="chk"><input id="agree" type="checkbox"><span>I confirm these details are true and belong to me, and I allow NodeTray to use my ID photos and details to verify my identity and process my loans and withdrawals.</span></label>
-    <button id="go" class="btn" type="submit">Submit</button>
+    <div class="card" style="border-color:var(--infobd);background:var(--infobg)">
+      <div class="title">What happens when you draw a loan</div>
+      <div class="small" style="margin:0;color:var(--infotx);font-size:14px">By drawing a loan, you are selling the coin to Paychant at the current market price at that moment. Paychant then sends the money, in Ghana cedis, to your mobile money or bank account.</div>
+      <label class="chk" style="margin-bottom:0"><input id="sell" type="checkbox"><span>I have read this. I understand that drawing a loan sells the coin to Paychant at the current market price, and the cedis are sent to my mobile money or bank account.</span></label>
+    </div>
+
+    <label class="chk"><input id="agree" type="checkbox"><span>I confirm these details are true and belong to me, and I allow Paychant to use my ID photos and details to verify my identity and process my loans.</span></label>
+    <button id="go" class="btn" type="submit">Submit for Paychant verification</button>
     <div id="msg" class="msg" role="status"></div>
   </form>
 </main>
@@ -133,25 +163,87 @@ async function upload(file,name){
   if(error)throw new Error("Upload failed. Check your connection and try again.");
   return path;
 }
+/* ---- ID outlines (simple generic guides, one per ID type) ---- */
+const SPECS={
+ "Ghana Card":{
+  front:{ttl:"Front of your Ghana Card",cap:"Place the whole card inside the photo.",head:"Card title",photo:[16,42,86,104],fx:118,fy:50,fs:24,fields:["Surname","First names","Date of birth","ID number*","Expiry date"],sign:[118,174,184]},
+  back:{ttl:"Back of your Ghana Card",cap:"Show the full back of the card, including any barcode or printed lines.",fx:20,fy:36,fs:28,fields:["Other details","Date issued"],bars:{y:118,label:"Barcode or printed lines*"}}},
+ "Driver's license":{
+  front:{ttl:"Front of your driver's license",cap:"Place the whole license inside the photo.",head:"License title",photo:[16,42,86,104],fx:118,fy:50,fs:24,fields:["Surname","First names","Date of birth","License number*","Expiry date"],sign:[118,174,184]},
+  back:{ttl:"Back of your driver's license",cap:"Show the full back of the license, including any barcode.",fx:20,fy:36,fs:28,fields:["Vehicle classes","Restrictions"],bars:{y:118,label:"Barcode or printed lines*"}}},
+ "Voter ID":{
+  front:{ttl:"Front of your Voter ID",cap:"Place the whole card inside the photo.",head:"Card title",photo:[16,42,86,104],fx:118,fy:54,fs:28,fields:["Surname","First names","Date of birth","Voter number*"]},
+  back:{ttl:"Back of your Voter ID",cap:"Show the full back of the card, including any barcode.",fx:20,fy:36,fs:28,fields:["Other details"],bars:{y:118,label:"Barcode or printed lines*"},sign:[20,100,150]}},
+ "Passport":{
+  front:{ttl:"Photo page of your passport",cap:"Open the passport flat. Show the whole page with your photo and the two lines of characters at the bottom.",h:226,head:"Photo page",photo:[16,40,86,104],fx:118,fy:52,fs:24,fields:["Surname","Given names","Passport number*","Date of birth","Expiry date"],bars:{y:178,label:"Two lines of characters at the bottom*",two:true}},
+  back:{ttl:"Signature page of your passport",cap:"Show the page next to your photo page, with your signature if it has one.",h:226,fx:20,fy:40,fs:28,fields:["Other details"],sign:[20,150,200]}}
+};
+function art(type,side){
+ const S=(SPECS[type]||SPECS["Ghana Card"])[side],W=320,H=S.h||202;
+ let g=`<svg class="sch" viewBox="0 0 ${W} ${H}" role="img" aria-label="${S.ttl}"><rect class="cf" x="2" y="2" width="${W-4}" height="${H-4}" rx="14"/>`;
+ if(S.head)g+=`<rect class="fl" x="14" y="12" width="292" height="18" rx="5"/><text class="tx" x="22" y="25">${S.head}</text>`;
+ if(S.photo){const [x,y,w,h]=S.photo;
+  g+=`<rect class="key" x="${x}" y="${y}" width="${w}" height="${h}" rx="8"/><circle class="pf" cx="${x+w/2}" cy="${y+h*.36}" r="${h*.16}"/><path class="pf" d="M${x+w*.18} ${y+h*.86}Q${x+w/2} ${y+h*.5} ${x+w*.82} ${y+h*.86}Z"/><text class="tx" x="${x+w/2}" y="${y+h+14}" text-anchor="middle">Photo*</text>`}
+ (S.fields||[]).forEach((f,i)=>{const key=f.endsWith("*"),t=f.replace("*",""),y=S.fy+i*S.fs,w=(S.photo?150:240)-(i%2)*30;
+  g+=`<text class="tx" x="${S.fx}" y="${y}">${t}${key?"*":""}</text><rect class="${key?"key":"bar"}" x="${S.fx}" y="${y+5}" width="${w}" height="${key?9:6}" rx="3"/>`});
+ if(S.bars){const b=S.bars,n=b.two?2:1;
+  g+=`<text class="tx" x="20" y="${b.y}">${b.label.replace("*","")}*</text>`;
+  for(let r=0;r<n;r++){let x=20;const y=b.y+8+r*14;
+   if(b.two){g+=`<rect class="key" x="20" y="${y}" width="280" height="8" rx="3"/>`}
+   else{let i=0;while(x<300){const w=2+((i*7)%4);g+=`<rect class="key" style="stroke:none;fill:var(--accent);opacity:.55" x="${x}" y="${y}" width="${w}" height="30"/>`;x+=w+3;i++}}}}
+ if(S.sign){const [x,y,w]=S.sign;g+=`<path class="sg" d="M${x} ${y}H${x+w}"/><text class="tx" x="${x}" y="${y+12}">Signature</text>`}
+ return g+`</svg>`}
+function renderGuides(){
+ const t=$("idType").value;
+ ["front","back"].forEach(k=>{
+  const S=(SPECS[t]||SPECS["Ghana Card"])[k];
+  $(k+"Lbl").textContent=S.ttl;
+  $(k+"Cap").innerHTML=S.cap+" Areas marked <span style=\"color:var(--accent)\">* (blue)</span> must be sharp and readable.";
+  if(!files[k]){$(k+"Box").hidden=false;$(k+"Box").innerHTML=art(t,k)}
+ });
+}
+/* ---- photo slots: Take photo / Upload, one file per slot ---- */
+const files={front:null,back:null,stmt:null,self:null},urls={};
+function setFile(k,f){
+ if(!f)return;
+ if(!/^image\//.test(f.type||"")){$("msg").className="msg";$("msg").textContent="Please choose a photo (JPG or PNG).";return}
+ if(urls[k])URL.revokeObjectURL(urls[k]);
+ files[k]=f;urls[k]=URL.createObjectURL(f);
+ const box=$(k+"Box");box.hidden=false;box.innerHTML="";
+ const im=new Image();im.alt="Your photo";im.src=urls[k];box.appendChild(im);
+ $(k+"Name").textContent="Photo added ✓";
+ $(k).classList.remove("bad");
+ if(k!=="self"&&k!=="stmt")$(k+"Cap").textContent="Check that all text is readable. Use Take photo or Upload to replace it.";
+}
+["front","back","stmt","self"].forEach(k=>{
+ ["cam","up"].forEach(h=>{const inp=$(k+"_"+h);if(!inp)return;inp.addEventListener("change",()=>{setFile(k,inp.files[0]);inp.value=""})});
+ document.querySelectorAll('[data-pick="'+k+'"]').forEach(b=>b.addEventListener("click",()=>$(k+"_"+b.dataset.how).click()));
+});
+$("stmt").querySelector(".sbox").hidden=true;$("self").querySelector(".sbox").hidden=true;
+$("idType").addEventListener("change",renderGuides);
+renderGuides();
+const focusEl=id=>{const e=$(id);if(e){e.scrollIntoView({block:"center",behavior:"smooth"});try{e.focus({preventScroll:true})}catch(_){}}};
+
 const gh=s=>{const d=String(s).replace(/\D/g,"");return d.length===10&&d[0]==="0"?d:d.length===12&&d.startsWith("233")?"0"+d.slice(3):""};
 
 $("form").addEventListener("submit",async e=>{
   e.preventDefault();const msg=$("msg");msg.className="msg";msg.textContent="";
   document.querySelectorAll(".bad").forEach(x=>x.classList.remove("bad"));
   const v={fn:$("fn").value.trim(),ln:$("ln").value.trim(),dob:$("dob").value,phone:gh($("phone").value),addr:$("addr").value.trim(),job:$("job").value.trim(),idn:$("idNum").value.trim()};
-  const need=[["fn",v.fn.length>=2],["ln",v.ln.length>=2],["dob",!!v.dob],["phone",!!v.phone],["net",!!$("net").value],["addr",v.addr.length>=4],["job",v.job.length>=2],["idNum",v.idn.length>=6],["front",$("front").files.length],["stmt",$("stmt").files.length],["back",$("back").files.length],["self",$("self").files.length]];
+  const need=[["fn",v.fn.length>=2],["ln",v.ln.length>=2],["dob",!!v.dob],["phone",!!v.phone],["net",!!$("net").value],["addr",v.addr.length>=4],["job",v.job.length>=2],["idNum",v.idn.length>=6],["front",!!files.front],["stmt",!!files.stmt],["back",!!files.back],["self",!!files.self]];
   const miss=need.filter(n=>!n[1]);
-  if(miss.length){miss.forEach(n=>$(n[0]).classList.add("bad"));msg.textContent="Please complete the highlighted fields.";$(miss[0][0]).focus();return}
+  if(miss.length){miss.forEach(n=>$(n[0]).classList.add("bad"));msg.textContent="Please complete the highlighted fields.";focusEl(miss[0][0]);return}
   const age=(Date.now()-new Date(v.dob).getTime())/31557600000;
   if(!(age>=18&&age<110)){$("dob").classList.add("bad");msg.textContent="You must be at least 18 years old to borrow.";return}
+  if(!$("sell").checked){msg.textContent="Please read what happens when you draw a loan and tick the first box.";focusEl("sell");return}
   if(!$("agree").checked){msg.textContent="Please tick the box to confirm.";return}
   if(!uid){msg.textContent="Please log in again.";return}
   $("go").disabled=true;$("go").textContent="Uploading…";
   try{
-    const front_path=await upload($("front").files[0],"front");
-    const back_path=await upload($("back").files[0],"back");
-    const selfie_path=await upload($("self").files[0],"selfie");
-    const momo_statement_path=await upload($("stmt").files[0],"statement");
+    const front_path=await upload(files.front,"front");
+    const back_path=await upload(files.back,"back");
+    const selfie_path=await upload(files.self,"selfie");
+    const momo_statement_path=await upload(files.stmt,"statement");
     const row={user_id:uid,first_name:v.fn,last_name:v.ln,date_of_birth:v.dob,phone:v.phone,address:v.addr,occupation:v.job,employer:$("emp").value.trim()||null,id_type:$("idType").value,id_number:v.idn,front_path,back_path,selfie_path,status:"pending",reject_reason:null};
     // momo_network needs a column in the kyc table (see the SQL in my notes). If it is missing, save everything else so nobody is blocked.
     let {error}=await sb.from("kyc").upsert({...row,momo_statement_path,momo_network:$("net").value},{onConflict:"user_id"});
@@ -163,7 +255,7 @@ $("form").addEventListener("submit",async e=>{
     setTimeout(()=>location.href="app.html",1200);
   }catch(err){
     msg.textContent=err.message||"Something went wrong. Try again.";
-    $("go").disabled=false;$("go").textContent="Submit";
+    $("go").disabled=false;$("go").textContent="Submit for Paychant verification";
   }
 });
 </script>
