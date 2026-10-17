@@ -749,7 +749,7 @@ function renderAssets(){
     const sub=act?(a.sym===actSym?"Active loan":"Locked until you repay"):ok?"Up to "+a.qty.toLocaleString(undefined,{maximumFractionDigits:a.sym==="USDC"?2:a.qty<1?6:4})+" "+esc(dn(a.sym)):"Not available right now";
     const label=act?(a.sym===actSym?"Loan active":"Locked"):!S.idOk?"Verify identity to borrow":"Get loan";
     return `<div class="asset" style="flex-wrap:wrap"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div style="font-size:11px;font-weight:700;margin-top:2px">${tag}</div></div></div><div class="r"><div class="nm" data-aq="${a.sym}">${sub}</div><div class="sub up" data-ag="${a.sym}">${ok&&!act?ghs(a.qty*S.px.fx):""}</div></div><button class="btn" data-loan="${a.sym}" style="flex-basis:100%;margin:10px 0 0;min-height:42px" ${ok&&!act?"":"disabled"}>${label}</button></div>`}).join("");
-  {const na=rows.find(r=>r.qty>0);$("sellNoteBox").innerHTML=(na&&!act)?`<div class="sellNote">By clicking <b>Get loan</b>, you are selling our ${esc(dn(na.sym))} tokens to <b>Paychant</b> at the current market price.<br><b>1 ${esc(dn(na.sym))} = <span data-nr="${na.sym}">${ghs(priceOf(na.sym)*S.px.fx)}</span></b></div>`:""}
+  {const na=rows.find(r=>r.qty>0);$("sellNoteBox").innerHTML=(na&&!act)?`<div class="sellNote">By clicking <b>Get loan</b>, you are selling the ${esc(dn(na.sym))} tokens to <b>Paychant</b> at the current market price.<br><b>1 ${esc(dn(na.sym))} = <span data-nr="${na.sym}">${ghs(priceOf(na.sym)*S.px.fx)}</span></b></div>`:""}
   $("assets").querySelectorAll("[data-loan]").forEach(b=>b.onclick=()=>S.idOk?openLoan(b.dataset.loan):location.href="kyc.html");
   try{renderKyc()}catch(e){}$("sellBtn").style.display="none";
 }
@@ -851,7 +851,7 @@ $("confirm").onclick=async()=>{
   const c=calc(),fz=freezeUsd(),have=availCash(),btn=$("confirm"),note=$("freezeNeed");
   if(have+.005<fz){
     const need=Math.max(0.01,Math.ceil((fz-have)*100)/100);
-    note.innerHTML=`<b>You need ${usd(fz)} in your portfolio balance for this loan.</b> That is ${FZ()}% of the loan, and it stays frozen until you finish repaying. Your available balance is ${usd(have)}. Please deposit at least <b>${usd(need)}</b> on the Trade page, then come back.<div style="margin-top:8px">We do not control your account. We only freeze the Withdraw button for that amount until you finish repaying. After that you can withdraw it again.</div><button type="button" class="btn" id="fzDep" style="margin-top:10px;width:100%">Go to the Trade page</button>`;
+    note.innerHTML=`<b>You need ${usd(fz)} in your portfolio balance for this loan.</b> That is ${FZ()}% of the loan, and it stays frozen until you finish repaying. Your available balance is ${usd(have)}. Please deposit at least <b>${usd(need)}</b> on the Trade page, then come back.<div style="margin-top:8px">We will freeze only ${FZ()}% of your loan amount (${usd(fz)}) in your portfolio balance until you finish repaying. If your balance is higher, the rest is not frozen. Once you finish repaying, the frozen amount is released and you can withdraw it again.</div><button type="button" class="btn" id="fzDep" style="margin-top:10px;width:100%">Go to the Trade page</button>`;
     note.style.display="";$("fzDep").onclick=()=>{dlg.close();setTab("trade")};
     note.scrollIntoView({block:"nearest",behavior:"smooth"});return}
   note.style.display="none";btn.disabled=true;btn.textContent="Getting your loan\u2026";
