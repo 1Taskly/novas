@@ -6,8 +6,13 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-<title>Nova Loan · Paychant verification</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23c9bcff'/%3E%3Cstop offset='.55' stop-color='%23a995f5'/%3E%3Cstop offset='1' stop-color='%2335e875'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='%23000'/%3E%3Cpath d='M50 14C53 38 62 47 86 50C62 53 53 62 50 86C47 62 38 53 14 50C38 47 47 38 50 14Z' fill='url(%23g)'/%3E%3C/svg%3E">
+<title>Nodetray · Identity verification</title>
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-96.png" type="image/png" sizes="96x96">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
 :root{color-scheme:light dark;--bg:#ffffff;--s1:#f5f6f8;--s2:#eceef2;--text:#14151a;--muted:#5f636d;--line:#e3e5ea;--accent:#2f7bff;--green:#12924a;--red:#d93636;--amber:#b7791f;--bd:#d6d9e0;--soft:#7a7e88;--strong:#000000;--pop:#ffffff;--ico:#ffffff;--okbg:#dff5e8;--onred:#ffffff;--ongreen:#ffffff;--warnbg:#fff6e0;--warnbd:#f0d9a0;--warntx:#8a5a00;--dangbg:#fdecec;--dangbd:#f2b8b8;--dangtx:#b42525;--notebg:#fdeeee;--notebd:#f0b3b3;--notetx:#a32020;--infobg:#f1effa;--infobd:#d9d3f0;--infotx:#4b4376}
@@ -30,7 +35,7 @@ input,select{background:var(--s2);border:1px solid var(--bd);border-radius:14px;
 input[type=file]{padding:10px;font-size:13px}
 input.bad,select.bad{border-color:var(--red)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.btn{border:0;border-radius:14px;background:var(--accent);color:var(--strong)fff;font-weight:750;min-height:50px;width:100%;margin-top:6px}
+.btn{border:0;border-radius:14px;background:var(--accent);color:#fff;font-weight:750;min-height:50px;width:100%;margin-top:6px}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 .msg{font-size:13px;margin-top:12px;color:var(--red);line-height:1.45}
 .msg.ok{color:var(--green)}
@@ -38,13 +43,14 @@ input.bad,select.bad{border-color:var(--red)}
 .chk{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--muted);margin:14px 0 6px}
 .chk input{width:auto;margin-top:3px}
 @media(max-width:480px){.two{grid-template-columns:1fr}}
+.brand{display:flex;align-items:center;gap:9px}.bmk{width:28px;height:28px;flex:none;border-radius:7px}
 </style>
 </head>
 <body>
 <main class="app">
-  <header class="top"><div class="brand">Nova Loan</div><button id="out" class="lo">Log out</button></header>
-  <h1>Paychant verification</h1>
-  <p class="lead">Your loans are paid out through <b style="color:var(--strong)">Paychant</b>, our payment partner. To process your loans, Paychant needs to know who you are and where to send your money, so we ask for your ID and mobile money details once. Your details and photos are stored privately and only used for this.</p>
+  <header class="top"><div class="brand"><svg class="bmk" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="ngB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b9bff"/><stop offset="1" stop-color="#35e875"/></linearGradient></defs><rect width="100" height="100" rx="23" fill="#070b14"/><path d="M50 27L31 49M50 27L69 49M31 49H69" stroke="url(#ngB)" stroke-width="3.4" stroke-linecap="round" fill="none" opacity=".8"/><circle cx="50" cy="26" r="9" fill="url(#ngB)"/><circle cx="30" cy="50" r="8" fill="url(#ngB)"/><circle cx="70" cy="50" r="8" fill="url(#ngB)"/><path d="M20 62V69Q20 79 30 79H70Q80 79 80 69V62" stroke="url(#ngB)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><span>Nodetray</span></div><button id="out" class="lo">Log out</button></header>
+  <h1>Identity verification</h1>
+  <p class="lead">To keep Nodetray safe and to process your loans and withdrawals, we need to know who you are and where to send your money, so we ask for your ID and mobile money details once. Your details and photos are stored privately and only used for this.</p>
 
   <form id="form" novalidate>
     <div class="card">
@@ -60,11 +66,11 @@ input.bad,select.bad{border-color:var(--red)}
     </div>
 
     <div class="card">
-      <div class="title">Where Paychant sends your money</div>
+      <div class="title">Where we send your money</div>
       <label for="phone">Mobile money number</label><input id="phone" inputmode="tel" autocomplete="tel" placeholder="024 000 0000">
       <label for="net">Network</label>
       <select id="net"><option value="">Choose your network</option><option>MTN MoMo</option><option>Telecel Cash</option><option>AirtelTigo Money</option><option>Bank account</option></select>
-      <div class="small">When you draw a loan, the payment prompt goes straight to this number. The number must be in your own name.</div>
+      <div class="small">When you take a loan or withdraw, we send the money to this number. The number must be in your own name.</div>
     </div>
 
     <div class="card">
@@ -84,7 +90,7 @@ input.bad,select.bad{border-color:var(--red)}
       <div class="small">Use good light. All text on the ID must be readable and your face must be clearly visible.</div>
     </div>
 
-    <label class="chk"><input id="agree" type="checkbox"><span>I confirm these details are true and belong to me, and I allow Paychant to use my ID photos and details to verify my identity and process my loans.</span></label>
+    <label class="chk"><input id="agree" type="checkbox"><span>I confirm these details are true and belong to me, and I allow Nodetray to use my ID photos and details to verify my identity and process my loans and withdrawals.</span></label>
     <button id="go" class="btn" type="submit">Submit</button>
     <div id="msg" class="msg" role="status"></div>
   </form>
@@ -98,14 +104,14 @@ let uid=null;
 
 (async()=>{
   const {data}=await sb.auth.getSession();
-  if(!data.session){location.replace("landing.html");return}
+  if(!data.session){location.replace("index.html");return}
   uid=data.session.user.id;
   try{
     const {data:k}=await sb.from("kyc").select("status").eq("user_id",uid).maybeSingle();
-    if(k&&(k.status==="pending"||k.status==="approved"))location.replace("index.html");
+    if(k&&(k.status==="pending"||k.status==="approved"))location.replace("app.html");
   }catch(e){}
 })();
-$("out").onclick=()=>sb.auth.signOut().finally(()=>location.href="landing.html");
+$("out").onclick=()=>sb.auth.signOut().finally(()=>location.href="index.html");
 
 // Shrink photos before upload (saves mobile data and storage)
 function shrink(file){
@@ -154,7 +160,7 @@ $("form").addEventListener("submit",async e=>{
     if(error&&/momo_network/i.test(error.message||""))({error}=await sb.from("kyc").upsert({...row,momo_statement_path},{onConflict:"user_id"}));
     if(error)throw new Error("Could not save your details. Try again.");
     msg.className="msg ok";msg.textContent="Submitted. Taking you to your dashboard…";
-    setTimeout(()=>location.href="index.html",1200);
+    setTimeout(()=>location.href="app.html",1200);
   }catch(err){
     msg.textContent=err.message||"Something went wrong. Try again.";
     $("go").disabled=false;$("go").textContent="Submit";
