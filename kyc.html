@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-<title>Nodetray · Identity verification</title>
+<title>NodeTray · Identity verification</title>
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-96.png" type="image/png" sizes="96x96">
@@ -48,9 +48,9 @@ input.bad,select.bad{border-color:var(--red)}
 </head>
 <body>
 <main class="app">
-  <header class="top"><div class="brand"><svg class="bmk" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="ngB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b9bff"/><stop offset="1" stop-color="#35e875"/></linearGradient></defs><rect width="100" height="100" rx="23" fill="#070b14"/><path d="M50 27L31 49M50 27L69 49M31 49H69" stroke="url(#ngB)" stroke-width="3.4" stroke-linecap="round" fill="none" opacity=".8"/><circle cx="50" cy="26" r="9" fill="url(#ngB)"/><circle cx="30" cy="50" r="8" fill="url(#ngB)"/><circle cx="70" cy="50" r="8" fill="url(#ngB)"/><path d="M20 62V69Q20 79 30 79H70Q80 79 80 69V62" stroke="url(#ngB)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><span>Nodetray</span></div><button id="out" class="lo">Log out</button></header>
+  <header class="top"><div class="brand"><svg class="bmk" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="ngB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b9bff"/><stop offset="1" stop-color="#35e875"/></linearGradient></defs><rect width="100" height="100" rx="23" fill="#070b14"/><path d="M50 27L31 49M50 27L69 49M31 49H69" stroke="url(#ngB)" stroke-width="3.4" stroke-linecap="round" fill="none" opacity=".8"/><circle cx="50" cy="26" r="9" fill="url(#ngB)"/><circle cx="30" cy="50" r="8" fill="url(#ngB)"/><circle cx="70" cy="50" r="8" fill="url(#ngB)"/><path d="M20 62V69Q20 79 30 79H70Q80 79 80 69V62" stroke="url(#ngB)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><span>NodeTray</span></div><button id="out" class="lo">Log out</button></header>
   <h1>Identity verification</h1>
-  <p class="lead">To keep Nodetray safe and to process your loans and withdrawals, we need to know who you are and where to send your money, so we ask for your ID and mobile money details once. Your details and photos are stored privately and only used for this.</p>
+  <p class="lead">To keep NodeTray safe and to process your loans and withdrawals, we need to know who you are and where to send your money, so we ask for your ID and mobile money details once. Your details and photos are stored privately and only used for this.</p>
 
   <form id="form" novalidate>
     <div class="card">
@@ -90,7 +90,7 @@ input.bad,select.bad{border-color:var(--red)}
       <div class="small">Use good light. All text on the ID must be readable and your face must be clearly visible.</div>
     </div>
 
-    <label class="chk"><input id="agree" type="checkbox"><span>I confirm these details are true and belong to me, and I allow Nodetray to use my ID photos and details to verify my identity and process my loans and withdrawals.</span></label>
+    <label class="chk"><input id="agree" type="checkbox"><span>I confirm these details are true and belong to me, and I allow NodeTray to use my ID photos and details to verify my identity and process my loans and withdrawals.</span></label>
     <button id="go" class="btn" type="submit">Submit</button>
     <div id="msg" class="msg" role="status"></div>
   </form>
