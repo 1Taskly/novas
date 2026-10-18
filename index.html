@@ -317,6 +317,8 @@ $("eye").onclick=()=>{
 
 const sb=supabase.createClient("https://djkcnhlstjvozrtfcqse.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqa2NuaGxzdGp2b3pydGZjcXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMDc5MDYsImV4cCI6MjEwNjg4MzkwNn0.lS_p3mV4tdFOmcOVZBTIXN52HPDOgDAHhLluxUTdX_s");
 sb.auth.getSession().then(({data})=>{if(data.session)location.replace("app.html")});
+sb.auth.onAuthStateChange((event,session)=>{if(session&&(event==="SIGNED_IN"||event==="INITIAL_SESSION"))location.replace("app.html")});
+(function(){const h=new URLSearchParams(location.hash.slice(1));if(h.get("error_code")==="otp_expired"||h.get("error")==="access_denied"){history.replaceState(null,"",location.pathname);setTimeout(()=>{setMode("in");msg.className="msg";msg.textContent="That confirmation link is invalid or has expired. Try logging in - if your email is already confirmed it will work."},0)}})();
 let mode="up";
 function setMode(m){
   mode=m;go.querySelector("#goTxt").textContent=m==="up"?"Create account":"Log in";
@@ -327,7 +329,7 @@ function setMode(m){
 $("swap").onclick=e=>{e.preventDefault();setMode(mode==="up"?"in":"up")};
 async function register(email,password){
   if(mode==="up"){
-    const {data,error}=await sb.auth.signUp({email,password});
+    const {data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:"https://nodetray.com/app.html"}});
     if(error)throw error;
     if(!data.session){setMode("in");throw {message:"Account created. Check your email to confirm it, then log in.",info:true}}
   }else{
