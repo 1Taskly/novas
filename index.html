@@ -190,7 +190,19 @@ input.bad{border-color:var(--red)}
     <button id="go" class="btn" type="submit"><span class="spin"></span><span id="goTxt">Create account</span></button>
     <div id="msg" class="msg" role="status"></div>
     <div class="fine" id="terms">By creating an account you agree to the Terms of Service and Privacy Policy.</div>
+    <div class="fine" id="forgotWrap" hidden><a href="#" id="forgot" style="color:var(--accent);font-weight:700;text-decoration:none">Forgot your password?</a></div>
     <div class="fine"><a href="#" id="swap" style="color:var(--accent);font-weight:700;text-decoration:none">Already have an account? Log in</a></div>
+  </form>
+
+  <form id="rform" class="card" hidden novalidate>
+    <h2 class="vh" style="text-align:center;margin:0 0 6px">Set a new password</h2>
+    <p class="vp" style="text-align:center">Choose a new password for your account.</p>
+    <div class="field">
+      <label for="np">New password</label>
+      <div class="pw"><input id="np" type="password" autocomplete="new-password" placeholder="At least 8 characters" required></div>
+    </div>
+    <button id="rgo" class="btn" type="submit"><span class="spin"></span><span id="rgoTxt">Save new password</span></button>
+    <div id="rmsg" class="msg" role="status"></div>
   </form>
 
   <div id="verify" class="card vbox" hidden>
@@ -333,13 +345,15 @@ $("eye").onclick=()=>{
 };
 
 const sb=supabase.createClient("https://djkcnhlstjvozrtfcqse.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqa2NuaGxzdGp2b3pydGZjcXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMDc5MDYsImV4cCI6MjEwNjg4MzkwNn0.lS_p3mV4tdFOmcOVZBTIXN52HPDOgDAHhLluxUTdX_s");
-sb.auth.getSession().then(({data})=>{if(data.session)location.replace("app.html")});
+const RECOVERING=/(^|[#&?])type=recovery/.test(location.hash+location.search);
+sb.auth.getSession().then(({data})=>{if(data.session&&!RECOVERING)location.replace("app.html")});
 let mode="up";
 function setMode(m){
   mode=m;go.querySelector("#goTxt").textContent=m==="up"?"Create account":"Log in";
   $("swap").textContent=m==="up"?"Already have an account? Log in":"New here? Create account";
   pass.autocomplete=m==="up"?"new-password":"current-password";
   $("terms").style.display=m==="up"?"":"none";msg.className="msg";msg.textContent="";
+  $("forgotWrap").hidden=m==="up";
 }
 $("swap").onclick=e=>{e.preventDefault();setMode(mode==="up"?"in":"up")};
 /* ---- email verification ---- */
@@ -380,8 +394,49 @@ $("vBack").onclick=e=>{e.preventDefault();clearInterval(cdT);$("verify").hidden=
   setMode("in");
   const d=(p.get("error_description")||"")+" "+(p.get("error_code")||"");
   msg.className="msg";
-  msg.textContent=/expired|invalid|used/i.test(d)?"That confirmation link has expired or was already used. If you already confirmed, log in. If not, log in and we will send you a new link.":"Something went wrong. Try again.";
+  msg.textContent=/expired|invalid|used/i.test(d)?"That link has expired or was already used. If you already confirmed your email, log in. If you were resetting your password, tap Forgot your password to get a new link.":"Something went wrong. Try again.";
 })();
+
+/* ---- forgot password ---- */
+let fpUntil=0;
+$("forgot").onclick=async e=>{
+  e.preventDefault();
+  const em=email.value.trim();
+  if(!emailOk(em)){email.classList.add("bad");msg.className="msg";msg.textContent="Type your email address above first, then tap Forgot your password.";email.focus();return}
+  if(Date.now()<fpUntil){msg.className="msg";msg.textContent="We just sent a link. Please wait a minute before asking again.";return}
+  const a=$("forgot");a.style.pointerEvents="none";msg.className="msg";msg.textContent="Sending…";
+  try{
+    const {error}=await sb.auth.resetPasswordForEmail(em,{redirectTo:REDIRECT});
+    if(error)throw error;
+    fpUntil=Date.now()+60000;
+    msg.className="msg ok";msg.textContent="If there is an account for "+em+", we have sent a link to reset your password. Check your inbox and spam folder.";
+  }catch(err){msg.className="msg";msg.textContent=friendly(err)}
+  finally{a.style.pointerEvents=""}
+};
+function showRecover(){
+  $("form").hidden=true;$("verify").hidden=true;$("rform").hidden=false;
+  history.replaceState(null,"",location.pathname);
+  setTimeout(()=>{try{$("np").focus()}catch(_){}},50);
+}
+sb.auth.onAuthStateChange(ev=>{if(ev==="PASSWORD_RECOVERY")showRecover()});
+if(RECOVERING)setTimeout(()=>{if($("rform").hidden&&!$("form").hidden)showRecover()},1500); // safety net if the event was missed
+$("rform").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const pw=$("np").value,rm=$("rmsg");rm.className="msg";rm.textContent="";
+  if(pw.length<8||!/[A-Za-z]/.test(pw)||!/\d/.test(pw)){$("np").classList.add("bad");rm.textContent="Password needs 8+ characters with a letter and a number.";$("np").focus();return}
+  const b=$("rgo");b.disabled=true;b.classList.add("load");$("rgoTxt").textContent="Saving…";
+  try{
+    const {error}=await sb.auth.updateUser({password:pw});
+    if(error)throw error;
+    rm.className="msg ok";rm.textContent="Password changed. Taking you in…";
+    setTimeout(()=>{location.href="app.html"},900);
+  }catch(err){
+    const m=(err&&err.message)||"";
+    rm.textContent=/same|different from the old/i.test(m)?"Choose a password you have not used before.":/session|jwt|not logged|missing/i.test(m)?"This link has expired. Go back to the login page and tap Forgot your password again.":friendly(err);
+    b.disabled=false;b.classList.remove("load");$("rgoTxt").textContent="Save new password";
+  }
+});
+$("np").addEventListener("input",()=>{$("np").classList.remove("bad");$("rmsg").textContent=""});
 
 async function register(email,password){
   if(mode==="up"){

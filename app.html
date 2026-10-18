@@ -992,11 +992,19 @@ function renderKyc(){
   }[st]||["Verification under review","",""];
   $("kycTitle").textContent=T[0];$("kycTxt").textContent=T[1];$("kycBtn").style.display=T[2]?"flex":"none";$("kycBtn").textContent=T[2];
 }
+let kycTries=0;
 async function loadKyc(uid){
-  let k=null;try{const {data}=await sb.from("kyc").select("*").eq("user_id",uid).maybeSingle();k=data}catch(e){}
+  let k=null,failed=false;
+  try{const {data,error}=await sb.from("kyc").select("*").eq("user_id",uid).maybeSingle();if(error){failed=true;console.error("kyc load",error)}else k=data}catch(e){failed=true;console.error("kyc load",e)}
+  // A failed lookup must not look like "never submitted": keep what we already know, or retry a few times on first load.
+  if(failed){if(S.kycState==="loading"&&kycTries++<3)setTimeout(()=>loadKyc(uid),2500);if(S.kycState!=="loading"||kycTries<=3)return}
   S.kyc=k;S.kycState=k&&["pending","approved","rejected"].includes(k.status)?k.status:"none";S.idOk=S.kycState==="approved";
   setLock();renderAssets();
 }
+// Re-check from the server so a submission or approval made on one device shows on all of them
+const kycRefresh=()=>{if(S.uid&&S.kycState!=="approved"&&S.kycState!=="loading")loadKyc(S.uid)};
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){kycRefresh();try{loadWallet()}catch(e){}}});
+setInterval(()=>{if(!document.hidden)kycRefresh()},20000);
 sb.auth.getSession().then(({data})=>{if(!data.session){location.replace("index.html");return}uem=data.session.user.email||"";S.uid=data.session.user.id;showUser();loadKyc(data.session.user.id);startTour();mgLoad()});
 const side=$("side"),scrim=$("scrim");
 function sideOpen(o){side.classList.toggle("open",o);scrim.classList.toggle("on",o);side.setAttribute("aria-hidden",String(!o));if(o)$("sideClose").focus()}

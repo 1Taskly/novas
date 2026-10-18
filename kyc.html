@@ -152,10 +152,18 @@ function shrink(file){
   });
 }
 async function upload(blob,name){
-  const path=uid+"/"+name+"-"+Date.now()+".jpg";
-  const {error}=await sb.storage.from("kyc").upload(path,blob,{contentType:"image/jpeg"});
-  if(error){console.error("upload",name,error);throw new Error("Upload failed. Check your connection and try again. (Detail: "+name+": "+(error.message||error)+")")}
-  return path;
+  let error,path;
+  for(let i=0;i<3;i++){
+    path=uid+"/"+name+"-"+Date.now()+"-"+i+".jpg";
+    ({error}=await sb.storage.from("kyc").upload(path,blob,{contentType:"image/jpeg"}));
+    if(!error)return path;
+    if(/row-level security|policy|jwt|unauthorized|exceeded|too large|quota/i.test(String(error.message||error)))break; // retrying will not help
+    await new Promise(r=>setTimeout(r,900*(i+1)));
+  }
+  console.error("upload",name,error);
+  const m=String((error&&error.message)||error),
+    why=/row-level security|policy|jwt|unauthorized/i.test(m)?"Your account is not allowed to upload yet. Please contact support.":/exceeded|too large|quota|payload/i.test(m)?"The server is not accepting this file right now. Please contact support.":"Check your connection and try again.";
+  throw new Error("Upload failed. "+why+" (Detail: "+name+": "+m+")");
 }
 /* ---- ID outlines: simple guides drawn to match each ID's real layout (x,y,w,h are fractions of the card) ---- */
 const CW=240,CH=151.4;
