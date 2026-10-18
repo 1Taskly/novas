@@ -52,14 +52,14 @@ input.bad,select.bad{border-color:var(--red)}
 .sbox[hidden]{display:none}
 .sbox img{display:block;width:100%;max-height:240px;object-fit:contain;background:#000}
 .sch{display:block;width:100%;height:auto}
-.sch .cf{fill:var(--bg);stroke:var(--bd);stroke-width:2}
+.sch .cf{fill:var(--bg)}.sch .co{fill:none;stroke:var(--bd);stroke-width:1.4}
 .sch .fl{fill:var(--s2)}
-.sch .ph{fill:var(--s2);stroke:var(--bd);stroke-width:1.5}
+.sch .ph{fill:var(--s2);stroke:var(--bd);stroke-width:.8}.sch .gh{opacity:.55}
 .sch .pf{fill:var(--bd)}
 .sch .bar{fill:var(--bd)}
-.sch .key{fill:color-mix(in srgb,var(--accent) 20%,transparent);stroke:var(--accent);stroke-width:1.5}
-.sch .tx{fill:var(--muted);font-size:10px;font-family:inherit}
-.sch .sg{stroke:var(--bd);stroke-width:1.5;fill:none}
+.sch .key{fill:color-mix(in srgb,var(--accent) 20%,transparent);stroke:var(--accent);stroke-width:.8}
+.sch .tx{fill:var(--muted);font-size:5.8px;font-family:inherit}
+.sch .sg{stroke:var(--bd);stroke-width:.8;fill:none}.sch .bx{fill:none;stroke:var(--bd);stroke-width:.8;stroke-dasharray:2.5 2}.sch .mrz{stroke:var(--bd);stroke-width:3.4;stroke-dasharray:2.4 1.4}.sch .mrz.k{stroke:var(--accent);opacity:.7}
 .scap{font-size:12px;color:var(--soft);line-height:1.5;margin-top:8px}
 .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .acts.one{grid-template-columns:1fr}
@@ -107,17 +107,11 @@ input.bad,select.bad{border-color:var(--red)}
       <div class="title">Your ID</div>
       <label for="idType">ID type</label>
       <select id="idType"><option>Ghana Card</option><option>Driver's license</option><option>Passport</option><option>Voter ID</option></select>
-      <label for="idNum">ID number</label><input id="idNum" autocomplete="off">
+      <label for="idNum">ID number</label><input id="idNum" autocomplete="off"><div class="small" id="idHint" style="margin-top:6px"></div>
       <div class="slot" id="front" tabindex="-1"><div class="lab" id="frontLbl">Front of your ID</div><div class="sbox" id="frontBox"></div><div class="scap" id="frontCap"></div><div class="acts"><button type="button" class="act cam" data-pick="front" data-how="cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>Take photo</button><button type="button" class="act" data-pick="front" data-how="up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload</button></div><input type="file" accept="image/*" capture="environment" hidden id="front_cam"><input type="file" accept="image/*" hidden id="front_up"><div class="sname" id="frontName"></div></div>
       <div class="slot" id="back" tabindex="-1"><div class="lab" id="backLbl">Back of your ID</div><div class="sbox" id="backBox"></div><div class="scap" id="backCap"></div><div class="acts"><button type="button" class="act cam" data-pick="back" data-how="cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>Take photo</button><button type="button" class="act" data-pick="back" data-how="up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload</button></div><input type="file" accept="image/*" capture="environment" hidden id="back_cam"><input type="file" accept="image/*" hidden id="back_up"><div class="sname" id="backName"></div></div>
       <div class="slot" id="self" tabindex="-1"><div class="lab" id="selfLbl">A clear live selfie of your face</div><div class="sbox" id="selfBox"></div><div class="scap" id="selfCap">Taken now with your camera. Face the camera in good light.</div><div class="acts one"><button type="button" class="act cam" data-pick="self" data-how="cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>Take selfie</button></div><input type="file" accept="image/*" capture="user" hidden id="self_cam"><div class="sname" id="selfName"></div></div>
       <div class="small">Use good light. All text on the ID must be readable and your face must be clearly visible.</div>
-    </div>
-
-    <div class="card" style="border-color:var(--infobd);background:var(--infobg)">
-      <div class="title">What happens when you draw a loan</div>
-      <div class="small" style="margin:0;color:var(--infotx);font-size:14px">By drawing a loan, you are selling the coin to Paychant at the current market price at that moment. Paychant then sends the money, in Ghana cedis, to your mobile money or bank account.</div>
-      <label class="chk" style="margin-bottom:0"><input id="sell" type="checkbox"><span>I have read this. I understand that drawing a loan sells the coin to Paychant at the current market price, and the cedis are sent to my mobile money or bank account.</span></label>
     </div>
 
     <label class="chk"><input id="agree" type="checkbox"><span>I confirm these details are true and belong to me, and I allow Paychant to use my ID photos and details to verify my identity and process my loans.</span></label>
@@ -163,36 +157,72 @@ async function upload(file,name){
   if(error)throw new Error("Upload failed. Check your connection and try again.");
   return path;
 }
-/* ---- ID outlines (simple generic guides, one per ID type) ---- */
+/* ---- ID outlines: simple guides drawn to match each ID's real layout (x,y,w,h are fractions of the card) ---- */
+const CW=240,CH=151.4;
+const ROW=(x,ys,w,labels)=>labels.map((l,i)=>({k:"f",x,y:ys[i],w:w[i],l:l.replace("*",""),key:l.endsWith("*")}));
 const SPECS={
  "Ghana Card":{
-  front:{ttl:"Front of your Ghana Card",cap:"Place the whole card inside the photo.",head:"Card title",photo:[16,42,86,104],fx:118,fy:50,fs:24,fields:["Surname","First names","Date of birth","ID number*","Expiry date"],sign:[118,174,184]},
-  back:{ttl:"Back of your Ghana Card",cap:"Show the full back of the card, including any barcode or printed lines.",fx:20,fy:36,fs:28,fields:["Other details","Date issued"],bars:{y:118,label:"Barcode or printed lines*"}}},
+  front:{ttl:"Front of your Ghana Card",cap:"Hold the card flat and show the whole front: your photo, name, date of birth and Personal ID Number (it starts with GHA-).",items:[
+   {k:"logo",x:.118,y:.12,r:10},{k:"b",x:.23,y:.05,w:.47,h:.07},{k:"b",x:.23,y:.14,w:.47,h:.025,light:1},{k:"b",x:.32,y:.19,w:.30,h:.035},{k:"flag",x:.76,y:.04,w:.12,h:.105},
+   {k:"chip",x:.075,y:.30,w:.165,h:.215},
+   ...ROW(.26,[.27,.33,.41,.49,.56,.64,.72,.80,.88,.95],[.22,.30,.22,.16,.14,.26,.16,.12,.14,.14],["Surname*","First names*","Previous names","Nationality","Date of birth*","Personal ID number*","Document number","Place of issue","Issue date","Expiry date"]),
+   {k:"f",x:.53,y:.49,w:.06,l:"Sex"},{k:"f",x:.53,y:.64,w:.08,l:"Height"},
+   {k:"photo",x:.67,y:.37,w:.28,h:.51,key:1,label:"Photo*",lx:.81,ly:.95},{k:"photo",x:.13,y:.62,w:.09,h:.18,ghost:1}]},
+  back:{ttl:"Back of your Ghana Card",cap:"Show the whole back: the Personal ID Number and the three lines of characters at the bottom must be readable.",items:[
+   {k:"b",x:.03,y:.07,w:.18,h:.03,light:1},{k:"nfc",x:.42,y:.065},{k:"lines",x:.03,y:.15,w:.52,n:5,gap:.024},{k:"flag",x:.75,y:.08,w:.12,h:.10},{k:"emblem",x:.80,y:.22,w:.12,h:.33},
+   {k:"f",x:.41,y:.285,w:.25,l:"Personal ID number*",key:1},
+   {k:"box",x:.03,y:.34,w:.51,h:.18},{k:"t",x:.05,y:.395,l:"Signature"},{k:"t",x:.30,y:.395,l:"Country code"},{k:"b",x:.30,y:.415,w:.05,h:.03},{k:"t",x:.05,y:.47,l:"Authority of issue"},{k:"b",x:.05,y:.485,w:.28,h:.025},
+   {k:"b",x:.04,y:.56,w:.30,h:.025},
+   {k:"band",y:.62},{k:"mrz",x:.06,y:.74,w:.89,n:3,gap:.085,key:1,label:"Three lines of characters at the bottom*",ly:.69}]}},
  "Driver's license":{
-  front:{ttl:"Front of your driver's license",cap:"Place the whole license inside the photo.",head:"License title",photo:[16,42,86,104],fx:118,fy:50,fs:24,fields:["Surname","First names","Date of birth","License number*","Expiry date"],sign:[118,174,184]},
-  back:{ttl:"Back of your driver's license",cap:"Show the full back of the license, including any barcode.",fx:20,fy:36,fs:28,fields:["Vehicle classes","Restrictions"],bars:{y:118,label:"Barcode or printed lines*"}}},
+  front:{ttl:"Front of your driver's license",cap:"Show the whole front: your photo, name, date of birth and license number.",items:[
+   {k:"b",x:.05,y:.07,w:.62,h:.09,light:1},{k:"t",x:.07,y:.13,l:"Issuer name and card title"},
+   {k:"photo",x:.05,y:.26,w:.27,h:.52,key:1,label:"Photo*",lx:.185,ly:.86},
+   ...ROW(.38,[.30,.385,.47,.555,.64,.725,.81,.895],[.42,.22,.32,.2,.1,.16,.16,.24],["Full name*","Date of birth*","License number*","Nationality","Class","Issue date","Expiry date","Reference number"])]},
+  back:{ttl:"Back of your driver's license",cap:"Show the whole back, including the renewal dates.",items:[
+   {k:"lines",x:.05,y:.10,w:.60,n:3,gap:.03},
+   {k:"box",x:.05,y:.27,w:.42,h:.22},{k:"t",x:.07,y:.34,l:"First renewal date"},{k:"b",x:.07,y:.38,w:.2,h:.03,key:1},
+   {k:"box",x:.53,y:.27,w:.42,h:.22},{k:"t",x:.55,y:.34,l:"Second renewal date"},{k:"b",x:.55,y:.38,w:.2,h:.03,key:1},
+   {k:"lines",x:.05,y:.62,w:.88,n:4,gap:.045}]}},
  "Voter ID":{
-  front:{ttl:"Front of your Voter ID",cap:"Place the whole card inside the photo.",head:"Card title",photo:[16,42,86,104],fx:118,fy:54,fs:28,fields:["Surname","First names","Date of birth","Voter number*"]},
-  back:{ttl:"Back of your Voter ID",cap:"Show the full back of the card, including any barcode.",fx:20,fy:36,fs:28,fields:["Other details"],bars:{y:118,label:"Barcode or printed lines*"},sign:[20,100,150]}},
+  front:{ttl:"Front of your Voter ID",cap:"Show the whole front: your photo, name, date of birth and voter ID number.",items:[
+   {k:"b",x:.05,y:.07,w:.62,h:.09,light:1},{k:"t",x:.07,y:.13,l:"Issuer name and card title"},
+   {k:"photo",x:.05,y:.26,w:.27,h:.52,key:1,label:"Photo*",lx:.185,ly:.86},
+   ...ROW(.38,[.30,.39,.48,.57,.66,.75,.84],[.30,.36,.20,.06,.30,.18,.26],["Surname*","First names*","Date of birth*","Sex","Voter ID number*","Registration date","Polling station"])]},
+  back:{ttl:"Back of your Voter ID",cap:"Show the whole back of the card, including any QR code.",items:[
+   {k:"lines",x:.05,y:.10,w:.55,n:4,gap:.04},{k:"qr",x:.68,y:.12,s:.34},{k:"lines",x:.05,y:.62,w:.88,n:4,gap:.05}]}},
  "Passport":{
-  front:{ttl:"Photo page of your passport",cap:"Open the passport flat. Show the whole page with your photo and the two lines of characters at the bottom.",h:226,head:"Photo page",photo:[16,40,86,104],fx:118,fy:52,fs:24,fields:["Surname","Given names","Passport number*","Date of birth","Expiry date"],bars:{y:178,label:"Two lines of characters at the bottom*",two:true}},
-  back:{ttl:"Signature page of your passport",cap:"Show the page next to your photo page, with your signature if it has one.",h:226,fx:20,fy:40,fs:28,fields:["Other details"],sign:[20,150,200]}}
+  front:{ttl:"Photo page of your passport",cap:"Open the passport flat and show the whole photo page, including the two lines of characters at the bottom.",h:169,items:[
+   {k:"f",x:.04,y:.10,w:.04,l:"Type"},{k:"f",x:.16,y:.10,w:.08,l:"Country code"},{k:"f",x:.55,y:.10,w:.28,l:"Passport number*",key:1},
+   {k:"photo",x:.04,y:.20,w:.27,h:.45,key:1,label:"Photo*",lx:.175,ly:.71},
+   ...ROW(.37,[.24,.31,.38,.45,.52,.59,.66,.73],[.34,.42,.18,.2,.06,.26,.16,.16],["Surname*","Given names*","Nationality","Date of birth*","Sex","Place of birth","Date of issue","Date of expiry"]),
+   {k:"mrz",x:.04,y:.875,w:.92,n:2,gap:.065,key:1,label:"Two lines of characters at the bottom*",ly:.81}]},
+  back:{ttl:"Page facing your photo page",cap:"Show the page next to your photo page. If it is blank, photograph it anyway.",h:169,items:[
+   {k:"lines",x:.06,y:.12,w:.6,n:4,gap:.05},{k:"sign",x:.06,y:.70,w:.5}]}}
 };
 function art(type,side){
- const S=(SPECS[type]||SPECS["Ghana Card"])[side],W=320,H=S.h||202;
- let g=`<svg class="sch" viewBox="0 0 ${W} ${H}" role="img" aria-label="${S.ttl}"><rect class="cf" x="2" y="2" width="${W-4}" height="${H-4}" rx="14"/>`;
- if(S.head)g+=`<rect class="fl" x="14" y="12" width="292" height="18" rx="5"/><text class="tx" x="22" y="25">${S.head}</text>`;
- if(S.photo){const [x,y,w,h]=S.photo;
-  g+=`<rect class="key" x="${x}" y="${y}" width="${w}" height="${h}" rx="8"/><circle class="pf" cx="${x+w/2}" cy="${y+h*.36}" r="${h*.16}"/><path class="pf" d="M${x+w*.18} ${y+h*.86}Q${x+w/2} ${y+h*.5} ${x+w*.82} ${y+h*.86}Z"/><text class="tx" x="${x+w/2}" y="${y+h+14}" text-anchor="middle">Photo*</text>`}
- (S.fields||[]).forEach((f,i)=>{const key=f.endsWith("*"),t=f.replace("*",""),y=S.fy+i*S.fs,w=(S.photo?150:240)-(i%2)*30;
-  g+=`<text class="tx" x="${S.fx}" y="${y}">${t}${key?"*":""}</text><rect class="${key?"key":"bar"}" x="${S.fx}" y="${y+5}" width="${w}" height="${key?9:6}" rx="3"/>`});
- if(S.bars){const b=S.bars,n=b.two?2:1;
-  g+=`<text class="tx" x="20" y="${b.y}">${b.label.replace("*","")}*</text>`;
-  for(let r=0;r<n;r++){let x=20;const y=b.y+8+r*14;
-   if(b.two){g+=`<rect class="key" x="20" y="${y}" width="280" height="8" rx="3"/>`}
-   else{let i=0;while(x<300){const w=2+((i*7)%4);g+=`<rect class="key" style="stroke:none;fill:var(--accent);opacity:.55" x="${x}" y="${y}" width="${w}" height="30"/>`;x+=w+3;i++}}}}
- if(S.sign){const [x,y,w]=S.sign;g+=`<path class="sg" d="M${x} ${y}H${x+w}"/><text class="tx" x="${x}" y="${y+12}">Signature</text>`}
- return g+`</svg>`}
+ const S=(SPECS[type]||SPECS["Ghana Card"])[side],H=S.h||CH,W=CW,X=v=>+(v*W).toFixed(2),Y=v=>+(v*H).toFixed(2),id="cp"+side;
+ let g=`<svg class="sch" viewBox="0 0 ${W} ${H}" role="img" aria-label="${S.ttl}"><defs><clipPath id="${id}"><rect x="1" y="1" width="${W-2}" height="${H-2}" rx="9"/></clipPath></defs><rect class="cf" x="1" y="1" width="${W-2}" height="${H-2}" rx="9"/><g clip-path="url(#${id})">`;
+ for(const it of S.items){switch(it.k){
+  case "b":g+=`<rect class="${it.key?"key":it.light?"fl":"bar"}" x="${X(it.x)}" y="${Y(it.y)}" width="${X(it.w)}" height="${Y(it.h)}" rx="1.4"/>`;break;
+  case "t":g+=`<text class="tx" x="${X(it.x)}" y="${Y(it.y)}">${it.l}</text>`;break;
+  case "f":g+=`<text class="tx" x="${X(it.x)}" y="${Y(it.y)}">${it.l.replace("*","")}${it.key?"*":""}</text><rect class="${it.key?"key":"bar"}" x="${X(it.x)}" y="${Y(it.y)+1.8}" width="${X(it.w)}" height="${it.key?3.6:2.4}" rx="1.2"/>`;break;
+  case "photo":{const x=X(it.x),y=Y(it.y),w=X(it.w),h=Y(it.h);
+   g+=`<g class="${it.ghost?"gh":""}"><rect class="${it.key?"key":"ph"}" x="${x}" y="${y}" width="${w}" height="${h}" rx="3"/><circle class="pf" cx="${x+w/2}" cy="${y+h*.36}" r="${Math.min(w,h)*.17}"/><path class="pf" d="M${x+w*.2} ${y+h*.88}Q${x+w/2} ${y+h*.5} ${x+w*.8} ${y+h*.88}Z"/></g>`;
+   if(it.label)g+=`<text class="tx" x="${X(it.lx)}" y="${Y(it.ly)}" text-anchor="middle">${it.label}</text>`;break}
+  case "chip":{const x=X(it.x),y=Y(it.y),w=X(it.w),h=Y(it.h);g+=`<rect class="ph" x="${x}" y="${y}" width="${w}" height="${h}" rx="4"/><rect class="bar" x="${x+w*.22}" y="${y+h*.2}" width="${w*.56}" height="${h*.6}" rx="2.5"/><path class="sg" d="M${x+w*.22} ${y+h*.5}H${x+w*.78}M${x+w*.5} ${y+h*.2}V${y+h*.8}"/>`;break}
+  case "logo":g+=`<circle class="ph" cx="${X(it.x)}" cy="${Y(it.y)}" r="${it.r}"/><circle class="bar" cx="${X(it.x)}" cy="${Y(it.y)}" r="${it.r*.55}"/>`;break;
+  case "flag":{const x=X(it.x),y=Y(it.y),w=X(it.w),h=Y(it.h);for(let i=0;i<3;i++)g+=`<rect class="${i==1?"ph":"bar"}" x="${x}" y="${y+i*h/3}" width="${w}" height="${h/3-.4}"/>`;break}
+  case "nfc":{const x=X(it.x),y=Y(it.y);g+=`<rect class="bar" x="${x}" y="${y}" width="11" height="7" rx="1.5"/><path class="sg" d="M${x+14} ${y+.5}q3 3 0 6M${x+17} ${y-.5}q4.5 4 0 8"/>`;break}
+  case "emblem":g+=`<ellipse class="fl" cx="${X(it.x+it.w/2)}" cy="${Y(it.y+it.h/2)}" rx="${X(it.w)/2}" ry="${Y(it.h)/2}"/>`;break;
+  case "lines":for(let i=0;i<it.n;i++)g+=`<rect class="fl" x="${X(it.x)}" y="${Y(it.y+i*it.gap)}" width="${X(it.w)*(i%2?.82:1)}" height="1.6" rx=".8"/>`;break;
+  case "box":g+=`<rect class="bx" x="${X(it.x)}" y="${Y(it.y)}" width="${X(it.w)}" height="${Y(it.h)}" rx="2"/>`;break;
+  case "band":g+=`<rect class="fl" x="0" y="${Y(it.y)}" width="${W}" height="${H}"/>`;break;
+  case "mrz":g+=`<text class="tx" x="${X(it.x)}" y="${Y(it.ly)}">${it.label}</text>`;for(let i=0;i<it.n;i++)g+=`<line class="mrz${it.key?" k":""}" x1="${X(it.x)}" y1="${Y(it.y+i*it.gap)}" x2="${X(it.x+it.w)}" y2="${Y(it.y+i*it.gap)}"/>`;break;
+  case "qr":{const x=X(it.x),y=Y(it.y),z=it.s*CH;g+=`<rect class="bx" x="${x}" y="${y}" width="${z}" height="${z}" rx="2"/>`;[[.12,.12],[.58,.12],[.12,.58]].forEach(([a,b])=>g+=`<rect class="bar" x="${x+z*a}" y="${y+z*b}" width="${z*.3}" height="${z*.3}" rx="1"/>`);g+=`<rect class="bar" x="${x+z*.58}" y="${y+z*.58}" width="${z*.3}" height="${z*.3}" rx="1" opacity=".5"/><text class="tx" x="${x+z/2}" y="${y+z+7}" text-anchor="middle">QR code</text>`;break}
+  case "sign":g+=`<path class="sg" d="M${X(it.x)} ${Y(it.y)}H${X(it.x+it.w)}"/><text class="tx" x="${X(it.x)}" y="${Y(it.y)+8}">Signature (if there is one)</text>`;break;
+ }}
+ return g+`</g><rect class="co" x="1" y="1" width="${W-2}" height="${H-2}" rx="9"/></svg>`}
 function renderGuides(){
  const t=$("idType").value;
  ["front","back"].forEach(k=>{
@@ -201,6 +231,8 @@ function renderGuides(){
   $(k+"Cap").innerHTML=S.cap+" Areas marked <span style=\"color:var(--accent)\">* (blue)</span> must be sharp and readable.";
   if(!files[k]){$(k+"Box").hidden=false;$(k+"Box").innerHTML=art(t,k)}
  });
+ const H={"Ghana Card":["GHA-000000000-0","Use the Personal ID Number on the front. It starts with GHA-."],"Driver's license":["","Use the license number printed on the front."],"Voter ID":["","Use the voter ID number printed on the front."],"Passport":["","Use the passport number from the photo page."]}[t]||["",""];
+ $("idNum").placeholder=H[0];$("idHint").textContent=H[1];
 }
 /* ---- photo slots: Take photo / Upload, one file per slot ---- */
 const files={front:null,back:null,stmt:null,self:null},urls={};
@@ -235,7 +267,6 @@ $("form").addEventListener("submit",async e=>{
   if(miss.length){miss.forEach(n=>$(n[0]).classList.add("bad"));msg.textContent="Please complete the highlighted fields.";focusEl(miss[0][0]);return}
   const age=(Date.now()-new Date(v.dob).getTime())/31557600000;
   if(!(age>=18&&age<110)){$("dob").classList.add("bad");msg.textContent="You must be at least 18 years old to borrow.";return}
-  if(!$("sell").checked){msg.textContent="Please read what happens when you draw a loan and tick the first box.";focusEl("sell");return}
   if(!$("agree").checked){msg.textContent="Please tick the box to confirm.";return}
   if(!uid){msg.textContent="Please log in again.";return}
   $("go").disabled=true;$("go").textContent="Uploading…";

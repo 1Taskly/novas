@@ -972,11 +972,11 @@ function renderBiz(){
   if(wa)x.push(`<a ${btn} href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>`);
   if(b.phone)x.push(`<a ${btn} href="tel:${esc(b.phone)}">Call us</a>`);
   if(b.email)x.push(`<a ${btn} href="mailto:${esc(b.email)}?subject=NodeTray%20support">Email us</a>`);
-  if(b.maps)x.push(`<a ${btn} href="${esc(b.maps)}" target="_blank" rel="noopener">Find us on Google Maps</a>`);
+  if(b.maps)x.push(`<a ${btn} href="${esc(b.maps)}" target="_blank" rel="noopener">Find our Ghana office</a>`);
   $("helpBtns").innerHTML=x.join("");
   $("helpInfo").innerHTML=[b.hours?"Support hours: "+esc(b.hours):"",""].filter(Boolean).join("<br>");
   $("sideHelp").style.display=x.length?"":"none";
-  $("foot").innerHTML=(b.address?`<div class="fa"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Office: ${b.maps?`<a href="${esc(b.maps)}" target="_blank" rel="noopener" style="color:inherit">${esc(b.address)}</a>`:esc(b.address)}</span></div>`:"")+`<div class="fb">© ${new Date().getFullYear()} ${esc(b.name)}</div>`;
+  $("foot").innerHTML=(b.address?`<div class="fa"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Ghana office: ${b.maps?`<a href="${esc(b.maps)}" target="_blank" rel="noopener" style="color:inherit">${esc(b.address)}</a>`:esc(b.address)}</span></div>`:"")+`<div class="fb">© 2022–${new Date().getFullYear()} ${esc(b.name)}</div>`;
 }
 renderBiz();
 S.kyc=null;S.kycState="loading";
