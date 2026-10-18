@@ -121,6 +121,13 @@ input.bad{border-color:var(--red)}
 .inst-b{flex:none;border:0;border-radius:10px;background:var(--accent);color:#fff;font-weight:700;font-size:13px;padding:0 14px;min-height:38px}
 .inst-x{flex:none;background:none;border:0;color:#6f6f75;font-size:22px;line-height:1;padding:6px 8px}
 .inst[data-mode="prompt"] [data-for="ios"],.inst[data-mode="ios"] [data-for="prompt"]{display:none}
+.vbox{text-align:center}
+.vic{width:54px;height:54px;margin:2px auto 12px;border-radius:16px;background:#101a2b;border:1px solid #1f3355;display:flex;align-items:center;justify-content:center}
+.vic svg{width:26px;height:26px;stroke:var(--blue2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.vh{font-size:21px;letter-spacing:-.4px;margin:0 0 8px}
+.vp{font-size:14px;color:var(--muted);line-height:1.55;margin:0 0 6px;word-break:break-word}.vp b{color:var(--text)}
+.vs{font-size:12px;color:#6f6f75;margin:0 0 14px}
+.vsec{background:#202020;border:1px solid #303030}.vsec:disabled{opacity:.6;cursor:not-allowed}
 .trust span::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:7px;vertical-align:middle}
 </style>
 </head>
@@ -185,6 +192,16 @@ input.bad{border-color:var(--red)}
     <div class="fine" id="terms">By creating an account you agree to the Terms of Service and Privacy Policy.</div>
     <div class="fine"><a href="#" id="swap" style="color:var(--accent);font-weight:700;text-decoration:none">Already have an account? Log in</a></div>
   </form>
+
+  <div id="verify" class="card vbox" hidden>
+    <div class="vic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M4 7l8 6 8-6"/></svg></div>
+    <h2 class="vh">Check your email</h2>
+    <p class="vp">We sent a confirmation link to <b id="vEmail"></b>. Open it to activate your account.</p>
+    <p class="vs">Can't see it? Check your spam or junk folder.</p>
+    <button type="button" id="vResend" class="btn vsec">Resend email</button>
+    <div id="vMsg" class="msg" role="status"></div>
+    <div class="fine"><a href="#" id="vBack" style="color:var(--accent);font-weight:700;text-decoration:none">Use a different email</a></div>
+  </div>
 
   <div class="trust"><span>17+ coins</span><span>Fast payouts</span><span>ID verified</span></div>
 
@@ -317,8 +334,6 @@ $("eye").onclick=()=>{
 
 const sb=supabase.createClient("https://djkcnhlstjvozrtfcqse.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqa2NuaGxzdGp2b3pydGZjcXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMDc5MDYsImV4cCI6MjEwNjg4MzkwNn0.lS_p3mV4tdFOmcOVZBTIXN52HPDOgDAHhLluxUTdX_s");
 sb.auth.getSession().then(({data})=>{if(data.session)location.replace("app.html")});
-sb.auth.onAuthStateChange((event,session)=>{if(session&&(event==="SIGNED_IN"||event==="INITIAL_SESSION"))location.replace("app.html")});
-(function(){const h=new URLSearchParams(location.hash.slice(1));if(h.get("error_code")==="otp_expired"||h.get("error")==="access_denied"){history.replaceState(null,"",location.pathname);setTimeout(()=>{setMode("in");msg.className="msg";msg.textContent="That confirmation link is invalid or has expired. Try logging in - if your email is already confirmed it will work."},0)}})();
 let mode="up";
 function setMode(m){
   mode=m;go.querySelector("#goTxt").textContent=m==="up"?"Create account":"Log in";
@@ -327,15 +342,61 @@ function setMode(m){
   $("terms").style.display=m==="up"?"":"none";msg.className="msg";msg.textContent="";
 }
 $("swap").onclick=e=>{e.preventDefault();setMode(mode==="up"?"in":"up")};
+/* ---- email verification ---- */
+const REDIRECT=new URL("index.html",location.href).href; // where the confirmation link sends people back to
+let pendingEmail="",cdT=null;
+function friendly(err){
+  const m=(err&&err.message)||"";
+  if(/invalid login credentials/i.test(m))return "Wrong email or password.";
+  if(/rate limit|too many|security purposes/i.test(m)||(err&&err.status===429))return "Too many attempts. Please wait a few minutes and try again.";
+  if(/already registered|already been registered/i.test(m))return "An account with this email already exists. Log in instead.";
+  if(/failed to fetch|network/i.test(m))return "Network problem. Check your connection and try again.";
+  return m||"Something went wrong. Try again.";
+}
+function cooldown(sec){
+  clearInterval(cdT);let n=sec;const b=$("vResend");
+  const tick=()=>{if(n>0){b.disabled=true;b.textContent="Resend email in "+n+"s";n--}else{clearInterval(cdT);b.disabled=false;b.textContent="Resend email"}};
+  tick();cdT=setInterval(tick,1000);
+}
+function showVerify(em,note){
+  pendingEmail=em;$("vEmail").textContent=em;
+  $("form").hidden=true;$("verify").hidden=false;
+  const vm=$("vMsg");vm.className="msg";vm.textContent=note||"";
+}
+$("vResend").onclick=async()=>{
+  const b=$("vResend"),vm=$("vMsg");b.disabled=true;vm.className="msg";vm.textContent="";
+  try{
+    const {error}=await sb.auth.resend({type:"signup",email:pendingEmail,options:{emailRedirectTo:REDIRECT}});
+    if(error)throw error;
+    vm.className="msg ok";vm.textContent="Sent. Check your inbox.";cooldown(60);
+  }catch(err){vm.textContent=friendly(err);b.disabled=false}
+};
+$("vBack").onclick=e=>{e.preventDefault();clearInterval(cdT);$("verify").hidden=true;$("form").hidden=false;setMode("up");email.focus()};
+// Back from an expired or already-used confirmation link
+(function(){
+  const p=new URLSearchParams(location.hash.replace(/^#/,""));
+  if(!(p.get("error")||p.get("error_code")))return;
+  history.replaceState(null,"",location.pathname+location.search);
+  setMode("in");
+  const d=(p.get("error_description")||"")+" "+(p.get("error_code")||"");
+  msg.className="msg";
+  msg.textContent=/expired|invalid|used/i.test(d)?"That confirmation link has expired or was already used. If you already confirmed, log in. If not, log in and we will send you a new link.":"Something went wrong. Try again.";
+})();
+
 async function register(email,password){
   if(mode==="up"){
-    const {data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:"https://nodetray.com/app.html"}});
+    const {data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:REDIRECT}});
     if(error)throw error;
-    if(!data.session){setMode("in");throw {message:"Account created. Check your email to confirm it, then log in.",info:true}}
-  }else{
-    const {error}=await sb.auth.signInWithPassword({email,password});
-    if(error)throw error;
+    // An already-registered email comes back with no identities (and no error) when confirmation is on
+    if(data.user&&Array.isArray(data.user.identities)&&data.user.identities.length===0){setMode("in");throw {message:"An account with this email already exists. Log in instead."}}
+    return data.session?"ok":"verify";
   }
+  const {error}=await sb.auth.signInWithPassword({email,password});
+  if(error){
+    if(error.code==="email_not_confirmed"||/not confirmed/i.test(error.message||""))return "unconfirmed";
+    throw error;
+  }
+  return "ok";
 }
 
 $("form").addEventListener("submit",async e=>{
@@ -344,13 +405,15 @@ $("form").addEventListener("submit",async e=>{
   if(!emailOk(em)){email.classList.add("bad");msg.textContent="Enter a valid email address.";email.focus();return}
   if(pw.length<8||!/[A-Za-z]/.test(pw)||!/\d/.test(pw)){pass.classList.add("bad");msg.textContent="Password needs 8+ characters with a letter and a number.";pass.focus();return}
   go.disabled=true;go.classList.add("load");$("goTxt").textContent=mode==="up"?"Creating account…":"Logging in…";
+  const reset=()=>{go.disabled=false;go.classList.remove("load");$("goTxt").textContent=mode==="up"?"Create account":"Log in"};
   try{
-    await register(em,pw);
+    const r=await register(em,pw);
+    if(r==="verify"){reset();showVerify(em);cooldown(60);return}
+    if(r==="unconfirmed"){reset();showVerify(em,"Please confirm your email first. Open the link we sent you, or resend it below.");cooldown(0);return}
     msg.className="msg ok";msg.textContent=mode==="up"?"Account created. Taking you in…":"Welcome back. Taking you in…";
     setTimeout(()=>{location.href="app.html"},900);
   }catch(err){
-    msg.className=err.info?"msg ok":"msg";msg.textContent=err.message||"Something went wrong. Try again.";
-    go.disabled=false;go.classList.remove("load");$("goTxt").textContent=mode==="up"?"Create account":"Log in";
+    msg.className="msg";msg.textContent=friendly(err);reset();
   }
 });
 </script>

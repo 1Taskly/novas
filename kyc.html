@@ -67,7 +67,7 @@ input.bad,select.bad{border-color:var(--red)}
 .act.cam{border-color:var(--accent);color:var(--accent)}
 .act svg{width:18px;height:18px;flex:none}
 .sname{font-size:12px;color:var(--green);margin-top:8px;word-break:break-all}
-.sname:empty{display:none}
+.sname:empty{display:none}.sname.err{color:var(--red)}.sname.wait{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -145,16 +145,16 @@ function shrink(file){
       const m=1600,k=Math.min(1,m/Math.max(img.width,img.height)),c=document.createElement("canvas");
       c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
       c.getContext("2d").drawImage(img,0,0,c.width,c.height);
-      URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(new Error("Could not read a photo.")),"image/jpeg",.85);
+      URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(new Error("We could not read this photo. Please try another one (JPG or PNG).")),"image/jpeg",.85);
     };
-    img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("One of the photos could not be read. Use a JPG or PNG."))};
+    img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("We could not read this photo. Please try another one (JPG or PNG)."))};
     img.src=u;
   });
 }
-async function upload(file,name){
-  const blob=await shrink(file),path=uid+"/"+name+"-"+Date.now()+".jpg";
+async function upload(blob,name){
+  const path=uid+"/"+name+"-"+Date.now()+".jpg";
   const {error}=await sb.storage.from("kyc").upload(path,blob,{contentType:"image/jpeg"});
-  if(error)throw new Error("Upload failed. Check your connection and try again.");
+  if(error){console.error("upload",name,error);throw new Error("Upload failed. Check your connection and try again. (Detail: "+name+": "+(error.message||error)+")")}
   return path;
 }
 /* ---- ID outlines: simple guides drawn to match each ID's real layout (x,y,w,h are fractions of the card) ---- */
@@ -236,19 +236,25 @@ function renderGuides(){
 }
 /* ---- photo slots: Take photo / Upload, one file per slot ---- */
 const files={front:null,back:null,stmt:null,self:null},urls={};
-function setFile(k,f){
+let busy=0;
+async function setFile(k,f){
  if(!f)return;
- if(!/^image\//.test(f.type||"")){$("msg").className="msg";$("msg").textContent="Please choose a photo (JPG or PNG).";return}
- if(urls[k])URL.revokeObjectURL(urls[k]);
- files[k]=f;urls[k]=URL.createObjectURL(f);
- const box=$(k+"Box");box.hidden=false;box.innerHTML="";
- const im=new Image();im.alt="Your photo";im.src=urls[k];box.appendChild(im);
- $(k+"Name").textContent="Photo added ✓";
- $(k).classList.remove("bad");
- if(k!=="self"&&k!=="stmt")$(k+"Cap").textContent="Check that all text is readable. Use Take photo or Upload to replace it.";
+ const nm=$(k+"Name");nm.className="sname wait";nm.textContent="Processing photo…";busy++;
+ try{
+  const blob=await shrink(f);              // read it now, so nothing depends on the original file later
+  if(urls[k])URL.revokeObjectURL(urls[k]);
+  files[k]=blob;urls[k]=URL.createObjectURL(blob);
+  const box=$(k+"Box");box.hidden=false;box.innerHTML="";
+  const im=new Image();im.alt="Your photo";im.src=urls[k];box.appendChild(im);
+  nm.className="sname";nm.textContent="Photo added ✓";
+  $(k).classList.remove("bad");
+  if(k!=="self"&&k!=="stmt")$(k+"Cap").textContent="Check that all text is readable. Use Take photo or Upload to replace it.";
+ }catch(err){
+  nm.className="sname err";nm.textContent=(err&&err.message)||"We could not read this photo. Please try another one (JPG or PNG).";
+ }finally{busy--}
 }
 ["front","back","stmt","self"].forEach(k=>{
- ["cam","up"].forEach(h=>{const inp=$(k+"_"+h);if(!inp)return;inp.addEventListener("change",()=>{setFile(k,inp.files[0]);inp.value=""})});
+ ["cam","up"].forEach(h=>{const inp=$(k+"_"+h);if(!inp)return;inp.addEventListener("change",async()=>{await setFile(k,inp.files[0]);inp.value=""})});
  document.querySelectorAll('[data-pick="'+k+'"]').forEach(b=>b.addEventListener("click",()=>$(k+"_"+b.dataset.how).click()));
 });
 $("stmt").querySelector(".sbox").hidden=true;$("self").querySelector(".sbox").hidden=true;
@@ -268,12 +274,13 @@ $("form").addEventListener("submit",async e=>{
   const age=(Date.now()-new Date(v.dob).getTime())/31557600000;
   if(!(age>=18&&age<110)){$("dob").classList.add("bad");msg.textContent="You must be at least 18 years old to borrow.";return}
   if(!$("agree").checked){msg.textContent="Please tick the box to confirm.";return}
+  if(busy>0){msg.textContent="Please wait a moment. A photo is still being prepared.";return}
   if(!uid){msg.textContent="Please log in again.";return}
-  $("go").disabled=true;$("go").textContent="Uploading…";
+  $("go").disabled=true;$("go").textContent="Uploading 1 of 4…";
   try{
-    const front_path=await upload(files.front,"front");
-    const back_path=await upload(files.back,"back");
-    const selfie_path=await upload(files.self,"selfie");
+    const front_path=await upload(files.front,"front");$("go").textContent="Uploading 2 of 4…";
+    const back_path=await upload(files.back,"back");$("go").textContent="Uploading 3 of 4…";
+    const selfie_path=await upload(files.self,"selfie");$("go").textContent="Uploading 4 of 4…";
     const momo_statement_path=await upload(files.stmt,"statement");
     const row={user_id:uid,first_name:v.fn,last_name:v.ln,date_of_birth:v.dob,phone:v.phone,address:v.addr,occupation:v.job,employer:$("emp").value.trim()||null,id_type:$("idType").value,id_number:v.idn,front_path,back_path,selfie_path,status:"pending",reject_reason:null};
     // momo_network needs a column in the kyc table (see the SQL in my notes). If it is missing, save everything else so nobody is blocked.
@@ -281,7 +288,7 @@ $("form").addEventListener("submit",async e=>{
     // The statement column is required. If it is missing the setup is not finished, so stop instead of losing the photo.
     if(error&&/momo_statement_path/i.test(error.message||""))throw new Error("We could not save your statement yet. Please try again later.");
     if(error&&/momo_network/i.test(error.message||""))({error}=await sb.from("kyc").upsert({...row,momo_statement_path},{onConflict:"user_id"}));
-    if(error)throw new Error("Could not save your details. Try again.");
+    if(error){console.error("save kyc",error);throw new Error("Could not save your details. Try again. (Detail: "+(error.message||error)+")")}
     msg.className="msg ok";msg.textContent="Submitted. Taking you to your dashboard…";
     setTimeout(()=>location.href="app.html",1200);
   }catch(err){
