@@ -314,12 +314,44 @@ async function loadLoans(){
   if(!rows.length){L.innerHTML='<div class="empty">No loans yet.</div>';return}
   const {data:ps}=await sb.from("profiles").select("id,email");
   const em=Object.fromEntries((ps||[]).map(p=>[p.id,p.email]));
+  const byId=Object.fromEntries(rows.map(r=>[String(r.id),r]));
   L.innerHTML=rows.map(r=>{const nw=r.usd!=null,st=r.repaid?["repaid","ok"]:r.status==="paid"?["paid out","wait"]:["to pay out","wait"];
     const body=nw?`Loan: <b>$${Number(r.usd).toFixed(2)}</b> · GHS <b>${Number(r.ghs).toFixed(2)}</b> · ${esc(r.months)} month(s)<br>Repays: GHS <b>${Number(r.total_ghs).toFixed(2)}</b> · paid so far GHS <b>${Number(r.paid_ghs).toFixed(2)}</b><br>Frozen in their balance: <b>$${Number(r.freeze_usd).toFixed(2)}</b>${r.repaid?" (released)":""}`
       :`Draw: <b>${Number(r.sol).toFixed(4)} SOL</b> · GHS <b>${Number(r.ghs).toFixed(2)}</b> · ${esc(r.months)} month(s)<br>Collateral: GHS <b>${Number(r.collateral_ghs).toFixed(2)}</b> ${r.collateral_paid?"(paid)":"(unpaid)"}`;
     return `<div class="card"><div class="head"><span>${esc(em[r.user_id]||r.user_id)}</span><span class="pill ${st[1]}">${st[0]}</span></div>
     <div class="kv">${new Date(r.created_at).toLocaleString()}<br>${body}<br>Pay out to: <b>${esc(r.payout_network)}${r.payout_bank?" · "+esc(r.payout_bank):""}</b> · ${esc(r.payout_name)} · ${esc(r.payout_number)}</div>
-    ${r.status!=="paid"?`<div class="row" style="margin-top:12px"><button class="btn sm" data-id="${esc(r.id)}">Mark paid out</button></div>`:""}</div>`}).join("");
+    <div class="row" style="margin-top:12px">${r.status!=="paid"?`<button class="btn sm" data-id="${esc(r.id)}">Mark paid out</button>`:""}<button class="btn sm ghost" data-edit="${esc(r.id)}">Edit receiver</button></div>
+    <div data-ed="${esc(r.id)}" hidden></div></div>`}).join("");
+  L.querySelectorAll("button[data-edit]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.edit,r=byId[id],box=[...L.querySelectorAll("[data-ed]")].find(x=>x.dataset.ed===id);
+    if(!r||!box)return;
+    if(!box.hidden){box.hidden=true;return}
+    const nets=["MTN MoMo","Telecel Cash","AirtelTigo Money","Bank account"],cur=r.payout_network||"";
+    const opts=(nets.includes(cur)||!cur?nets:[cur,...nets]).map(n=>`<option${n===cur?" selected":""}>${esc(n)}</option>`).join("");
+    box.innerHTML=`<div style="margin-top:6px">
+      <label>Network</label><select class="ed-net">${opts}</select>
+      <div class="ed-bw"${cur==="Bank account"?"":" hidden"}><label>Bank name</label><input class="ed-bank" value="${esc(r.payout_bank||"")}"></div>
+      <label>Receiver name</label><input class="ed-name" value="${esc(r.payout_name||"")}" autocomplete="off">
+      <label>Receiver number</label><input class="ed-num" inputmode="tel" value="${esc(r.payout_number||"")}" autocomplete="off">
+      <div class="row" style="margin-top:12px"><button class="btn sm ed-save">Save changes</button><button class="btn sm ghost ed-cancel" type="button">Cancel</button></div>
+      <div class="msg ed-msg" role="status"></div></div>`;
+    box.hidden=false;
+    const q=s=>box.querySelector(s),msg=q(".ed-msg");
+    q(".ed-net").onchange=()=>{q(".ed-bw").hidden=q(".ed-net").value!=="Bank account"};
+    q(".ed-cancel").onclick=()=>{box.hidden=true};
+    q(".ed-save").onclick=async()=>{
+      const net=q(".ed-net").value,name=q(".ed-name").value.trim(),num=q(".ed-num").value.trim(),bank=net==="Bank account"?q(".ed-bank").value.trim():"";
+      const digits=num.replace(/[\s-]/g,"");
+      msg.className="msg";
+      if(name.length<2){msg.textContent="Enter the receiver's name.";return}
+      if(!/^\+?\d{9,20}$/.test(digits)){msg.textContent="Enter a valid number (digits only, at least 9).";return}
+      if(net==="Bank account"&&!bank){msg.textContent="Enter the bank name.";return}
+      const sv=q(".ed-save");sv.disabled=true;
+      const {error}=await sb.from("loans").update({payout_network:net,payout_bank:bank||null,payout_name:name,payout_number:digits}).eq("id",id);
+      if(error){msg.textContent="Could not save. "+error.message;sv.disabled=false;return}
+      msg.className="msg ok";msg.textContent="Saved.";setTimeout(loadLoans,500);
+    };
+  });
   L.querySelectorAll("button[data-id]").forEach(b=>b.onclick=async()=>{
     const {error}=await sb.from("loans").update({status:"paid"}).eq("id",b.dataset.id);
     if(error){alert("Could not save. "+error.message);return}
