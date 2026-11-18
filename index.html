@@ -102,6 +102,9 @@ input.bad{border-color:var(--red)}
 .meter{display:flex;gap:5px;margin-top:9px}
 .meter i{flex:1;height:4px;border-radius:4px;background:#2a2a2a;transition:background .25s}
 .hint{font-size:12px;color:#85858a;margin-top:7px;line-height:1.45;min-height:17px}
+.gbtn{border:1px solid #dadce0;border-radius:14px;background:#fff;color:#1f1f1f;font-weight:700;padding:0 18px;min-height:50px;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .15s,opacity .2s}
+.gbtn:active{transform:scale(.985)}.gbtn:disabled{opacity:.55;cursor:not-allowed}
+.or{display:flex;align-items:center;gap:10px;margin:14px 0 4px;color:var(--muted,#8a8a90);font-size:12px}.or:before,.or:after{content:"";flex:1;height:1px;background:var(--line,#2a2a2a)}
 .btn{border:0;border-radius:14px;background:var(--accent);color:#fff;font-weight:750;padding:0 18px;min-height:50px;width:100%;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .15s,opacity .2s}
 .btn:active{transform:scale(.985)}
 .btn:disabled{opacity:.55;cursor:not-allowed}
@@ -174,6 +177,8 @@ input.bad{border-color:var(--red)}
   <p class="lead">Buy and sell Bitcoin, Ethereum, Solana and meme coins like Dogecoin. Or take a loan and pay it back in instalments.</p>
 
   <form id="form" class="card" novalidate>
+    <button type="button" id="gbtn" class="gbtn"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg><span>Continue with Google</span></button>
+    <div class="or" id="orRow">or use email</div>
     <div class="field">
       <label for="email">Email address</label>
       <input id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="you@gmail.com" required>
@@ -355,6 +360,11 @@ function setMode(m){
   $("terms").style.display=m==="up"?"":"none";msg.className="msg";msg.textContent="";
   $("forgotWrap").hidden=m==="up";
 }
+$("gbtn").onclick=async()=>{
+  const b=$("gbtn");b.disabled=true;msg.className="msg";msg.textContent="";
+  try{const {error}=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:REDIRECT}});if(error)throw error}
+  catch(err){msg.textContent=(err&&err.message)||"Google sign-in failed. Try again.";b.disabled=false}
+};
 $("swap").onclick=e=>{e.preventDefault();setMode(mode==="up"?"in":"up")};
 /* ---- email verification ---- */
 const REDIRECT=new URL("index.html",location.href).href; // where the confirmation link sends people back to
