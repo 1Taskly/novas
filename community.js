@@ -10,10 +10,12 @@ const FIRST=["Mike","Jake","Tyler","Chris","Brandon","Austin","Cody","Dustin","T
 const NICK=["Big Mike","JT","TJ","Dave","Tex","Smitty","Doc","Chip","Bubba","Mac","Ace","Slim","Cap","Rev","Hutch","Rocco","Moose","Duke","Ziggy","Sully"];
 const SUF=["_trades","_hodl","_fx","_charts","_dca","_swing","_risk","_scalps","_ta","_flow","21","99","_btc","_daily","_longs","_atl","_nyc","_tx","_fl","_chi"];
 const COLORS=["#f7931a","#627eea","#9945ff","#26a17b","#e8505b","#2d9cdb","#f2994a","#bb6bd9","#27ae60","#eb5757","#56ccf2","#f2c94c","#6fcf97","#ff7a59"];
-const AVATAR_BASE="avatars/",AVATAR_COUNT=293,AVATAR_EXT="webp"; /* put numbered files in /avatars (1.jpg, 2.jpg ...) and set AVATAR_COUNT */
+const AVATAR_BASE="avatars/",AVATAR_COUNT=300,AVATAR_EXT="webp"; /* put numbered files in /avatars (1.jpg, 2.jpg ...) and set AVATAR_COUNT */
 const LAST=["A","B","C","D","E","G","H","J","K","L","M","N","P","R","S","T","W"];
+const NAMECOL=["#e03a5f","#8b5cf6","#2f7bff","#12a15a","#e8890c","#d946ef","#0ea5b7","#ef4444","#7c3aed","#c98a04","#0f9d8a","#f0568a"];
 const PEOPLE=[],seen=new Set();
 for(let i=0;i<1000;i++){const f=FIRST[(i*7+Math.floor(i/50))%FIRST.length];let n;const k=i%7;
+  const role=i%40===1?"mod":i%20<7?"new":i%20<14?"vet":"chat";
   if(k===0)n=f.toLowerCase()+SUF[i%SUF.length];
   else if(k===1)n=NICK[i%NICK.length].replace(/ /g,"")+ri0(10,99);
   else if(k===2)n=f+"_"+LAST[i%LAST.length];
@@ -21,11 +23,12 @@ for(let i=0;i<1000;i++){const f=FIRST[(i*7+Math.floor(i/50))%FIRST.length];let n
   else if(k===4)n="the_"+f.toLowerCase()+(i>350?ri0(1,9):"");
   else if(k===5)n=f.toLowerCase()+LAST[(i*3)%LAST.length].toLowerCase()+ri0(1,98);
   else n=f+LAST[(i*5)%LAST.length]+ri0(80,99);
+  if(role==="mod")n=f+"_Mod";
   while(seen.has(n))n+=ri0(0,9);seen.add(n);
-  PEOPLE.push({n,c:COLORS[(i*5+3)%COLORS.length],role:i%20<7?"new":i%20<14?"vet":"chat",img:(AVATAR_COUNT&&i%4!==0)?AVATAR_BASE+(((i*7919)%AVATAR_COUNT)+1)+"."+AVATAR_EXT:"",
+  PEOPLE.push({n,c:COLORS[(i*5+3)%COLORS.length],nc:NAMECOL[(i*7+3)%NAMECOL.length],role,gem:role==="chat"&&Math.random()<.35,num:AVATAR_COUNT?((i*7919)%AVATAR_COUNT)+1:0,img:AVATAR_COUNT?AVATAR_BASE+(((i*7919)%AVATAR_COUNT)+1)+"."+AVATAR_EXT:"",
     style:{lower:Math.random()<.6,emoji:Math.random()<.35,typo:Math.random()<.3,terse:Math.random()<.4}})}
 function ri0(a,b){return Math.floor(a+Math.random()*(b-a+1))}
-const ME={n:"you",c:"#a995f5",me:1};
+const ME={n:"you",c:"#2f7bff",nc:"#2f7bff",me:1};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const rnd=(a,b)=>a+Math.random()*(b-a),ri=(a,b)=>Math.floor(rnd(a,b+1)),pick=a=>a[Math.floor(Math.random()*a.length)];
@@ -95,11 +98,15 @@ function topicThread(){
     return[[0,a,br],[6,who("chat"),pick(["good call, been meaning to check that","yeah that one is on my list too","I have thoughts, give me a sec"])]]}
   const t=TOPICS[TP.i];
   return pick(t.kind==="price"?[market,market,topicChat,topicChat]:t.kind==="setup"?[card,card,result,topicChat]:[risk,lesson,topicChat,topicChat])()}
+function modThread(){const m=who("mod"),a=who("new");return pick([
+ [[0,m,"Quick reminder: never share your seed phrase, password or verification code with anyone. Our team will never DM you first."],[6,a,"good to know, thanks 🙏"]],
+ [[0,a,"can I post a screenshot here?"],[6,m,mention(a)+" yes, but hide your account numbers, phone number and any personal info first"],[5,a,"will do, thanks"]],
+ [[0,m,"Before you take a loan, read the repayment total on the draw screen. Only borrow what you can repay."],[6,who("vet"),"this ^ plan the repayment first, then borrow"]]])}
 function banter(){return[[0,who("chat"),pick(CHAT)],[5,who("chat"),pick(CHAT)]]}
 function meme(){return[[0,who("chat"),pick(MEME)],[4,who("chat"),pick(["😂😂","too real","this is my whole personality 😭","felt this in my soul"])]]}
 function poll(){const [q,o]=pick(POLLS);return[[0,who("vet"),{poll:1,q,o,v:o.map(()=>ri(2,9)),my:-1}]]}
 function risk(){const a=who("vet");return[[0,a,pick(["rule number one for me: never risk more than 1 to 2 percent of the account on a single trade","position size matters more than the entry. a great entry with a huge size still ruins you"])],[6,who("vet"),"1 percent if the setup is average, 2 if I really like it. never more"],[7,who("new"),mention(a)+" how do you work out the size?"],[7,a,"risk amount divided by the distance to your stop. smaller stop distance means a bigger size, that is the formula"]]}
-const F={lounge:[topicThread,topicThread,topicThread,topicThread,topicThread,topicThread,topicThread,meme,poll,()=>qa("loans"),()=>qa("new"),banter],general:[topicThread,topicThread,topicThread,topicThread,topicThread,topicThread,meme,poll],ideas:[topicThread,topicThread,topicThread,topicThread,poll],loans:[()=>qa("loans"),()=>qa("loans"),()=>qa("loans"),banter,poll],new:[()=>qa("new"),()=>qa("new"),()=>qa("new"),()=>qa("new"),banter,meme]};
+const F={lounge:[modThread,topicThread,topicThread,topicThread,topicThread,topicThread,topicThread,topicThread,meme,poll,()=>qa("loans"),()=>qa("new"),banter],general:[topicThread,topicThread,topicThread,topicThread,topicThread,topicThread,meme,poll],ideas:[topicThread,topicThread,topicThread,topicThread,poll],loans:[()=>qa("loans"),()=>qa("loans"),()=>qa("loans"),banter,poll],new:[()=>qa("new"),()=>qa("new"),()=>qa("new"),()=>qa("new"),banter,meme]};
 const REPLY=[[/\b(hi|hey|hello|gm|good (morning|evening))\b/i,["gm 👋 welcome in","hey, glad you are here 👋","hello! what are you trading these days?"]],
 [/\b(loan|borrow|collateral|repay|late fee)\b/i,["the loan screen shows the collateral, fees and every payment date before you confirm. read it carefully and only borrow what you can repay"]],
 [/\b(btc|bitcoin)\b/i,["BTC around __BTC__ here. I keep my size small until it picks a direction","bitcoin sets the mood for everything else so I watch it first"]],
@@ -109,126 +116,126 @@ const REPLY=[[/\b(hi|hey|hello|gm|good (morning|evening))\b/i,["gm 👋 welcome 
 const GENERIC=["interesting take","fair point","I think it depends on your risk","same here, still learning every day","good one 👌","true"];
 
 /* ---- state ---- */
-const state={room:"lounge",newCount:0,msgs:{},unread:0,open:false,online:ri(380,620),typing:null,nid:1,greeted:false,voted:{}};
-ROOMS.forEach(r=>state.msgs[r.id]=[]);
+const state={room:"lounge",newCount:0,msgs:{lounge:[]},open:false,online:ri(380,620),nid:1,greeted:false,voted:{}};
 const TYPOS=[[/\bthe\b/,"teh"],[/\bthink\b/,"thnk"],[/\bdefinitely\b/,"definately"],[/\bbecause\b/,"bc"],[/\bhonestly\b/,"honestly tbh"],[/\byou\b/,"u"],[/\bto be honest\b/,"tbh"],[/\bright now\b/,"rn"]];
-function human(p,t){if(typeof t!=="string"||p.me||!p.style)return t;const st=p.style;
+function human(p,t){if(typeof t!=="string"||p.me||!p.style||p.role==="mod")return t;const st=p.style;
   if(st.lower)t=t.charAt(0).toLowerCase()+t.slice(1);
   if(st.terse&&t.length>90&&Math.random()<.5)t=t.split(/[.,] /)[0];
   if(st.typo&&Math.random()<.35){const x=pick(TYPOS);t=t.replace(x[0],x[1])}
   if(st.lower&&Math.random()<.5)t=t.replace(/[.]$/,"");
   if(st.emoji&&Math.random()<.3)t+=" "+pick(["😅","👀","💀","🫡","🤝","😬"]);
   return t}
-function add(room,p,body,ts,silent,rp){
+const prevTxt=b=>typeof b==="string"?b:b.poll?"📊 "+b.q:"📈 "+b.sym+" "+b.side+" idea";
+function add(room,p,body,ts,silent,re){
   body=human(p,body);
   const m={id:state.nid++,p,body,ts:ts||Date.now(),rx:{}};
-  if(rp&&rp.p&&typeof rp.body==="string")m.rp={id:rp.id,n:rp.p.n,c:rp.p.c,img:rp.p.img||"",t:rp.body.replace(/\s+/g," ").slice(0,90)};
+  if(re)m.re={p:re.p,t:prevTxt(re.body)};
   if(Math.random()<.4)m.rx[pick(["🔥","👍","📈","😂","🙏"])]=ri(1,8);
   const L=state.msgs[room];L.push(m);if(L.length>400)L.shift();
   if(!silent&&state.open)appendMsg(m);return m}
-function seed(){let t=Date.now()-ri(50,110)*60000;for(let i=0;i<16;i++)pick(F.lounge)().forEach((x,j,arr)=>{t+=ri(15,140)*1000;const L=state.msgs.lounge;add("lounge",x[1],x[2],t,true,j>0&&Math.random()<.6?L[L.length-1]:null)})}
-function run(room){let d=0,prev=null;pick(F[room])().forEach((x,j)=>{d+=x[0]*1000+ri(300,1500);const p=x[1];
-  const go=()=>{const rp=j>0&&prev&&Math.random()<.7?prev:null;prev=add(room,p,x[2],null,false,rp)};
-  setTimeout(()=>{if(state.open){setTyping(p.n);setTimeout(()=>{setTyping(null);go()},ri(900,2200))}else go()},d)})}
+const wantReply=(prev,p,k)=>k>0&&prev&&prev.p!==p&&Math.random()<.78?prev:null;
+function seed(){let t=Date.now()-ri(50,110)*60000;for(let i=0;i<24;i++){let prev=null;pick(F.lounge)().forEach((x,k)=>{t+=ri(15,140)*1000;prev=add("lounge",x[1],x[2],t,true,wantReply(prev,x[1],k))})}}
+function run(room){let d=0,prev=null;pick(F[room])().forEach((x,k)=>{d+=x[0]*1000+ri(300,1500);const p=x[1];
+  setTimeout(()=>{const go=()=>{prev=add(room,p,x[2],undefined,false,wantReply(prev,p,k))};
+    if(state.open){setTyping(p);setTimeout(()=>{setTyping(null);go()},ri(900,2200))}else go()},d)})}
 function notice(room,txt){const L=state.msgs[room],m={id:state.nid++,sys:1,p:{n:"",c:"#333"},body:txt,ts:Date.now(),rx:{}};L.push(m);if(L.length>400)L.shift();if(state.open)appendMsg(m)}
 function schedule(){const lull=Math.random()<.2;setTimeout(()=>{const r="lounge";
-  if(Math.random()<.12)notice(r,pick(PEOPLE).n+" joined the room");else run(r);schedule()},lull?ri(25000,60000):ri(4000,12000))}
+  if(Math.random()<.12)notice(r,pick(PEOPLE).n+" joined the room");else run(r);schedule()},lull?ri(20000,45000):ri(3500,9000))}
 
 /* ---- UI ---- */
-const css=`#cmBtn{position:fixed;right:16px;bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:12px 16px;background:var(--accent,#a995f5);color:#17131f;font:inherit;font-weight:750;box-shadow:0 6px 24px rgba(0,0,0,.35);cursor:pointer}
-#cmBtn .b{min-width:20px;height:20px;border-radius:10px;background:#ff4d4d;color:#fff;font-size:12px;display:none;place-items:center;padding:0 5px}
-#cmDlg{display:flex;flex-direction:column;flex:1;min-height:0;margin:0;border:1px solid var(--line,#282828);border-radius:20px;background:var(--s1,#151515);color:var(--text,#f5f5f5);overflow:hidden}
+const css=`#cmBtn{display:none!important}
+#cmDlg{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;margin:0;border:1px solid var(--line,#282828);border-radius:22px;background:var(--bg,#000);color:var(--text,#f5f5f5);overflow:hidden;box-shadow:0 14px 34px -18px rgba(0,0,0,.5)}
+.cmH{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line,#282828)}
+.cmH .ttl{display:flex;align-items:center;gap:8px;font-size:19px;font-weight:800;letter-spacing:-.3px}.cmH .hs{color:var(--soft,#85858a);font-weight:700}
+.cmOn{font-size:12px;color:var(--muted,#9a9a9f);margin-top:3px}.cmOn i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#35e875;margin-right:6px}
+.cmTag{flex:none;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--s2,#202020);color:var(--muted,#9a9a9f);border:1px solid var(--line,#303030)}
 .cmWrap{position:relative;flex:1;min-height:0;display:flex}
-.cmTag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--s2,#202020);color:var(--muted,#9a9a9f);border:1px solid var(--line,#303030)}
-#cmBtn{display:none!important}
-.cmH{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 8px}.cmH b{font-size:19px}
-.cmOn{font-size:12px;color:var(--muted,#9a9a9f)}.cmOn i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#35e875;margin-right:6px}
-.cmX{border:1px solid var(--line,#303030);background:var(--s2,#202020);color:inherit;border-radius:50%;width:36px;height:36px;cursor:pointer}
-.cmRooms{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 10px;scrollbar-width:none}
-.cmRooms button{flex:none;border:0;border-radius:999px;padding:8px 14px;background:var(--s2,#202020);color:var(--muted,#a8a8ad);font:inherit;font-size:14px;cursor:pointer}
-.cmRooms button.on{background:var(--accent,#a995f5);color:#17131f;font-weight:700}
-.cmBan{margin:0 16px 8px;padding:8px 12px;border-radius:12px;background:#2a2112;border:1px solid #4a3a1a;color:#e7c98a;font-size:12px;line-height:1.5}
-#cmLog{flex:1;overflow-y:auto;overscroll-behavior:contain;overflow-anchor:none;padding:8px 16px;display:flex;flex-direction:column;gap:12px;scrollbar-width:thin}
-.cmM{display:flex;gap:10px;align-items:flex-start}.cmA{flex:none;position:relative;overflow:hidden;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:14px}.cmA img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.cmN{font-size:13px;font-weight:700}.cmN small{font-weight:500;color:var(--muted,#85858a);margin-left:6px;font-size:11px}
-.cmT{font-size:14px;line-height:1.5;margin-top:2px;word-break:break-word}.cmT .at{color:var(--accent,#a995f5);font-weight:650}
-.cmM.me .cmT{background:var(--accent,#a995f5);color:#17131f;padding:7px 11px;border-radius:14px;display:inline-block}.cmM.me .cmT .at{color:#17131f}
-.cmCard{margin-top:6px;padding:12px;border-radius:14px;background:var(--s2,#202020);border:1px solid var(--line,#303030);min-width:230px}
+#cmLog{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;overflow-anchor:none;padding:14px 14px 6px;display:flex;flex-direction:column;gap:18px;scrollbar-width:thin}
+.cmM{display:flex;flex-direction:column;flex:none}
+.cmRow{display:flex;gap:12px;align-items:flex-start}
+.cmA{flex:none;position:relative;overflow:hidden;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px}.cmA img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cmA.s{width:20px;height:20px;font-size:10px}
+.cmRe{position:relative;display:flex;align-items:center;gap:7px;margin:0 0 4px 21px;padding-left:28px;min-height:22px;font-size:13.5px;color:var(--muted,#9a9a9f)}
+.cmRe:before{content:"";position:absolute;left:0;top:50%;bottom:-9px;width:24px;border-left:2px solid var(--bd,#303030);border-top:2px solid var(--bd,#303030);border-top-left-radius:9px}
+.cmRe .rt{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.cmRe .rt b{font-weight:750}
+.cmBody{min-width:0;flex:1}
+.cmN{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;line-height:1.25}
+.cmN .nm{font-size:17px;font-weight:750;letter-spacing:-.2px}
+.cmN .bd{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:2px 8px 2px 6px;border-radius:7px;background:var(--s2,#202020);border:1px solid var(--bd,#303030);color:var(--text,#f5f5f5)}
+.cmN .bd svg,.cmN .gm svg{display:block}
+.cmN .ago{font-size:12.5px;color:var(--muted,#85858a);font-weight:500}
+.cmT{font-size:17px;line-height:1.42;margin-top:3px;word-break:break-word}
+.cmT .at{color:var(--accent,#2f7bff);font-weight:650;background:color-mix(in srgb,var(--accent,#2f7bff) 16%,transparent);padding:0 4px;border-radius:5px}
+.cmM.me .cmRow{background:color-mix(in srgb,var(--accent,#2f7bff) 9%,transparent);margin:0 -8px;padding:6px 8px;border-radius:12px}
+.cmCard{margin-top:6px;padding:12px;border-radius:16px;background:var(--s1,#151515);border:1px solid var(--line,#303030);min-width:230px;max-width:340px}
 .cmCard .t{display:flex;justify-content:space-between;font-weight:750;margin-bottom:8px}.cmCard .s{padding:2px 9px;border-radius:999px;font-size:12px;font-weight:750}.s.L{background:#12301f;color:#35e875}.s.S{background:#3a1616;color:#ff8a8a}
-.cmCard .g{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:12px;color:var(--muted,#9a9a9f)}.cmCard .g b{display:block;color:var(--text,#f5f5f5);font-size:13px}
+.cmCard .g{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:12px;color:var(--muted,#9a9a9f)}.cmCard .g b{display:block;color:var(--text,#f5f5f5);font-size:14px}
 .cmCard .r{margin-top:8px;font-weight:750;font-size:13px}.r.w{color:#35e875}.r.l{color:#ff6b6b}
-.cmPoll button{display:flex;justify-content:space-between;width:100%;margin-top:6px;border:1px solid var(--line,#303030);background:var(--s1,#151515);color:inherit;border-radius:10px;padding:8px 10px;font:inherit;font-size:13px;cursor:pointer;position:relative;overflow:hidden}
-.cmPoll button i{position:absolute;left:0;top:0;bottom:0;background:rgba(169,149,245,.22)}.cmPoll button span{position:relative}
-.cmRx{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}.cmRx button{border:1px solid var(--line,#303030);background:var(--s2,#202020);color:inherit;border-radius:999px;padding:2px 8px;font-size:12px;cursor:pointer}
-.cmTy{font-size:12px;color:var(--muted,#85858a);padding:0 16px 4px;min-height:18px}
-.cmF{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--line,#282828)}
-.cmF input{flex:1;min-width:0;background:var(--s2,#202020);border:1px solid var(--line,#303030);color:inherit;border-radius:14px;padding:12px;font:inherit}
-.cmF button{border:0;border-radius:14px;background:var(--accent,#a995f5);color:#17131f;font-weight:750;padding:0 16px;cursor:pointer}
-.cmDis{font-size:11px;color:var(--muted,#85858a);text-align:center;padding:0 16px 10px}
-.cmNew{display:none;align-items:center;justify-content:space-between;gap:10px;width:100%;border:0;background:#5865f2;color:#fff;padding:9px 14px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;text-align:left}.cmNew em{font-style:normal;padding:0 4px;opacity:.9}
-.cmJump{position:absolute;right:14px;bottom:12px;width:44px;height:44px;border-radius:12px;border:1px solid var(--line,#303030);background:var(--s2,#202020);color:var(--text,#f5f5f5);font-size:20px;display:none;place-items:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4)}
-.cmM{gap:12px}.cmA{width:42px;height:42px;font-size:16px}.cmN{font-size:15px}.cmN .nn{font-weight:800}.cmT{font-size:15.5px;line-height:1.45}
-.cmM.hasRp{margin-top:4px}.cmRp{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted,#9a9a9f);margin:-2px 0 3px;min-width:0;cursor:pointer;position:relative;padding-left:22px}
-.cmRp i{position:absolute;left:-30px;top:8px;width:46px;height:12px;border-left:2px solid var(--line,#4a4a50);border-top:2px solid var(--line,#4a4a50);border-top-left-radius:8px}
-.cmRp .ra{width:18px;height:18px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:10px;font-weight:800;color:#fff;position:relative;overflow:hidden}.cmRp .ra img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.cmRp b{font-weight:700;white-space:nowrap}.cmRp .rt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.cmM.flash{background:rgba(88,101,242,.18);border-radius:10px;transition:background .3s}
-.cmTy{display:flex;align-items:center;gap:8px;font-size:13px}.cmTy b{font-weight:700}.cmTy .dots{display:inline-flex;gap:3px}.cmTy .dots i{width:7px;height:7px;border-radius:50%;background:var(--muted,#9a9a9f);animation:cmd 1.2s infinite ease-in-out}.cmTy .dots i:nth-child(2){animation-delay:.2s}.cmTy .dots i:nth-child(3){animation-delay:.4s}
-@keyframes cmd{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-2px)}}
+.cmPoll button{display:flex;justify-content:space-between;width:100%;margin-top:6px;border:1px solid var(--line,#303030);background:var(--bg,#000);color:inherit;border-radius:10px;padding:9px 11px;font:inherit;font-size:14px;cursor:pointer;position:relative;overflow:hidden}
+.cmPoll button i{position:absolute;left:0;top:0;bottom:0;background:color-mix(in srgb,var(--accent,#2f7bff) 28%,transparent)}.cmPoll button span{position:relative}
+.cmRx{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}.cmRx button{border:1px solid var(--bd,#303030);background:var(--s2,#202020);color:inherit;border-radius:9px;padding:3px 9px;font-size:13px;cursor:pointer}
+.cmTy{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted,#85858a);padding:0 16px 6px;min-height:22px}
+.cmTy .dots{display:inline-flex;gap:3px}.cmTy .dots i{width:7px;height:7px;border-radius:50%;background:var(--muted,#85858a);opacity:.5}
+@media(prefers-reduced-motion:no-preference){.cmTy .dots i{animation:cmd 1s infinite}.cmTy .dots i:nth-child(2){animation-delay:.15s}.cmTy .dots i:nth-child(3){animation-delay:.3s}}
+@keyframes cmd{50%{opacity:1;transform:translateY(-2px)}}
+.cmF{display:flex;align-items:center;gap:8px;margin:4px 12px 8px;padding:6px 6px 6px 16px;border-radius:26px;background:var(--s2,#202020);border:1px solid var(--bd,#303030)}
+.cmF input{flex:1;min-width:0;background:none;border:0;padding:8px 0;font:inherit;font-size:16px;color:inherit;outline:none}
+.cmF button{flex:none;display:grid;place-items:center;width:44px;height:40px;border:0;border-radius:14px;background:var(--accent,#2f7bff);color:#fff;cursor:pointer}.cmF button svg{width:20px;height:20px}
+.cmDis{font-size:11px;color:var(--soft,#85858a);text-align:center;padding:0 16px 10px;line-height:1.4}
+.cmNew{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);box-shadow:0 4px 14px rgba(0,0,0,.4);border:0;border-radius:999px;background:var(--accent,#2f7bff);color:#fff;padding:7px 14px;font:inherit;font-size:13px;font-weight:700;display:none;cursor:pointer}
 `;
-function badge(){const b=$("cmBadge");if(!b)return;b.textContent=state.unread>99?"99+":state.unread;b.style.display=state.unread?"grid":"none"}
-const ago=t=>{const s=Math.max(0,(Date.now()-t)/1000);return s<60?"now":s<3600?Math.floor(s/60)+"m":new Date(t).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})};
+const GEM=(c,s)=>`<svg width="${s||14}" height="${s||14}" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12l4 6-10 12L2 9z" fill="${c}"/><path d="M2 9h20M9 3l-2 6 5 12 5-12-2-6" fill="none" stroke="rgba(255,255,255,.65)" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+const ago=t=>{const s=Math.max(0,(Date.now()-t)/1000);return s<60?"now":s<3600?Math.floor(s/60)+"m":new Date(t).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})};
 const txt=t=>esc(t).replace(/@[\w.]+/g,m=>`<span class="at">${m}</span>`);
 function bodyHtml(b,m){
   if(typeof b==="string")return `<div class="cmT">${txt(b)}</div>`;
-  if(b.poll){const tot=b.v.reduce((a,c)=>a+c,0);return `<div class="cmCard cmPoll"><b>📊 ${esc(b.q)}</b>${b.o.map((o,i)=>`<button data-poll="${m.id}" data-i="${i}"><i style="width:${Math.round(b.v[i]/tot*100)}%"></i><span>${esc(o)}</span><span>${Math.round(b.v[i]/tot*100)}%</span></button>`).join("")}<div class="cmN" style="margin-top:6px"><small>${tot} votes</small></div></div>`}
+  if(b.poll){const tot=b.v.reduce((a,c)=>a+c,0);return `<div class="cmCard cmPoll"><b>📊 ${esc(b.q)}</b>${b.o.map((o,i)=>`<button data-poll="${m.id}" data-i="${i}"><i style="width:${Math.round(b.v[i]/tot*100)}%"></i><span>${esc(o)}</span><span>${Math.round(b.v[i]/tot*100)}%</span></button>`).join("")}<div class="cmN" style="margin-top:6px"><span class="ago">${tot} votes</span></div></div>`}
   const L=b.side==="Long",res=b.res==null?"":`<div class="r ${b.res>=0?"w":"l"}">${b.res>=0?"Closed +":"Stopped "}${b.res.toFixed(1)}%</div>`;
   return `<div class="cmCard"><div class="t"><span>${b.sym}/USD</span><span class="s ${L?"L":"S"}">${b.side}</span></div><div class="g"><span>Entry<b>${fp(b.e)}</b></span><span>Target<b>${fp(b.tg)}</b></span><span>Stop<b>${fp(b.st)}</b></span></div>${res}</div>`}
-function avatar(p){return `<div class="cmA" style="background:${p.c}">${esc((p.n[0]||"?").toUpperCase())}${p.img?`<img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.remove()">`:""}</div>`}
-function rpHtml(m){const r=m.rp;if(!r)return "";return `<div class="cmRp" data-go="${r.id}"><i></i><span class="ra" style="background:${r.c}">${esc((r.n[0]||"?").toUpperCase())}${r.img?`<img src="${esc(r.img)}" alt="" onerror="this.remove()">`:""}</span><b style="color:${r.c}">@${esc(r.n)}</b><span class="rt">${esc(r.t)}</span></div>`}
-function inner(m){const p=m.p;if(m.sys)return `<div class="cmN" style="text-align:center;opacity:.7"><small>${esc(m.body)}</small></div>`;
-  return `${avatar(p)}<div style="min-width:0;flex:1">${rpHtml(m)}<div class="cmN"><span class="nn" style="color:${p.c}">${esc(p.n)}</span><small class="ago" data-ts="${m.ts}">${ago(m.ts)}</small></div>${bodyHtml(m.body,m)}${Object.keys(m.rx).length?`<div class="cmRx">${Object.entries(m.rx).map(([e,k])=>`<button data-m="${m.id}" data-e="${e}">${e} ${k}</button>`).join("")}</div>`:""}</div>`}
-function mkEl(m){const el=document.createElement("div");el.className="cmM"+(m.p.me?" me":"")+(m.rp?" hasRp":"");el.dataset.id=m.id;el.innerHTML=inner(m);return el}
-const atBottom=log=>log.scrollHeight-log.scrollTop-log.clientHeight<70;
-function showNew(){const b=$("cmNew"),j=$("cmJump");if(!b)return;const n=state.newCount;b.querySelector("span").textContent=(n>=50?"50+":n)+(n===1?" new message":" new messages")+" since "+new Date(state.since||Date.now()).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});b.style.display=n?"flex":"none";if(j)j.style.display=n||!atBottom($("cmLog"))?"grid":"none"}
-function toBottom(){const log=$("cmLog");log.scrollTop=log.scrollHeight;state.newCount=0;state.since=0;showNew()}
+function avatar(p,sm){return `<div class="cmA${sm?" s":""}" style="background:${p.c}">${esc((p.n[0]||"?").toUpperCase())}${p.img?`${window.ntImg?window.ntImg(p.num).replace("<img ","<img loading=\"lazy\" "):`<img src="${esc(p.img)}" alt="" onerror="this.remove()">`}`:""}</div>`}
+function inner(m){const p=m.p;if(m.sys)return `<div class="cmN" style="justify-content:center;opacity:.75"><span class="ago">${esc(m.body)}</span></div>`;
+  const re=m.re?`<div class="cmRe">${avatar(m.re.p,1)}<span class="rt"><b style="color:${m.re.p.nc}">@${esc(m.re.p.n)}</b> ${esc(m.re.t)}</span></div>`:"";
+  const badge=p.role==="mod"?`<span class="bd">${GEM("#8b5cf6",15)}MOD</span>`:p.role==="vet"?`<span class="bd">${GEM("#2f7bff",15)}PRO</span>`:p.gem?`<span class="gm">${GEM(p.nc,17)}</span>`:"";
+  return `${re}<div class="cmRow">${avatar(p)}<div class="cmBody"><div class="cmN"><span class="nm" style="color:${p.nc}">${esc(p.n)}</span>${badge}<span class="ago" data-ts="${m.ts}">${ago(m.ts)}</span></div>${bodyHtml(m.body,m)}${Object.keys(m.rx).length?`<div class="cmRx">${Object.entries(m.rx).map(([e,k])=>`<button data-m="${m.id}" data-e="${e}">${e} ${k}</button>`).join("")}</div>`:""}</div></div>`}
+function mkEl(m){const el=document.createElement("div");el.className="cmM"+(m.p.me?" me":"");el.dataset.id=m.id;el.innerHTML=inner(m);return el}
+const atBottom=log=>log.scrollHeight-log.scrollTop-log.clientHeight<80;
+function showNew(){const b=$("cmNew");if(!b)return;b.textContent=state.newCount+(state.newCount===1?" new message":" new messages")+" ↓";b.style.display=state.newCount?"block":"none"}
+function toBottom(){const log=$("cmLog");log.scrollTop=log.scrollHeight;state.newCount=0;showNew()}
 function appendMsg(m){const log=$("cmLog");if(!log)return;const stick=atBottom(log)||m.p.me;
   log.appendChild(mkEl(m));
-  /* trim old messages without moving what the reader is looking at */
-  while(log.children.length>260){const f=log.firstElementChild,h=f.offsetHeight+12;f.remove();if(!stick)log.scrollTop=Math.max(0,log.scrollTop-h)}
-  if(stick)toBottom();else{if(!state.newCount)state.since=Date.now();state.newCount++;showNew()}}
+  while(log.children.length>260){const f=log.firstElementChild,h=f.offsetHeight+18;f.remove();if(!stick)log.scrollTop=Math.max(0,log.scrollTop-h)}
+  if(stick)toBottom();else{state.newCount++;showNew()}}
 function refreshMsg(m){const el=$("cmLog").querySelector('[data-id="'+m.id+'"]');if(el)el.innerHTML=inner(m)}
-function setTyping(n){state.typing=n;const t=$("cmTy");if(t)t.innerHTML=n?`<span class="dots"><i></i><i></i><i></i></span><b>${esc(n)}</b> is typing…`:""}
-function render(){const log=$("cmLog");if(!log)return;log.innerHTML="";const f=document.createDocumentFragment();state.msgs.lounge.slice(-120).forEach(m=>f.appendChild(mkEl(m)));log.appendChild(f);toBottom();$("cmOn").innerHTML=`<i></i>${state.online.toLocaleString()} of 1,000 simulated members online`}
-function setRoom(){}
-function botSay(room,p,t,delay,rp){setTimeout(()=>{if(state.open)setTyping(p.n);setTimeout(()=>{setTyping(null);add(room,p,t,null,false,rp)},ri(900,2000))},delay)}
+function setTyping(p){const t=$("cmTy");if(!t)return;t.innerHTML=p?`<span class="dots"><i></i><i></i><i></i></span><span><b>${esc(p.n)}</b> is typing…</span>`:""}
+const onl=()=>`<i></i>${state.online.toLocaleString()} of 1,000 simulated members online`;
+function render(){const log=$("cmLog");if(!log)return;log.innerHTML="";const f=document.createDocumentFragment();state.msgs.lounge.slice(-120).forEach(m=>f.appendChild(mkEl(m)));log.appendChild(f);toBottom();$("cmOn").innerHTML=onl()}
+function botSay(room,p,t,delay,re){setTimeout(()=>{if(state.open)setTyping(p);setTimeout(()=>{setTyping(null);add(room,p,t,undefined,false,re)},ri(900,2000))},delay)}
 function userSay(){
-  const i=$("cmIn"),t=i.value.trim().slice(0,300);if(!t)return;i.value="";const mine=add(state.room,ME,t);const room=state.room;
+  const i=$("cmIn"),t=i.value.trim().slice(0,300);if(!t)return;i.value="";const mine=add("lounge",ME,t),room="lounge";
   let ans=null;for(const [re,o] of REPLY){if(re.test(t)){ans=pick(o).replace("__BTC__",fp(px("BTC")));break}}
   ans=ans||(Math.random()<.75?pick(GENERIC):null);
-  if(ans){botSay(room,who(/\?/.test(t)?"vet":"chat"),ans,ri(1200,3200),mine);if(Math.random()<.4)botSay(room,who("chat"),pick(["agreed 👍","same here","good point @"+ME.n]),ri(5000,8000))}}
-function greet(){if(state.greeted)return;state.greeted=true;setTimeout(()=>botSay("lounge",who("chat"),"welcome "+mention(ME)+" 👋 glad you joined",0),1500);setTimeout(()=>botSay("lounge",who("vet"),mention(ME)+" ask anything, nobody here minds beginner questions 🙂",0),5500)}
+  if(ans){botSay(room,who(/\?/.test(t)?"vet":"chat"),mention(ME)+" "+ans,ri(1200,3200),mine);if(Math.random()<.4)botSay(room,who("chat"),pick(["agreed 👍","same here","good point"]),ri(5000,8000),mine)}}
+function greet(){if(state.greeted)return;state.greeted=true;setTimeout(()=>botSay("lounge",who("chat"),"welcome "+mention(ME)+" 👋 glad you joined",0),1500);setTimeout(()=>botSay("lounge",who("mod"),mention(ME)+" welcome! ask anything, nobody here minds beginner questions 🙂",0),5500)}
 function build(){
   const st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
   const d=document.createElement("section");d.id="cmDlg";d.setAttribute("aria-label","Traders lounge");
-  d.innerHTML=`<div class="cmH"><div><b>Traders lounge</b><div class="cmOn" id="cmOn"></div></div><span class="cmTag" title="The members and messages here are simulated, not real users">Simulated</span></div>
-  <button class="cmNew" id="cmNew" type="button"><span></span><em id="cmNewX" aria-label="Dismiss">✕</em></button><div class="cmWrap"><div id="cmLog" role="log" aria-live="off" aria-label="Messages"></div><button class="cmJump" id="cmJump" type="button" aria-label="Jump to latest messages">↓</button></div><div class="cmTy" id="cmTy"></div>
-  <div class="cmF"><input id="cmIn" placeholder="Message the lounge" maxlength="300" autocomplete="off" aria-label="Your message"><button id="cmSend" type="button">Send</button></div>
+  d.innerHTML=`<div class="cmH"><div><div class="ttl"><span class="hs">#</span>Traders-Lounge</div><div class="cmOn" id="cmOn"></div></div><span class="cmTag" title="The members and messages here are simulated, not real users">Simulated</span></div>
+  <div class="cmWrap"><div id="cmLog" role="log" aria-live="off" aria-label="Messages"></div><button class="cmNew" id="cmNew" type="button">New messages ↓</button></div><div class="cmTy" id="cmTy"></div>
+  <div class="cmF"><input id="cmIn" placeholder="Message #traders-lounge" maxlength="300" autocomplete="off" aria-label="Your message"><button id="cmSend" type="button" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
   <div class="cmDis">Not financial advice. Trading and borrowing carry risk. Never share your seed phrase or passwords.</div>`;
   (document.getElementById("loungeSec")||document.getElementById("mkSec")||document.body).appendChild(d);
   try{const e=document.getElementById("uEmail"),h=(e&&e.textContent||"").split("@")[0].replace(/[^\w.]/g,"").slice(0,16);if(h)ME.n=h}catch(_){}
   state.open=true;render();greet();
   const log=$("cmLog");
-  log.addEventListener("scroll",()=>{if(atBottom(log))state.newCount=0;showNew()},{passive:true});
-  log.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(g){const t=log.querySelector('[data-id="'+g.dataset.go+'"]');if(t){t.scrollIntoView({block:"center",behavior:"smooth"});t.classList.add("flash");setTimeout(()=>t.classList.remove("flash"),1400)}}});
+  log.addEventListener("scroll",()=>{if(atBottom(log)){state.newCount=0;showNew()}},{passive:true});
   log.addEventListener("click",e=>{const rx=e.target.closest("[data-e]"),pl=e.target.closest("[data-poll]"),all=state.msgs.lounge;
     if(rx){const m=all.find(x=>x.id==+rx.dataset.m);if(m){m.rx[rx.dataset.e]=(m.rx[rx.dataset.e]||0)+1;refreshMsg(m)}}
     if(pl){const m=all.find(x=>x.id==+pl.dataset.poll);if(m&&!state.voted[m.id]){state.voted[m.id]=1;m.body.v[+pl.dataset.i]++;refreshMsg(m)}}});
-  $("cmNew").onclick=e=>{if(e.target.id==="cmNewX"){state.newCount=0;showNew()}else toBottom()};$("cmJump").onclick=toBottom;
+  $("cmNew").onclick=toBottom;
   $("cmSend").onclick=userSay;$("cmIn").addEventListener("keydown",e=>{if(e.key==="Enter")userSay()});
-  setInterval(()=>{state.online=Math.max(300,Math.min(750,state.online+ri(-6,6)));const o=$("cmOn");if(o)o.innerHTML=`<i></i>${state.online.toLocaleString()} of 1,000 simulated members online`},5000);
-  setInterval(()=>{document.querySelectorAll("#cmLog .ago").forEach(x=>{x.textContent=ago(+x.dataset.ts)})},30000);
+  setInterval(()=>{state.online=Math.max(300,Math.min(750,state.online+ri(-6,6)));const o=$("cmOn");if(o)o.innerHTML=onl()},5000);
+  setInterval(()=>{document.querySelectorAll("#cmLog .ago[data-ts]").forEach(x=>{x.textContent=ago(+x.dataset.ts)})},30000);
   setInterval(()=>{const polls=state.msgs.lounge.filter(m=>m.body&&m.body.poll);if(polls.length){const m=pick(polls);m.body.v[ri(0,m.body.v.length-1)]+=ri(1,2);refreshMsg(m)}},9000)}
-function start(){seed();build();schedule();setTimeout(()=>run("lounge"),4000)}
+function start(){seed();build();schedule();setTimeout(()=>run("lounge"),3000)}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
 })();
