@@ -119,15 +119,17 @@ function human(p,t){if(typeof t!=="string"||p.me||!p.style)return t;const st=p.s
   if(st.lower&&Math.random()<.5)t=t.replace(/[.]$/,"");
   if(st.emoji&&Math.random()<.3)t+=" "+pick(["😅","👀","💀","🫡","🤝","😬"]);
   return t}
-function add(room,p,body,ts,silent){
+function add(room,p,body,ts,silent,rp){
   body=human(p,body);
   const m={id:state.nid++,p,body,ts:ts||Date.now(),rx:{}};
+  if(rp&&rp.p&&typeof rp.body==="string")m.rp={id:rp.id,n:rp.p.n,c:rp.p.c,img:rp.p.img||"",t:rp.body.replace(/\s+/g," ").slice(0,90)};
   if(Math.random()<.4)m.rx[pick(["🔥","👍","📈","😂","🙏"])]=ri(1,8);
   const L=state.msgs[room];L.push(m);if(L.length>400)L.shift();
   if(!silent&&state.open)appendMsg(m);return m}
-function seed(){let t=Date.now()-ri(50,110)*60000;for(let i=0;i<16;i++)pick(F.lounge)().forEach(x=>{t+=ri(15,140)*1000;add("lounge",x[1],x[2],t,true)})}
-function run(room){let d=0;pick(F[room])().forEach(x=>{d+=x[0]*1000+ri(300,1500);const p=x[1];
-  setTimeout(()=>{if(state.open){setTyping(p.n);setTimeout(()=>{setTyping(null);add(room,p,x[2])},ri(900,2200))}else add(room,p,x[2])},d)})}
+function seed(){let t=Date.now()-ri(50,110)*60000;for(let i=0;i<16;i++)pick(F.lounge)().forEach((x,j,arr)=>{t+=ri(15,140)*1000;const L=state.msgs.lounge;add("lounge",x[1],x[2],t,true,j>0&&Math.random()<.6?L[L.length-1]:null)})}
+function run(room){let d=0,prev=null;pick(F[room])().forEach((x,j)=>{d+=x[0]*1000+ri(300,1500);const p=x[1];
+  const go=()=>{const rp=j>0&&prev&&Math.random()<.7?prev:null;prev=add(room,p,x[2],null,false,rp)};
+  setTimeout(()=>{if(state.open){setTyping(p.n);setTimeout(()=>{setTyping(null);go()},ri(900,2200))}else go()},d)})}
 function notice(room,txt){const L=state.msgs[room],m={id:state.nid++,sys:1,p:{n:"",c:"#333"},body:txt,ts:Date.now(),rx:{}};L.push(m);if(L.length>400)L.shift();if(state.open)appendMsg(m)}
 function schedule(){const lull=Math.random()<.2;setTimeout(()=>{const r="lounge";
   if(Math.random()<.12)notice(r,pick(PEOPLE).n+" joined the room");else run(r);schedule()},lull?ri(25000,60000):ri(4000,12000))}
@@ -163,7 +165,16 @@ const css=`#cmBtn{position:fixed;right:16px;bottom:calc(88px + env(safe-area-ins
 .cmF input{flex:1;min-width:0;background:var(--s2,#202020);border:1px solid var(--line,#303030);color:inherit;border-radius:14px;padding:12px;font:inherit}
 .cmF button{border:0;border-radius:14px;background:var(--accent,#a995f5);color:#17131f;font-weight:750;padding:0 16px;cursor:pointer}
 .cmDis{font-size:11px;color:var(--muted,#85858a);text-align:center;padding:0 16px 10px}
-.cmNew{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);box-shadow:0 4px 14px rgba(0,0,0,.4);border:0;border-radius:999px;background:var(--accent,#a995f5);color:#17131f;padding:6px 12px;font:inherit;font-size:12px;font-weight:700;display:none;cursor:pointer}
+.cmNew{display:none;align-items:center;justify-content:space-between;gap:10px;width:100%;border:0;background:#5865f2;color:#fff;padding:9px 14px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;text-align:left}.cmNew em{font-style:normal;padding:0 4px;opacity:.9}
+.cmJump{position:absolute;right:14px;bottom:12px;width:44px;height:44px;border-radius:12px;border:1px solid var(--line,#303030);background:var(--s2,#202020);color:var(--text,#f5f5f5);font-size:20px;display:none;place-items:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.cmM{gap:12px}.cmA{width:42px;height:42px;font-size:16px}.cmN{font-size:15px}.cmN .nn{font-weight:800}.cmT{font-size:15.5px;line-height:1.45}
+.cmM.hasRp{margin-top:4px}.cmRp{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted,#9a9a9f);margin:-2px 0 3px;min-width:0;cursor:pointer;position:relative;padding-left:22px}
+.cmRp i{position:absolute;left:-30px;top:8px;width:46px;height:12px;border-left:2px solid var(--line,#4a4a50);border-top:2px solid var(--line,#4a4a50);border-top-left-radius:8px}
+.cmRp .ra{width:18px;height:18px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:10px;font-weight:800;color:#fff;position:relative;overflow:hidden}.cmRp .ra img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cmRp b{font-weight:700;white-space:nowrap}.cmRp .rt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cmM.flash{background:rgba(88,101,242,.18);border-radius:10px;transition:background .3s}
+.cmTy{display:flex;align-items:center;gap:8px;font-size:13px}.cmTy b{font-weight:700}.cmTy .dots{display:inline-flex;gap:3px}.cmTy .dots i{width:7px;height:7px;border-radius:50%;background:var(--muted,#9a9a9f);animation:cmd 1.2s infinite ease-in-out}.cmTy .dots i:nth-child(2){animation-delay:.2s}.cmTy .dots i:nth-child(3){animation-delay:.4s}
+@keyframes cmd{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-2px)}}
 `;
 function badge(){const b=$("cmBadge");if(!b)return;b.textContent=state.unread>99?"99+":state.unread;b.style.display=state.unread?"grid":"none"}
 const ago=t=>{const s=Math.max(0,(Date.now()-t)/1000);return s<60?"now":s<3600?Math.floor(s/60)+"m":new Date(t).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})};
@@ -174,44 +185,46 @@ function bodyHtml(b,m){
   const L=b.side==="Long",res=b.res==null?"":`<div class="r ${b.res>=0?"w":"l"}">${b.res>=0?"Closed +":"Stopped "}${b.res.toFixed(1)}%</div>`;
   return `<div class="cmCard"><div class="t"><span>${b.sym}/USD</span><span class="s ${L?"L":"S"}">${b.side}</span></div><div class="g"><span>Entry<b>${fp(b.e)}</b></span><span>Target<b>${fp(b.tg)}</b></span><span>Stop<b>${fp(b.st)}</b></span></div>${res}</div>`}
 function avatar(p){return `<div class="cmA" style="background:${p.c}">${esc((p.n[0]||"?").toUpperCase())}${p.img?`<img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.remove()">`:""}</div>`}
+function rpHtml(m){const r=m.rp;if(!r)return "";return `<div class="cmRp" data-go="${r.id}"><i></i><span class="ra" style="background:${r.c}">${esc((r.n[0]||"?").toUpperCase())}${r.img?`<img src="${esc(r.img)}" alt="" onerror="this.remove()">`:""}</span><b style="color:${r.c}">@${esc(r.n)}</b><span class="rt">${esc(r.t)}</span></div>`}
 function inner(m){const p=m.p;if(m.sys)return `<div class="cmN" style="text-align:center;opacity:.7"><small>${esc(m.body)}</small></div>`;
-  return `${avatar(p)}<div style="min-width:0"><div class="cmN">${esc(p.n)}<small class="ago" data-ts="${m.ts}">${ago(m.ts)}</small></div>${bodyHtml(m.body,m)}${Object.keys(m.rx).length?`<div class="cmRx">${Object.entries(m.rx).map(([e,k])=>`<button data-m="${m.id}" data-e="${e}">${e} ${k}</button>`).join("")}</div>`:""}</div>`}
-function mkEl(m){const el=document.createElement("div");el.className="cmM"+(m.p.me?" me":"");el.dataset.id=m.id;el.innerHTML=inner(m);return el}
+  return `${avatar(p)}<div style="min-width:0;flex:1">${rpHtml(m)}<div class="cmN"><span class="nn" style="color:${p.c}">${esc(p.n)}</span><small class="ago" data-ts="${m.ts}">${ago(m.ts)}</small></div>${bodyHtml(m.body,m)}${Object.keys(m.rx).length?`<div class="cmRx">${Object.entries(m.rx).map(([e,k])=>`<button data-m="${m.id}" data-e="${e}">${e} ${k}</button>`).join("")}</div>`:""}</div>`}
+function mkEl(m){const el=document.createElement("div");el.className="cmM"+(m.p.me?" me":"")+(m.rp?" hasRp":"");el.dataset.id=m.id;el.innerHTML=inner(m);return el}
 const atBottom=log=>log.scrollHeight-log.scrollTop-log.clientHeight<70;
-function showNew(){const b=$("cmNew");if(!b)return;b.textContent=state.newCount+(state.newCount===1?" new message":" new messages")+" ↓";b.style.display=state.newCount?"block":"none"}
-function toBottom(){const log=$("cmLog");log.scrollTop=log.scrollHeight;state.newCount=0;showNew()}
+function showNew(){const b=$("cmNew"),j=$("cmJump");if(!b)return;const n=state.newCount;b.querySelector("span").textContent=(n>=50?"50+":n)+(n===1?" new message":" new messages")+" since "+new Date(state.since||Date.now()).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});b.style.display=n?"flex":"none";if(j)j.style.display=n||!atBottom($("cmLog"))?"grid":"none"}
+function toBottom(){const log=$("cmLog");log.scrollTop=log.scrollHeight;state.newCount=0;state.since=0;showNew()}
 function appendMsg(m){const log=$("cmLog");if(!log)return;const stick=atBottom(log)||m.p.me;
   log.appendChild(mkEl(m));
   /* trim old messages without moving what the reader is looking at */
   while(log.children.length>260){const f=log.firstElementChild,h=f.offsetHeight+12;f.remove();if(!stick)log.scrollTop=Math.max(0,log.scrollTop-h)}
-  if(stick)toBottom();else{state.newCount++;showNew()}}
+  if(stick)toBottom();else{if(!state.newCount)state.since=Date.now();state.newCount++;showNew()}}
 function refreshMsg(m){const el=$("cmLog").querySelector('[data-id="'+m.id+'"]');if(el)el.innerHTML=inner(m)}
-function setTyping(n){state.typing=n;const t=$("cmTy");if(t)t.textContent=n?n+" is typing…":""}
+function setTyping(n){state.typing=n;const t=$("cmTy");if(t)t.innerHTML=n?`<span class="dots"><i></i><i></i><i></i></span><b>${esc(n)}</b> is typing…`:""}
 function render(){const log=$("cmLog");if(!log)return;log.innerHTML="";const f=document.createDocumentFragment();state.msgs.lounge.slice(-120).forEach(m=>f.appendChild(mkEl(m)));log.appendChild(f);toBottom();$("cmOn").innerHTML=`<i></i>${state.online.toLocaleString()} of 1,000 simulated members online`}
 function setRoom(){}
-function botSay(room,p,t,delay){setTimeout(()=>{if(state.open)setTyping(p.n);setTimeout(()=>{setTyping(null);add(room,p,t)},ri(900,2000))},delay)}
+function botSay(room,p,t,delay,rp){setTimeout(()=>{if(state.open)setTyping(p.n);setTimeout(()=>{setTyping(null);add(room,p,t,null,false,rp)},ri(900,2000))},delay)}
 function userSay(){
-  const i=$("cmIn"),t=i.value.trim().slice(0,300);if(!t)return;i.value="";add(state.room,ME,t);const room=state.room;
+  const i=$("cmIn"),t=i.value.trim().slice(0,300);if(!t)return;i.value="";const mine=add(state.room,ME,t);const room=state.room;
   let ans=null;for(const [re,o] of REPLY){if(re.test(t)){ans=pick(o).replace("__BTC__",fp(px("BTC")));break}}
   ans=ans||(Math.random()<.75?pick(GENERIC):null);
-  if(ans){botSay(room,who(/\?/.test(t)?"vet":"chat"),mention(ME)+" "+ans,ri(1200,3200));if(Math.random()<.4)botSay(room,who("chat"),pick(["agreed 👍","same here","good point @"+ME.n]),ri(5000,8000))}}
+  if(ans){botSay(room,who(/\?/.test(t)?"vet":"chat"),ans,ri(1200,3200),mine);if(Math.random()<.4)botSay(room,who("chat"),pick(["agreed 👍","same here","good point @"+ME.n]),ri(5000,8000))}}
 function greet(){if(state.greeted)return;state.greeted=true;setTimeout(()=>botSay("lounge",who("chat"),"welcome "+mention(ME)+" 👋 glad you joined",0),1500);setTimeout(()=>botSay("lounge",who("vet"),mention(ME)+" ask anything, nobody here minds beginner questions 🙂",0),5500)}
 function build(){
   const st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
   const d=document.createElement("section");d.id="cmDlg";d.setAttribute("aria-label","Traders lounge");
   d.innerHTML=`<div class="cmH"><div><b>Traders lounge</b><div class="cmOn" id="cmOn"></div></div><span class="cmTag" title="The members and messages here are simulated, not real users">Simulated</span></div>
-  <div class="cmWrap"><div id="cmLog" role="log" aria-live="off" aria-label="Messages"></div><button class="cmNew" id="cmNew" type="button">New messages ↓</button></div><div class="cmTy" id="cmTy"></div>
+  <button class="cmNew" id="cmNew" type="button"><span></span><em id="cmNewX" aria-label="Dismiss">✕</em></button><div class="cmWrap"><div id="cmLog" role="log" aria-live="off" aria-label="Messages"></div><button class="cmJump" id="cmJump" type="button" aria-label="Jump to latest messages">↓</button></div><div class="cmTy" id="cmTy"></div>
   <div class="cmF"><input id="cmIn" placeholder="Message the lounge" maxlength="300" autocomplete="off" aria-label="Your message"><button id="cmSend" type="button">Send</button></div>
   <div class="cmDis">Not financial advice. Trading and borrowing carry risk. Never share your seed phrase or passwords.</div>`;
   (document.getElementById("loungeSec")||document.getElementById("mkSec")||document.body).appendChild(d);
   try{const e=document.getElementById("uEmail"),h=(e&&e.textContent||"").split("@")[0].replace(/[^\w.]/g,"").slice(0,16);if(h)ME.n=h}catch(_){}
   state.open=true;render();greet();
   const log=$("cmLog");
-  log.addEventListener("scroll",()=>{if(atBottom(log)){state.newCount=0;showNew()}},{passive:true});
+  log.addEventListener("scroll",()=>{if(atBottom(log))state.newCount=0;showNew()},{passive:true});
+  log.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(g){const t=log.querySelector('[data-id="'+g.dataset.go+'"]');if(t){t.scrollIntoView({block:"center",behavior:"smooth"});t.classList.add("flash");setTimeout(()=>t.classList.remove("flash"),1400)}}});
   log.addEventListener("click",e=>{const rx=e.target.closest("[data-e]"),pl=e.target.closest("[data-poll]"),all=state.msgs.lounge;
     if(rx){const m=all.find(x=>x.id==+rx.dataset.m);if(m){m.rx[rx.dataset.e]=(m.rx[rx.dataset.e]||0)+1;refreshMsg(m)}}
     if(pl){const m=all.find(x=>x.id==+pl.dataset.poll);if(m&&!state.voted[m.id]){state.voted[m.id]=1;m.body.v[+pl.dataset.i]++;refreshMsg(m)}}});
-  $("cmNew").onclick=toBottom;
+  $("cmNew").onclick=e=>{if(e.target.id==="cmNewX"){state.newCount=0;showNew()}else toBottom()};$("cmJump").onclick=toBottom;
   $("cmSend").onclick=userSay;$("cmIn").addEventListener("keydown",e=>{if(e.key==="Enter")userSay()});
   setInterval(()=>{state.online=Math.max(300,Math.min(750,state.online+ri(-6,6)));const o=$("cmOn");if(o)o.innerHTML=`<i></i>${state.online.toLocaleString()} of 1,000 simulated members online`},5000);
   setInterval(()=>{document.querySelectorAll("#cmLog .ago").forEach(x=>{x.textContent=ago(+x.dataset.ts)})},30000);
