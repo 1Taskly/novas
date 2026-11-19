@@ -132,19 +132,13 @@ button.pill{cursor:pointer}#avail{color:var(--accent);border-color:var(--accent)
 .ccard .cs{font-size:13px;font-weight:800;margin-top:3px}.ccard .nm{font-size:11px;font-weight:700;white-space:nowrap}.ccard .sub{font-size:11px;font-weight:700}
 .ccard .sp{width:100%;height:20px;margin-top:2px}.ccard .sp svg{width:100%;height:100%}
 .ccard .sub.up{color:var(--green)}.ccard .sub.down{color:var(--red)}
-/* lounge tab */
-.pg[data-tab=lounge]>[data-v=trade],.pg[data-tab=lounge]>[data-v=borrow]{display:none!important}
-.pg[data-tab=trade]>[data-v=lounge],.pg[data-tab=borrow]>[data-v=lounge]{display:none!important}
-.pg[data-tab=lounge]{overflow:hidden;padding-bottom:10px}
-#loungeSec{flex:1;min-height:360px;display:flex}
-@media(min-width:900px){.pg[data-tab=lounge]{display:flex;grid-template-columns:none;grid-template-areas:none}}
-/* floating blue nav */
-.tabs{border:0;background:transparent;padding:0 12px calc(10px + env(safe-area-inset-bottom,0px));justify-content:center}
-.tabs{gap:6px}.tabs button{flex:1;max-width:150px;flex-direction:row;justify-content:center;gap:7px;font-size:13px;padding:12px 8px;border-radius:999px;background:var(--accent);color:rgba(255,255,255,.78);box-shadow:0 6px 18px rgba(47,123,255,.35)}
-.tabs button.on{color:#fff;background:#1d5fe0;box-shadow:0 6px 18px rgba(47,123,255,.5),inset 0 0 0 2px rgba(255,255,255,.55)}.tabs svg{width:19px;height:19px}
-.tabs{flex:none;display:flex;border-top:1px solid var(--line);background:var(--bg)}
-.tabs button{flex:1;background:none;border:0;color:var(--soft);font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 6px}
-.tabs button.on{color:var(--accent)}.tabs svg{width:22px;height:22px}
+/* lounge: sits on the Trade page below Markets */
+#loungeSec{display:flex;height:min(560px,calc(var(--vh,100vh) - 170px));min-height:380px;margin-top:6px}
+/* bottom nav: Trade / Borrow. Active = solid blue pill with white text */
+.tabs{flex:none;display:flex;justify-content:center;gap:10px;border-top:1px solid var(--line);background:var(--bg);padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px))}
+.tabs button{flex:1;max-width:200px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;border:1px solid var(--bd);border-radius:999px;background:var(--s2);color:var(--muted);font-size:14px;font-weight:750;padding:12px 10px;box-shadow:none}
+.tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 6px 18px rgba(47,123,255,.4)}
+.tabs button svg{width:20px;height:20px;stroke:currentColor}
 .chips{display:flex;gap:8px;margin:0 0 12px;overflow-x:auto}
 .chips button,.seg button{border:0;font-weight:700;color:var(--muted)}
 .chips button{background:var(--s2);border:1px solid var(--bd);border-radius:999px;padding:7px 14px;font-size:13px;white-space:nowrap}
@@ -174,7 +168,7 @@ button.pill{cursor:pointer}#avail{color:var(--accent);border-color:var(--accent)
 @media(max-height:760px){.balance{font-size:42px}.chg{margin-top:8px;font-size:17px;min-height:26px}.chip{font-size:15px}.card{padding:14px;margin-bottom:12px}.h2{font-size:21px;margin:4px 2px 9px}.asset{padding:11px 0}.ico{width:38px;height:38px}.step{padding:13px}}
 @media(max-height:760px){#kycCard{padding:14px}#kycCard .title{font-size:16px;margin-bottom:8px}#kycTxt{font-size:13px!important;line-height:1.45;margin-bottom:10px!important}#kycBtn{min-height:44px}}
 @media(max-height:620px){.balance{font-size:36px}.label{margin-bottom:4px;font-size:13px}.top{margin-bottom:8px}.hero{padding-bottom:8px}.foot{padding-top:7px;font-size:11px}}
-@media(min-width:900px){.pg[data-tab=trade]{grid-template-areas:"top" "mk";grid-template-columns:1fr}}
+@media(min-width:900px){.pg[data-tab=trade]{grid-template-areas:"top" "mk" "lounge";grid-template-columns:1fr}#loungeSec{grid-area:lounge}}
 .card{margin-bottom:22px}#repayCard{margin-bottom:24px}#sellNoteBox{margin-top:16px}#sellBtn{margin-top:8px;margin-bottom:10px}#kycCard{margin-top:6px}.hero{margin-bottom:6px}@media(max-height:760px){.card{margin-bottom:18px}}
 #helpFabOld{position:absolute;right:14px;bottom:130px;z-index:30;display:none;align-items:center;gap:7px;height:42px;padding:0 16px 0 13px;border:0;border-radius:999px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.28)}#helpFab svg{width:19px;height:19px}#helpFab:active{opacity:.85}
 .addfw{margin-top:14px;display:flex;justify-content:center;gap:8px}.addf.g{background:var(--s2);color:var(--text);border:1px solid var(--bd)}
@@ -225,7 +219,7 @@ input:focus,select:focus{outline:none;border-color:var(--accent)}
 
   <section id="ordSec" style="display:none"><div class="h2">Orders</div><div id="ordList" class="card"></div></section>
 </div>
-<nav class="tabs" id="tabs" aria-label="Main"><button data-t="trade" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Trade</button><button data-t="lounge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11.5h7M8.5 14.5h4"/></svg>Lounge</button><button data-t="borrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>Borrow</button></nav>
+<nav class="tabs" id="tabs" aria-label="Main"><button data-t="trade" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Trade</button><button data-t="borrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>Borrow</button></nav>
 <footer id="foot" class="foot"></footer>
 </main>
 
@@ -398,11 +392,10 @@ function renderMine(){const el=$("myAssets");if(!el)return;
   const mine=MK.filter(m=>(W.h[m[1]]||0)>0);
   const cash=W.usd>0.005?`<div class="asset"><div class="l"><div class="ico" style="background:var(--s2);color:var(--strong);display:grid;place-items:center;font-weight:800;font-size:18px">$</div><div><div class="nm">US Dollar</div><div class="qty">Cash balance${frozenUsd()>0.005?" · "+usd(frozenUsd())+" frozen":""}</div></div></div><div class="r"><div class="nm">${usd(W.usd)}</div></div></div>`:"";
   const rows=mine.map(m=>{const d=S.mk[m[1]],q=W.h[m[1]],up=!d||d.chg>=0;return `<button class="asset mrow" data-hs="${m[1]}"><div class="l"><div class="ico">${mkIcon(m)}</div><div><div class="nm">${m[2]}</div><div class="qty">${qf(q)} ${m[1]}</div></div></div><div class="r"><div class="nm">${d?usd(q*d.p):"—"}</div><div class="sub ${up?"up":"down"}">${d?pcs(d.chg):""}</div></div></button>`}).join("");
-  const coin='<svg class="cn" viewBox="0 0 54 54" aria-hidden="true"><circle cx="27" cy="27" r="25" style="fill:var(--s2);stroke:var(--bd)" stroke-width="1.5"/><circle cx="27" cy="27" r="18" fill="none" style="stroke:var(--accent)" stroke-width="1.6" stroke-dasharray="2.5 4" opacity=".55"/><circle cx="21" cy="24" r="2.3" style="fill:var(--text)"/><circle cx="33" cy="24" r="2.3" style="fill:var(--text)"/><circle cx="16.5" cy="30" r="2.8" style="fill:var(--accent)" opacity=".22"/><circle cx="37.5" cy="30" r="2.8" style="fill:var(--accent)" opacity=".22"/><path d="M21 30.5c1.9 3.2 3.9 4.5 6 4.5s4.1-1.3 6-4.5" fill="none" style="stroke:var(--text)" stroke-width="2.2" stroke-linecap="round"/></svg>';
-  const empty=mine.length?"":`<div class="nada">${coin}<div class="tx"><div class="tt">No crypto yet</div><div class="ms">Everyone starts somewhere. Grab your first coin and it will show up here.</div><div class="bt"><button class="eBtn p" data-ea="buy">Buy crypto</button><button class="eBtn" data-ea="receive">Receive</button></div></div></div>`;
-  el.innerHTML=`<div class="h2">Your crypto</div><div class="card" style="margin-bottom:0">${cash}${rows}${empty}</div>`;
+  if(!cash&&!rows){el.innerHTML="";return}
+  el.innerHTML=`<div class="h2">Your crypto</div><div class="card" style="margin-bottom:0">${cash}${rows}</div>`;
   el.querySelectorAll("[data-hs]").forEach(b=>b.onclick=()=>{S.sym=b.dataset.hs;S.step="view";drawMk();$("mkDlg").showModal()});
-  el.querySelectorAll("[data-ea]").forEach(b=>b.onclick=()=>{const a=b.dataset.ea;S.sym=null;S.back=null;if(a==="buy"){S.side="buy";S.step="pick"}else S.step="receive";drawMk();$("mkDlg").showModal()})}
+}
 async function callTrade(body){const {data,error}=await sb.functions.invoke("trade",{body});
   if(error){let m=error.message;try{m=(await error.context.json()).error||m}catch(e){}throw new Error(m)}
   if(data&&data.error)throw new Error(data.error);return data}
@@ -715,7 +708,7 @@ document.addEventListener("visibilitychange",()=>{if(document.hidden){if(ws){con
 startWs();
 // ---- Tabs: Trade (default) / Borrow ----
 function setTab(t){if(t==="borrow"){try{markBorrowDot(false);localStorage.setItem(tourKey("opened"),"1")}catch(e){}}$("pg").dataset.tab=t;document.querySelectorAll("#tabs button").forEach(b=>{b.classList.toggle("on",b.dataset.t===t);b.setAttribute("aria-current",b.dataset.t===t?"page":"false")});$("pg").scrollTop=0}
-[...$("pg").children].forEach(el=>{if(!el.matches(".top"))el.dataset.v=el.id==="mkSec"?"trade":el.id==="loungeSec"?"lounge":"borrow"});
+[...$("pg").children].forEach(el=>{if(!el.matches(".top"))el.dataset.v=el.id==="mkSec"||el.id==="loungeSec"?"trade":"borrow"});
 document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>setTab(b.dataset.t));setTab("trade");
 const hero=document.querySelector(".hero");if(hero)hero.style.display="none";
 setInterval(()=>{if(!dlg.open)loadOffer()},30000); // keep pool balances live
