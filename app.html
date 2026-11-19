@@ -160,13 +160,15 @@ button.pill{cursor:pointer}#avail{color:var(--accent);border-color:var(--accent)
 .trc .tsp{position:relative;width:118px;height:46px;flex:none}.trc .tsp svg{width:100%;height:100%;display:block;overflow:visible}.trc .tsp .beat{right:0;background:var(--green);width:8px;height:8px}
 .trc .t3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-top:10px;border-top:1px solid var(--line)}
 .trc .t3 div{display:flex;flex-direction:column;gap:2px;min-width:0}.trc .t3 small{font-size:10.5px;font-weight:700;color:var(--soft);text-transform:uppercase;letter-spacing:.06em}.trc .t3 b{font-size:14px;font-weight:800;color:var(--strong);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cpMsg{display:none;font-size:12.5px;line-height:1.45;color:var(--muted);margin-top:-4px}.cpMsg.show{display:block}.cpMsg a{color:var(--accent);font-weight:750}
 .trc .cp{border:0;border-radius:999px;background:var(--accent);color:#fff;font:inherit;font-weight:800;font-size:14px;padding:11px;cursor:pointer}.trc .cp:active{opacity:.75}.trc .cp.on{background:var(--s2);color:var(--green);border:1px solid var(--bd)}
 @media(min-width:560px){.trList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;padding-bottom:4px}.trc{flex:none}}
 .demo{margin-bottom:10px}
 /* desktop: wider page, trade tab = content left + sticky lounge right */
 @media(min-width:900px){
  .pg{width:min(100%,1200px)}
- .pg[data-tab=trade]{grid-template-columns:minmax(0,1fr) 410px;grid-template-areas:"top top" "tr tr" "mk lounge";grid-template-rows:auto auto 1fr}
+ .pg[data-tab=trade]{grid-template-columns:minmax(0,1fr) 410px;grid-template-areas:"top top" "bal bal" "tr tr" "mk lounge";grid-template-rows:auto auto auto 1fr}
+ #balSec{grid-area:bal}
  .trList{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.trc .tsp{width:90px}.trc .ret{font-size:24px}.trc .t1 .rk{display:none}
  #trSec{grid-area:tr}#mkSec{grid-area:mk}
  #loungeSec{grid-area:lounge;position:sticky;top:6px;margin-top:44px;height:calc(var(--vh,100vh) - 150px);max-height:780px;align-self:start}
@@ -238,8 +240,8 @@ input:focus,select:focus{outline:none;border-color:var(--accent)}
 .sHelp{margin-top:26px;padding-top:18px;border-top:1px solid var(--line)}.sHelp .sT{font-weight:700;font-size:16px}#helpBtns{display:grid;gap:8px;margin-top:10px}
 .brand{display:flex;align-items:center;gap:9px}.bmk{width:28px;height:28px;flex:none;border-radius:7px}
 </style>
-<script>/* Avatar files: put them in "avatars" or in "Avatar Part 1..N" folders next to app.html; every folder is tried. */
-window.NT_AV_FOLDERS=["avatars","Avatar Part 1","Avatar Part 2","Avatar Part 3","Avatar Part 4","Avatar Part 5","Avatar Part 6"];
+<script>/* Avatar files: put them in avatars-part1..4 (or "avatars") folders next to app.html; every folder is tried. */
+window.NT_AV_FOLDERS=["avatars-part1","avatars-part2","avatars-part3","avatars-part4","avatars"];
 window.ntAvList=function(n){var f=NT_AV_FOLDERS,r=[],x=["webp","jpg","jpeg","png"],i,j;for(j=0;j<x.length;j++)for(i=0;i<f.length;i++)r.push(encodeURI(f[i]+"/"+n+"."+x[j]));return r};
 window.ntAv=function(i){var l=ntAvList(i.dataset.n),k=+(i.dataset.e||0)+1;if(k>=l.length){i.remove();return}i.dataset.e=k;i.src=l[k]};
 window.ntImg=function(n){return '<img alt="" data-n="'+n+'" src="'+ntAvList(n)[0]+'" onerror="ntAv(this)">'}</script>
@@ -258,8 +260,9 @@ window.ntImg=function(n){return '<img alt="" data-n="'+n+'" src="'+ntAvList(n)[0
     </section>
 
   <div id="assetsWrap"><div id="assets" class="card"><div class="empty">No loan offer available yet.</div></div><div id="sellNoteBox"></div></div>
+  <section id="balSec"><div id="demo" class="demo"></div></section>
   <section id="trSec"></section>
-  <section id="mkSec"><div id="demo" class="demo"></div><div id="myAssets"></div><div class="h2">Markets<span class="rateTf">24h change · 7-day chart</span></div><div class="chips" id="chips" style="display:none"><button data-c="all" class="on">All</button><button data-c="major">Majors</button><button data-c="meme">Meme coins</button></div><div id="mkts" class="cstrip"></div></section>
+  <section id="mkSec"><div id="myAssets"></div><div class="h2">Markets<span class="rateTf">24h change · 7-day chart</span></div><div class="chips" id="chips" style="display:none"><button data-c="all" class="on">All</button><button data-c="major">Majors</button><button data-c="meme">Meme coins</button></div><div id="mkts" class="cstrip"></div></section>
   <section id="loungeSec"></section>
   <section id="kycCard" class="card" style="display:none;border-color:var(--infobd);background:var(--infobg)"><div class="title" id="kycTitle"></div><div class="small" id="kycTxt" style="margin:0 0 12px;color:var(--infotx);font-size:14px"></div><a id="kycBtn" class="btn" href="kyc.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Verify my identity</a></section>
   <button id="sellBtn" class="btn" style="width:100%" disabled>Draw amount</button>
@@ -411,8 +414,9 @@ function mkChart(d,up,id){if(!d||!d.sp||d.sp.length<2)return '<div class="sk"></
   return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".38"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>${[25,50,75].map(y=>`<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="currentColor" stroke-opacity=".1" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/>`).join("")}<polygon points="0,${H} ${ln} ${W},${H}" fill="url(#${gid})"/><polyline points="${ln}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg><i class="beat" style="top:${pt[pt.length-1][1]}%;background:${col}"></i>`}
 function mkRange(d){if(!d||!d.sp||d.sp.length<2)return"";return `<span>Low ${mpx(Math.min(...d.sp))}</span><span>7 days</span><span>High ${mpx(Math.max(...d.sp))}</span>`}
 function renderMk(){
-  $("mkts").innerHTML=MK.slice(0,S.mkAll?MK.length:4).map(m=>{const d=S.mk[m[1]],up=!d||d.chg>=0;
-    return `<button type="button" class="ccard" data-s="${m[1]}" aria-label="${m[2]}"><div class="ch"><div class="ico">${mkIcon(m)}</div><div class="cn"><b>${m[1]}</b><span>${m[2]}</span></div><div class="sub ${up?"up":"down"}" data-ch>${d?pcs(d.chg):""}</div></div><div class="px" data-pr>${d?mpx(d.p):"—"}</div><div class="sp">${mkChart(d,up,m[1])}</div><div class="rg" data-rg>${mkRange(d)}</div></button>`}).join("")+`<button type="button" class="mkMore" id="mkMore">${S.mkAll?"Show fewer markets":"Show all "+MK.length+" markets"}</button>`;
+  const PRI=["BONK","WIF","PEPE","BTC"],ORD=PRI.map(k=>MK.find(m=>m[1]===k)).filter(Boolean).concat(MK.filter(m=>!PRI.includes(m[1])));
+  $("mkts").innerHTML=ORD.slice(0,S.mkAll?ORD.length:4).map(m=>{const d=S.mk[m[1]],up=!d||d.chg>=0;
+    return `<button type="button" class="ccard" data-s="${m[1]}" aria-label="${m[2]}"><div class="ch"><div class="ico">${mkIcon(m)}</div><div class="cn"><b>${m[1]}</b><span>${m[2]}</span></div><div class="sub ${up?"up":"down"}" data-ch>${d?pcs(d.chg):""}</div></div><div class="px" data-pr>${d?mpx(d.p):"—"}</div><div class="sp">${mkChart(d,up,m[1])}</div><div class="rg" data-rg>${mkRange(d)}</div></button>`}).join("")+`<button type="button" class="mkMore" id="mkMore">${S.mkAll?"Show fewer markets":"Show all "+ORD.length+" markets"}</button>`;
   $("mkMore").onclick=()=>{S.mkAll=!S.mkAll;renderMk()};
   $("mkts").querySelectorAll(".ccard[data-s]").forEach(b=>b.onclick=()=>{S.sym=b.dataset.s;S.step="view";drawMk();$("mkDlg").showModal()});
   renderWallet();
@@ -759,10 +763,10 @@ startWs();
 // ---- Top traders (simulated, live-updating) ----
 (function(){
 const T=[
- {n:"Kwame Asante",h:"@kwamefx",c:"#2f7bff",av:11,r:184.2,pnl:48210,w:78,f:12400,tag:"#1"},
- {n:"Ama Serwaa",h:"@ama.sol",c:"#9945ff",av:52,r:131.7,pnl:31560,w:72,f:8900,tag:"#2"},
- {n:"Daniel Okoye",h:"@danielonchain",c:"#f7931a",av:203,r:97.4,pnl:22875,w:69,f:6150,tag:"#3"},
- {n:"Fatima Bello",h:"@fatbtc",c:"#26a17b",av:377,r:82.9,pnl:18340,w:66,f:4720,tag:"#4"}];
+ {n:"Michael Carter",h:"@mikecarter_fx",c:"#2f7bff",av:11,r:184.2,pnl:48210,w:78,f:12400,tag:"#1"},
+ {n:"Emily Johnson",h:"@emilytrades",c:"#9945ff",av:52,r:131.7,pnl:31560,w:72,f:8900,tag:"#2"},
+ {n:"James Walker",h:"@jwalker.sol",c:"#f7931a",av:203,r:97.4,pnl:22875,w:69,f:6150,tag:"#3"},
+ {n:"Sophia Bennett",h:"@sophiabtc",c:"#26a17b",av:377,r:82.9,pnl:18340,w:66,f:4720,tag:"#4"}];
 T.forEach((t,i)=>{t.s=[];let v=40;for(let k=0;k<32;k++){v+=(Math.random()-.36)*6+i*.2;t.s.push(Math.max(8,v))}});
 let fol={};try{fol=JSON.parse(localStorage.getItem("nt_copy")||"{}")}catch(e){}
 const k=n=>n>=1e3?(n/1e3).toFixed(n>=1e4?1:2).replace(/\.?0+$/,"")+"K":String(n);
@@ -770,9 +774,33 @@ const spk=a=>{const mn=Math.min(...a),r=(Math.max(...a)-mn)||1,H=46,W=118,p=a.ma
  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="trg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#35e875" stop-opacity=".35"/><stop offset="1" stop-color="#35e875" stop-opacity="0"/></linearGradient></defs><polygon points="0,${H} ${ln} ${W},${H}" fill="url(#trg)"/><polyline points="${ln}" fill="none" stroke="#35e875" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg><i class="beat" style="top:${(p[p.length-1][1]/H*100).toFixed(1)}%"></i>`};
 const chk='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.8l2.6 1.9 3.2-.1 1 3.1 2.6 1.9-1 3 1 3-2.6 1.9-1 3.1-3.2-.1L12 22.2l-2.6-1.9-3.2.1-1-3.1-2.6-1.9 1-3-1-3 2.6-1.9 1-3.1 3.2.1z" fill="#2f7bff"/><path d="M8 12.3l2.7 2.7L16.3 9.4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const usd0=n=>"$"+Math.round(n).toLocaleString("en-US");
+const cpLoad=()=>{try{return JSON.parse(localStorage.getItem("nt_copy2")||"{}")}catch(e){return{}}},cpSave=o=>{try{localStorage.setItem("nt_copy2",JSON.stringify(o))}catch(e){}};
+let cp=cpLoad();
+const cpBtn=(i)=>cp[i]?`<button class="cp on" data-c="${i}">Copying · ${usd0(cp[i].amt)} · Stop</button>`:`<button class="cp" data-c="${i}">Copy trader</button>`;
 function draw(){const el=document.getElementById("trSec");if(!el)return;
- el.innerHTML=`<div class="trHead"><div class="h2">Top traders</div><span class="trTag"><span class="liveDot"></span>Live · simulated</span></div><div class="trList">${T.map((t,i)=>`<div class="trc" style="--rc:${t.c}" data-i="${i}"><div class="t1"><div class="av" style="background:linear-gradient(135deg,${t.c},#111)">${t.n[0]}${ntImg(t.av)}</div><div class="nmw"><b>${t.n}${chk}</b><span>${t.h} · ${k(t.f)} copiers</span></div><span class="rk">${t.tag}</span></div><div class="t2"><div class="ret" data-r>+${t.r.toFixed(1)}%<small>30-day return</small></div><div class="tsp" data-sp>${spk(t.s)}</div></div><div class="t3"><div><small>Profit</small><b data-p>${usd0(t.pnl)}</b></div><div><small>Win rate</small><b>${t.w}%</b></div><div><small>Trades</small><b data-t>${(300+i*77)}</b></div></div><button class="cp${fol[i]?" on":""}" data-c="${i}">${fol[i]?"Copying ✓":"Copy trader"}</button></div>`).join("")}</div>`;
- el.querySelectorAll(".cp").forEach(b=>b.onclick=()=>{const i=b.dataset.c;fol[i]=!fol[i];try{localStorage.setItem("nt_copy",JSON.stringify(fol))}catch(e){}b.classList.toggle("on",!!fol[i]);b.textContent=fol[i]?"Copying ✓":"Copy trader"})}
+ el.innerHTML=`<div class="trHead"><div class="h2">Top traders</div><span class="trTag"><span class="liveDot"></span>Live · simulated</span></div><div class="trList">${T.map((t,i)=>`<div class="trc" style="--rc:${t.c}" data-i="${i}"><div class="t1"><div class="av" style="background:linear-gradient(135deg,${t.c},#111)">${t.n[0]}${ntImg(t.av)}</div><div class="nmw"><b>${t.n}${chk}</b><span>${t.h} · ${k(t.f)} copiers</span></div><span class="rk">${t.tag}</span></div><div class="t2"><div class="ret" data-r>+${t.r.toFixed(1)}%<small>30-day return</small></div><div class="tsp" data-sp>${spk(t.s)}</div></div><div class="t3"><div><small>Profit</small><b data-p>${usd0(t.pnl)}</b></div><div><small>Win rate</small><b>${t.w}%</b></div><div><small>Trades</small><b data-t>${(300+i*77)}</b></div></div>${cpBtn(i)}<div class="cpMsg" data-m="${i}"></div></div>`).join("")}</div>`;
+ el.querySelectorAll(".cp").forEach(b=>b.onclick=()=>cpClick(+b.dataset.c,b))}
+function cpMsg(i,t,deposit){const m=document.querySelector('#trSec .cpMsg[data-m="'+i+'"]');if(!m)return;m.innerHTML=t+(deposit?' <a href="#" data-dep>Deposit</a>':"");m.className="cpMsg show";const d=m.querySelector("[data-dep]");if(d)d.onclick=e=>{e.preventDefault();openFund()}}
+function cpClick(i,b){const t=T[i];
+ if(cp[i]){delete cp[i];cpSave(cp);draw();cpMsg(i,"Stopped copying "+t.n+". Your cash is back to normal.");return}
+ const cash=availCash();
+ if(!(pvOf()>=10)){cpMsg(i,"You have no funds to copy with yet. Deposit first, then you can copy "+t.n.split(" ")[0]+".",true);return}
+ if(cash<10){cpMsg(i,"Copy trading uses your cash balance and you have only "+usd(cash)+" available. Deposit or sell some crypto first (minimum $10).",true);return}
+ cpOpen(i,cash)}
+function cpOpen(i,cash){const t=T[i];let d=document.getElementById("cpDlg");if(!d){d=document.createElement("dialog");d.id="cpDlg";document.body.appendChild(d)}
+ const def=Math.min(cash,Math.max(10,Math.round(cash*.25)));
+ d.innerHTML=`<div style="padding-top:18px"><div style="display:flex;align-items:center;gap:12px"><div class="trc" style="all:unset;--rc:${t.c}"><div class="av" style="background:linear-gradient(135deg,${t.c},#111);width:46px;height:46px;border-radius:50%;position:relative;overflow:hidden;display:grid;place-items:center;color:#fff;font-weight:800;font-size:18px">${t.n[0]}${ntImg(t.av)}</div></div><div><div style="font-size:18px;font-weight:800">Copy ${t.n}</div><div class="small" style="margin:2px 0 0">${t.h} · +${t.r.toFixed(1)}% in 30 days · ${t.w}% win rate</div></div></div>
+ <div class="label" style="margin:18px 0 6px">Amount to allocate (from your cash: ${usd(cash)})</div>
+ <input id="cpAmt" type="number" inputmode="decimal" min="10" max="${cash}" step="1" value="${def}" style="width:100%;font-size:22px;font-weight:800;padding:12px 14px;border-radius:14px;border:1px solid var(--bd);background:var(--s2);color:var(--strong)">
+ <div class="chips" style="margin:10px 0 0">${[25,50,100].map(x=>`<button type="button" data-pct="${x}">${x}%</button>`).join("")}</div>
+ <div class="small" id="cpNote" style="margin-top:12px">Copy trading is in preview. Your allocation is saved on this device and no orders are placed automatically yet. You can stop at any time.</div>
+ <div class="msg" id="cpErr" style="color:var(--red);min-height:18px;margin-top:6px"></div>
+ <div style="display:flex;gap:10px;margin-top:8px"><button class="btn ghost" id="cpNo" style="flex:1">Cancel</button><button class="btn" id="cpGo" style="flex:1">Start copying</button></div></div>`;
+ d.querySelectorAll("[data-pct]").forEach(c=>c.onclick=()=>{d.querySelector("#cpAmt").value=Math.max(10,Math.floor(cash*c.dataset.pct/100))});
+ d.querySelector("#cpNo").onclick=()=>d.close();
+ d.querySelector("#cpGo").onclick=()=>{const v=Number(d.querySelector("#cpAmt").value),e=d.querySelector("#cpErr");if(!(v>=10)){e.textContent="Enter at least $10.";return}if(v>availCash()+.005){e.textContent="That is more than your available cash ("+usd(availCash())+").";return}
+  cp[i]={amt:v,ts:Date.now()};cpSave(cp);d.close();draw();cpMsg(i,"Copy request saved: "+usd(v)+" allocated to "+t.n+". Orders are not placed automatically yet (preview).")};
+ d.showModal()}
 function tick(){if(document.hidden)return;const el=document.getElementById("trSec");if(!el)return;
  T.forEach((t,i)=>{const d=(Math.random()-.4)*.12;t.r=Math.max(1,t.r+d);t.pnl=Math.max(0,t.pnl+d*260);t.s.push(Math.max(8,t.s[t.s.length-1]+(Math.random()-.4)*5));t.s.shift();
   const c=el.querySelector('.trc[data-i="'+i+'"]');if(!c)return;
@@ -782,7 +810,7 @@ draw();setInterval(tick,2200);
 })();
 // ---- Tabs: Trade (default) / Borrow ----
 function setTab(t){if(t==="borrow"){try{markBorrowDot(false);localStorage.setItem(tourKey("opened"),"1")}catch(e){}}$("pg").dataset.tab=t;document.querySelectorAll("#tabs button").forEach(b=>{b.classList.toggle("on",b.dataset.t===t);b.setAttribute("aria-current",b.dataset.t===t?"page":"false")});$("pg").scrollTop=0}
-[...$("pg").children].forEach(el=>{if(!el.matches(".top"))el.dataset.v=el.id==="mkSec"||el.id==="loungeSec"||el.id==="trSec"?"trade":"borrow"});
+[...$("pg").children].forEach(el=>{if(!el.matches(".top"))el.dataset.v=el.id==="mkSec"||el.id==="loungeSec"||el.id==="trSec"||el.id==="balSec"?"trade":"borrow"});
 document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>setTab(b.dataset.t));setTab("trade");
 const hero=document.querySelector(".hero");if(hero)hero.style.display="none";
 setInterval(()=>{if(!dlg.open)loadOffer()},30000); // keep pool balances live
@@ -1066,7 +1094,7 @@ function avSvg(seed){let a=2166136261;for(const ch of String(seed)){a^=ch.charCo
   else if(mouth===2)o+='<path d="M44 61q3 4 6 0q3 4 6 0" '+st+'/>';
   else o+='<ellipse cx="50" cy="62.6" rx="2.6" ry="3.1" fill="'+ink+'"/>';
   return o+'</g></svg>'}
-function showUser(){$("uEmail").textContent=uem||"Signed in";if(S.uid){let h=0;for(const c of S.uid)h=(h*31+c.charCodeAt(0))>>>0;$("profile").innerHTML=avSvg(S.uid)+ntImg(h%300+1);$("avBig").innerHTML=avSvg(S.uid)}}
+function showUser(){$("uEmail").textContent=uem||"Signed in";if(S.uid){let h=0;for(const c of S.uid)h=(h*31+c.charCodeAt(0))>>>0;$("profile").innerHTML=avSvg(S.uid)+ntImg(h%300+1);$("avBig").innerHTML=avSvg(S.uid)+ntImg(h%300+1)}}
 showUser();
 const BIZ={name:"NodeTray",whatsapp:"",phone:"",email:"",maps:"https://www.google.com/maps/search/?api=1&query=HQ4X%2B593%20Accra",address:"HQ4X+593, Liberia Road, Accra",hours:""}; // fill in your real details
 // Real mode: the server is the record of the loan, so every device shows the same loan.

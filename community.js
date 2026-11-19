@@ -12,7 +12,7 @@ const SUF=["_trades","_hodl","_fx","_charts","_dca","_swing","_risk","_scalps","
 const COLORS=["#f7931a","#627eea","#9945ff","#26a17b","#e8505b","#2d9cdb","#f2994a","#bb6bd9","#27ae60","#eb5757","#56ccf2","#f2c94c","#6fcf97","#ff7a59"];
 const AVATAR_BASE="avatars/",AVATAR_COUNT=300,AVATAR_EXT="webp"; /* put numbered files in /avatars (1.jpg, 2.jpg ...) and set AVATAR_COUNT */
 const LAST=["A","B","C","D","E","G","H","J","K","L","M","N","P","R","S","T","W"];
-const NAMECOL=["#e03a5f","#8b5cf6","#2f7bff","#12a15a","#e8890c","#d946ef","#0ea5b7","#ef4444","#7c3aed","#c98a04","#0f9d8a","#f0568a"];
+const NAMECOL=["#ff4d6d","#9d7bff","#3b8bff","#16c172","#ff9f1a","#e855d6","#12b5cb","#ff6b4a","#b388ff","#f5b800","#1fc9b0","#ff5fa2"];
 const PEOPLE=[],seen=new Set();
 for(let i=0;i<1000;i++){const f=FIRST[(i*7+Math.floor(i/50))%FIRST.length];let n;const k=i%7;
   const role=i%40===1?"mod":i%20<7?"new":i%20<14?"vet":"chat";
@@ -106,7 +106,34 @@ function banter(){return[[0,who("chat"),pick(CHAT)],[5,who("chat"),pick(CHAT)]]}
 function meme(){return[[0,who("chat"),pick(MEME)],[4,who("chat"),pick(["😂😂","too real","this is my whole personality 😭","felt this in my soul"])]]}
 function poll(){const [q,o]=pick(POLLS);return[[0,who("vet"),{poll:1,q,o,v:o.map(()=>ri(2,9)),my:-1}]]}
 function risk(){const a=who("vet");return[[0,a,pick(["rule number one for me: never risk more than 1 to 2 percent of the account on a single trade","position size matters more than the entry. a great entry with a huge size still ruins you"])],[6,who("vet"),"1 percent if the setup is average, 2 if I really like it. never more"],[7,who("new"),mention(a)+" how do you work out the size?"],[7,a,"risk amount divided by the distance to your stop. smaller stop distance means a bigger size, that is the formula"]]}
-const F={lounge:[modThread,topicThread,topicThread,topicThread,topicThread,topicThread,topicThread,topicThread,meme,poll,()=>qa("loans"),()=>qa("new"),banter],general:[topicThread,topicThread,topicThread,topicThread,topicThread,topicThread,meme,poll],ideas:[topicThread,topicThread,topicThread,topicThread,poll],loans:[()=>qa("loans"),()=>qa("loans"),()=>qa("loans"),banter,poll],new:[()=>qa("new"),()=>qa("new"),()=>qa("new"),()=>qa("new"),banter,meme]};
+/* ---- conversation generator: combines topics, coins, levels, patterns, moods and reactions into millions of distinct threads ---- */
+const COINL=["BTC","ETH","SOL","BONK","WIF","PEPE","DOGE","XRP","LINK","AVAX","ADA","SHIB","FLOKI","BNB"],MAJ=["BTC","ETH","SOL","BNB","XRP"];
+const TFS=["15m","1h","1h","4h","4h","daily","weekly"],TIMES=["today","this morning","since the open","last night","this week","in the last hour","since yesterday","over the weekend"];
+const PATS=["bull flag","bear flag","double bottom","double top","ascending triangle","falling wedge","range breakout","head and shoulders","cup and handle","higher low","lower high","liquidity sweep","fakeout","retest of support","retest of resistance","inverse head and shoulders"];
+const INDS=["RSI","MACD","the 50 EMA","the 200 EMA","VWAP","volume profile","Bollinger bands","funding rate","open interest","fib levels","order flow","the 20 EMA"];
+const ZONES=["the weekly open","yesterday's high","yesterday's low","the 4h support","the range high","the range low","last week's close","the 200 EMA","the daily support","the previous swing high","the monthly open"];
+const EMO=["fomo","revenge trading","anxiety","overconfidence","boredom","fear of missing the next pump","the urge to overtrade"];
+const rn=v=>{const m=v>=5000?500:v>=1000?50:v>=100?5:v>=10?.5:v>=1?.05:.005;return Math.round(v/m)*m};
+const lf=v=>v>=1000?Math.round(v).toLocaleString():v>=10?String(+v.toFixed(1)):v.toFixed(2);
+function lv(c){if(MAJ.includes(c)){const p=px(c);if(p)return lf(rn(p*(1+rnd(-.04,.05))))}return pick(ZONES)}
+function X(){const c=pick(COINL);let c2;do{c2=pick(COINL)}while(c2===c);return{c,c2,tf:pick(TFS),pat:pick(PATS),ind:pick(INDS),zone:pick(ZONES),t:pick(TIMES),pct:ri(2,14),pct2:ri(1,4),n:ri(2,7),emo:pick(EMO),side:Math.random()<.6?"long":"short",lvl:lv(c),lvl2:lv(c2)}}
+const SETUP=["{c} printing a {pat} on the {tf}, waiting on {zone} to hold","anyone else seeing the {pat} on {c} {tf}?","{c} just reclaimed {lvl} and {ind} is finally turning","{c} wicked into {lvl} and got bought instantly, bullish for me","I'm flat until {c} closes the {tf} above {lvl}","{c} {tf} looks like a {pat} but {ind} says otherwise","took a small {c} {side} near {lvl}, stop just under {zone}","{c} vs {c2} this week, {c2} looks heavier to me","{ind} on {c} is flashing something odd right now","the {c} {tf} chart is so clean right now","{c} is chopping around {lvl} and it's testing my patience","is {c} really breaking out or is that a {pat} trap?","dca'd into {c} again, not touching it until {zone} breaks","{c} funding flipped {t}, feels like shorts are getting squeezed","set an alert on {c} at {lvl}, will decide once it gets there","{c} up {pct}% {t}, I'm not chasing that","{c} down {pct}% {t}, adding or waiting? ngl I'm a little nervous","the {pat} on {c} {tf} is the only chart I trust today","cut my {c} for a small loss, {zone} did not hold","the {c2}/{c} ratio is doing something weird {t}","{c} sitting right on {zone}, this is the decision point","watching {c} and {c2} together {t}, they keep moving as a pair","{c} volume is dead on the {tf}, I'd stay small","looking for a {side} on {c} but only if {ind} agrees","{c} has been range bound {t}, breakout either way soon","{c} {tf} candle closed strong, {zone} is the next test","trimmed some {c} {t}, locking in {pct2}% and letting the rest ride","my {c} {side} is up {pct2}% and I moved my stop to break even"];
+const REACT=["that {pat} looks valid but I'd wait for the {tf} close","I'm watching {zone} too","{ind} is what I'd check before entering","waiting for {lvl} like everyone else tbh","fair, I keep size small when volume is this thin","same, got stopped out twice {t} lol","ngl that's a solid plan","nah I think it fakes out first","respect for having a stop","honestly I'd rather miss it than chase","I'd wait for a retest, no rush","lol every time I buy it dips","exactly why I only risk {pct2}% per trade","good eye 👀","this is the way","yeah the {tf} looks cleaner than the {tf} below it","I took the opposite side, we'll see who's right 😅","same setup, different coin 😂","the market loves to punish impatience","thanks for sharing the level, adding it to my chart","that's the same level I have marked","bold, I'd want more confirmation","not financial advice but that stop makes sense","this is why journaling helps, you'd see the pattern","nice, keep us posted","I got in earlier, now just managing the risk","if it loses {zone} I'm out, simple as that","been watching this exact thing since {t}","price respects that zone every time","hmm, risky with the news coming","never said it was easy 😂","lowkey the best read I've seen today"];
+const FQ=[["what's your stop on that?",["just under {zone}, risking about {pct2}%","below the last swing low, nothing fancy","{pct2}% of the account max, whatever the distance"]],["what timeframe are you using?",["mostly the {tf}, then I zoom out to confirm","{tf} for the entry, daily for the bias"]],["how big is the position?",["small. {pct2}% risk, the size just follows from the stop","small enough that I won't care if it stops out"]],["are you using {ind}?",["yeah, together with price action, never by itself","only as confirmation, price first"]],["where's your target?",["first at {lvl}, then I trail the rest","next resistance, nothing greedy"]],["is it too late to get in?",["I'd rather wait for a pullback than chase it","depends on your stop, if the risk is small it's fine"]]];
+const QUESTIONS=[["what's everyone using for entries, limit orders or market?",["limit almost always, you control the price and the fees are lower","market when it's fast, limit when I have time","I set a limit near {zone} and walk away"]],["is {ind} actually useful or am I overthinking it?",["useful as a second opinion, never as the only reason to trade","I dropped half my indicators and my results got better","{ind} is fine if you know what it measures"]],["how do you size a {c} trade with a {pct2}% stop?",["risk amount divided by the stop distance, that's your size","decide the dollar loss you can accept first, size comes after"]],["should I take profit on {c} or let it run?",["I take half at the first target and trail the rest","write the plan before the trade, not during it","there's no right answer, but having a rule beats guessing"]],["is it too late to get into {c}?",["nobody knows, so I buy in parts instead of all at once","if you're scared of being late, you're probably sizing too big","dca and stop worrying about the perfect entry"]],["{c} or {c2} for the next month?",["I'd rather hold both small than pick a winner","{c} for me, the chart is cleaner","depends, are you trading it or holding it?"]],["how do you deal with {emo} after a loss?",["I step away for an hour, charts will still be there","write down what happened, it takes the emotion out of it","reduce size for the next trades until you're calm again","I stop after {n} losses in a day, rule is rule"]],["what do you do when the market is just choppy?",["nothing. sitting out is a position too","smaller size and wider patience","I go for a walk honestly 😂"]],["how many trades a day is normal?",["quality over quantity, 1 to 3 for me","some days zero, and that's fine","more trades usually means more fees and more mistakes"]],["does anyone actually make money with {tf} charts?",["yes but it takes screen time and discipline","I found the {tf} less noisy than lower timeframes","start higher, you get fewer but better signals"]],["how do you pick which coin to trade?",["liquidity first, I stay with coins that have volume","I stick to {c} and {c2}, I know how they move","I only trade what I understand, meme coins are for tiny bets"]],["is it better to trade spot or use leverage?",["spot until you're consistent for months","leverage is a tool, not a strategy","if you have to ask, stay with spot for now"]],["what's the best time of day to trade?",["the US open has the most volume for me","I avoid the first few minutes after big news","whenever you can watch the screen without stress"]],["how do you handle a trade that goes against you right away?",["it either hits the stop or it doesn't, I don't touch it","I don't average down, ever","that's what the stop is for"]],["anyone else journaling their trades?",["yes, it's the best habit I picked up","screenshots with notes, takes two minutes","started last month and already spotted my mistakes"]],["what's a realistic monthly return?",["anything consistent beats screenshots of 100x","protect capital first, the return follows","people brag about wins, nobody posts the losses"]]];
+const TAKES=["{c} is the strongest chart on my list right now","honestly the best trade {t} was the one I didn't take","everyone's bullish on {c}, which makes me nervous","{c} looks heavy, I'm staying out until {zone} breaks","I think {c} gets a squeeze if it clears {lvl}","can't believe how fast {c} moved {t}","my watchlist {t}: {c}, {c2}, and {pct2} coins I'm ignoring on purpose","no trade is also a trade, flat today","{c} reminds me of last cycle's {pat}","funding is wild on {c}, careful with leverage","{c2} has been quietly outperforming {c} {t}","weekend moves on {c} are never what they look like","I'd rather catch {pct}% on {c} with a tight stop than chase {pct}0% 😂","{ind} just turned on {c}, interesting","I keep checking {c} every {n} minutes and I hate it 😅","patience is paying off on {c} so far","I need to stop watching {c} {tf} candles, they're hypnotic","small wins on {c} {t}, feeling disciplined","rotated a bit from {c2} into {c} {t}, we'll see","can't decide between {c} and {c2}, so I'm doing neither lol","sentiment on {c} flipped fast {t}","{c} liquidity is thin {t}, spreads are wider than usual","green day, stayed calm, did nothing. best kind of day 🟢","red day on {c}, closing the chart and going outside 🔴"];
+const WINS=["closed {c} {side} for +{pct2}.{n}%, stuck to the plan","stopped out on {c} for -{pct2}%, small and clean","{c} hit my first target, half off and stop to breakeven","{c} {side} got stopped right before it reversed 😭 classic","finally followed my rules on {c} and it paid 🙏","three losses in a row on {c}, sizing down tomorrow","{c} setup played out exactly as drawn, rare 😂","took profit early on {c}, it ran another {pct}%. I'm fine with it"];
+const THX=["thanks, that helps 🙏","ok that makes sense","never thought of it that way","saving this","appreciate it 🙌","good tip, writing it down"];
+function gSetup(){const x=X(),a=who(Math.random()<.5?"vet":"chat"),out=[[0,a,sub(pick(SETUP),x)]];const n=ri(1,3);for(let i=0;i<n;i++)out.push([4+i*4,who("chat"),sub(pick(REACT),x)]);
+  if(Math.random()<.45){const [q,ans]=pick(FQ),b=who(Math.random()<.5?"new":"chat");out.push([6,b,sub(q,x)]);out.push([6,a,sub(pick(ans),x)])}return out}
+function gQuestion(){const x=X(),[q,ans]=pick(QUESTIONS),a=who(Math.random()<.6?"new":"chat"),out=[[0,a,sub(q,x)]],k=ri(1,Math.min(3,ans.length)),pool=ans.slice().sort(()=>Math.random()-.5);
+  for(let i=0;i<k;i++)out.push([5+i*4,who(i?"chat":"vet"),(i===0&&Math.random()<.6?mention(a)+" ":"")+sub(pool[i],x)]);if(Math.random()<.55)out.push([6,a,pick(THX)]);return out}
+function gTake(){const x=X(),a=who("chat"),out=[[0,a,sub(pick(TAKES),x)]];const n=ri(1,2);for(let i=0;i<n;i++)out.push([5+i*4,who("chat"),sub(pick(REACT),x)]);return out}
+function gWin(){const x=X(),a=who("chat"),out=[[0,a,sub(pick(WINS),x)]];out.push([5,who("vet"),pick(["that's how it's done","a small loss is just the cost of doing business","consistency beats hero trades","respect for sharing the loss too","nice discipline"])]);if(Math.random()<.5)out.push([5,who("chat"),sub(pick(REACT),x)]);return out}
+const recent=[];
+function fresh(f){for(let i=0;i<10;i++){const t=f(),k=typeof t[0][2]==="string"?t[0][2].toLowerCase().slice(0,60):"";if(!k||!recent.includes(k)){if(k){recent.push(k);if(recent.length>400)recent.shift()}return t}}return f()}
+
+const F={lounge:[gSetup,gSetup,gSetup,gSetup,gSetup,gQuestion,gQuestion,gQuestion,gQuestion,gTake,gTake,gTake,gWin,gWin,topicThread,topicThread,modThread,meme,poll,()=>qa("loans"),()=>qa("new"),()=>qa("new"),banter]};
 const REPLY=[[/\b(hi|hey|hello|gm|good (morning|evening))\b/i,["gm 👋 welcome in","hey, glad you are here 👋","hello! what are you trading these days?"]],
 [/\b(loan|borrow|collateral|repay|late fee)\b/i,["the loan screen shows the collateral, fees and every payment date before you confirm. read it carefully and only borrow what you can repay"]],
 [/\b(btc|bitcoin)\b/i,["BTC around __BTC__ here. I keep my size small until it picks a direction","bitcoin sets the mood for everything else so I watch it first"]],
@@ -134,8 +161,8 @@ function add(room,p,body,ts,silent,re){
   const L=state.msgs[room];L.push(m);if(L.length>400)L.shift();
   if(!silent&&state.open)appendMsg(m);return m}
 const wantReply=(prev,p,k)=>k>0&&prev&&prev.p!==p&&Math.random()<.78?prev:null;
-function seed(){let t=Date.now()-ri(50,110)*60000;for(let i=0;i<24;i++){let prev=null;pick(F.lounge)().forEach((x,k)=>{t+=ri(15,140)*1000;prev=add("lounge",x[1],x[2],t,true,wantReply(prev,x[1],k))})}}
-function run(room){let d=0,prev=null;pick(F[room])().forEach((x,k)=>{d+=x[0]*1000+ri(300,1500);const p=x[1];
+function seed(){let t=Date.now()-ri(50,110)*60000;for(let i=0;i<30;i++){let prev=null;fresh(pick(F.lounge)).forEach((x,k)=>{t+=ri(15,140)*1000;prev=add("lounge",x[1],x[2],t,true,wantReply(prev,x[1],k))})}}
+function run(room){let d=0,prev=null;fresh(pick(F[room])).forEach((x,k)=>{d+=x[0]*1000+ri(300,1500);const p=x[1];
   setTimeout(()=>{const go=()=>{prev=add(room,p,x[2],undefined,false,wantReply(prev,p,k))};
     if(state.open){setTyping(p);setTimeout(()=>{setTyping(null);go()},ri(900,2200))}else go()},d)})}
 function notice(room,txt){const L=state.msgs[room],m={id:state.nid++,sys:1,p:{n:"",c:"#333"},body:txt,ts:Date.now(),rx:{}};L.push(m);if(L.length>400)L.shift();if(state.open)appendMsg(m)}
@@ -144,27 +171,27 @@ function schedule(){const lull=Math.random()<.2;setTimeout(()=>{const r="lounge"
 
 /* ---- UI ---- */
 const css=`#cmBtn{display:none!important}
-#cmDlg{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;margin:0;border:1px solid var(--line,#282828);border-radius:22px;background:var(--bg,#000);color:var(--text,#f5f5f5);overflow:hidden;box-shadow:0 14px 34px -18px rgba(0,0,0,.5)}
-.cmH{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line,#282828)}
-.cmH .ttl{display:flex;align-items:center;gap:8px;font-size:19px;font-weight:800;letter-spacing:-.3px}.cmH .hs{color:var(--soft,#85858a);font-weight:700}
+#cmDlg{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;margin:0;border:0;border-radius:0;background:transparent;color:var(--text,#f5f5f5);overflow:hidden;font-family:inherit}
+.cmH{display:flex;align-items:center;gap:10px;padding:2px 2px 10px}
+.cmH .ttl{display:flex;align-items:center;gap:8px;font-size:26px;font-weight:850;letter-spacing:-.6px;color:var(--strong,#fff)}.cmH .hs{color:var(--soft,#85858a);font-weight:700}
 .cmOn{font-size:12px;color:var(--muted,#9a9a9f);margin-top:3px}.cmOn i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#35e875;margin-right:6px}
 .cmTag{flex:none;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--s2,#202020);color:var(--muted,#9a9a9f);border:1px solid var(--line,#303030)}
 .cmWrap{position:relative;flex:1;min-height:0;display:flex}
-#cmLog{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;overflow-anchor:none;padding:14px 14px 6px;display:flex;flex-direction:column;gap:18px;scrollbar-width:thin}
+#cmLog{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;overflow-anchor:none;padding:6px 2px 6px;display:flex;flex-direction:column;gap:22px;scrollbar-width:none}#cmLog::-webkit-scrollbar{display:none}
 .cmM{display:flex;flex-direction:column;flex:none}
 .cmRow{display:flex;gap:12px;align-items:flex-start}
-.cmA{flex:none;position:relative;overflow:hidden;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px}.cmA img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cmA{flex:none;position:relative;overflow:hidden;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px}.cmA img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .cmA.s{width:20px;height:20px;font-size:10px}
-.cmRe{position:relative;display:flex;align-items:center;gap:7px;margin:0 0 4px 21px;padding-left:28px;min-height:22px;font-size:13.5px;color:var(--muted,#9a9a9f)}
+.cmRe{position:relative;display:flex;align-items:center;gap:7px;margin:0 0 5px 23px;padding-left:28px;min-height:22px;font-size:14.5px;color:var(--muted,#9a9a9f)}
 .cmRe:before{content:"";position:absolute;left:0;top:50%;bottom:-9px;width:24px;border-left:2px solid var(--bd,#303030);border-top:2px solid var(--bd,#303030);border-top-left-radius:9px}
 .cmRe .rt{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.cmRe .rt b{font-weight:750}
 .cmBody{min-width:0;flex:1}
 .cmN{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;line-height:1.25}
-.cmN .nm{font-size:17px;font-weight:750;letter-spacing:-.2px}
+.cmN .nm{font-size:19px;font-weight:800;letter-spacing:-.3px}
 .cmN .bd{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:2px 8px 2px 6px;border-radius:7px;background:var(--s2,#202020);border:1px solid var(--bd,#303030);color:var(--text,#f5f5f5)}
 .cmN .bd svg,.cmN .gm svg{display:block}
 .cmN .ago{font-size:12.5px;color:var(--muted,#85858a);font-weight:500}
-.cmT{font-size:17px;line-height:1.42;margin-top:3px;word-break:break-word}
+.cmT{font-size:18px;line-height:1.45;margin-top:4px;word-break:break-word;font-weight:450;letter-spacing:-.1px}
 .cmT .at{color:var(--accent,#2f7bff);font-weight:650;background:color-mix(in srgb,var(--accent,#2f7bff) 16%,transparent);padding:0 4px;border-radius:5px}
 .cmM.me .cmRow{background:color-mix(in srgb,var(--accent,#2f7bff) 9%,transparent);margin:0 -8px;padding:6px 8px;border-radius:12px}
 .cmCard{margin-top:6px;padding:12px;border-radius:16px;background:var(--s1,#151515);border:1px solid var(--line,#303030);min-width:230px;max-width:340px}
@@ -178,7 +205,7 @@ const css=`#cmBtn{display:none!important}
 .cmTy .dots{display:inline-flex;gap:3px}.cmTy .dots i{width:7px;height:7px;border-radius:50%;background:var(--muted,#85858a);opacity:.5}
 @media(prefers-reduced-motion:no-preference){.cmTy .dots i{animation:cmd 1s infinite}.cmTy .dots i:nth-child(2){animation-delay:.15s}.cmTy .dots i:nth-child(3){animation-delay:.3s}}
 @keyframes cmd{50%{opacity:1;transform:translateY(-2px)}}
-.cmF{display:flex;align-items:center;gap:8px;margin:4px 12px 8px;padding:6px 6px 6px 16px;border-radius:26px;background:var(--s2,#202020);border:1px solid var(--bd,#303030)}
+.cmF{display:flex;align-items:center;gap:8px;margin:4px 0 8px;padding:6px 6px 6px 16px;border-radius:26px;background:var(--s2,#202020);border:1px solid var(--bd,#303030)}
 .cmF input{flex:1;min-width:0;background:none;border:0;padding:8px 0;font:inherit;font-size:16px;color:inherit;outline:none}
 .cmF button{flex:none;display:grid;place-items:center;width:44px;height:40px;border:0;border-radius:14px;background:var(--accent,#2f7bff);color:#fff;cursor:pointer}.cmF button svg{width:20px;height:20px}
 .cmDis{font-size:11px;color:var(--soft,#85858a);text-align:center;padding:0 16px 10px;line-height:1.4}
@@ -208,7 +235,7 @@ function appendMsg(m){const log=$("cmLog");if(!log)return;const stick=atBottom(l
 function refreshMsg(m){const el=$("cmLog").querySelector('[data-id="'+m.id+'"]');if(el)el.innerHTML=inner(m)}
 function setTyping(p){const t=$("cmTy");if(!t)return;t.innerHTML=p?`<span class="dots"><i></i><i></i><i></i></span><span><b>${esc(p.n)}</b> is typing…</span>`:""}
 const onl=()=>`<i></i>${state.online.toLocaleString()} of 1,000 simulated members online`;
-function render(){const log=$("cmLog");if(!log)return;log.innerHTML="";const f=document.createDocumentFragment();state.msgs.lounge.slice(-120).forEach(m=>f.appendChild(mkEl(m)));log.appendChild(f);toBottom();$("cmOn").innerHTML=onl()}
+function render(){const log=$("cmLog");if(!log)return;log.innerHTML="";const f=document.createDocumentFragment();state.msgs.lounge.slice(-120).forEach(m=>f.appendChild(mkEl(m)));log.appendChild(f);toBottom();}
 function botSay(room,p,t,delay,re){setTimeout(()=>{if(state.open)setTyping(p);setTimeout(()=>{setTyping(null);add(room,p,t,undefined,false,re)},ri(900,2000))},delay)}
 function userSay(){
   const i=$("cmIn"),t=i.value.trim().slice(0,300);if(!t)return;i.value="";const mine=add("lounge",ME,t),room="lounge";
@@ -219,9 +246,9 @@ function greet(){if(state.greeted)return;state.greeted=true;setTimeout(()=>botSa
 function build(){
   const st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
   const d=document.createElement("section");d.id="cmDlg";d.setAttribute("aria-label","Traders lounge");
-  d.innerHTML=`<div class="cmH"><div><div class="ttl"><span class="hs">#</span>Traders-Lounge</div><div class="cmOn" id="cmOn"></div></div><span class="cmTag" title="The members and messages here are simulated, not real users">Simulated</span></div>
+  d.innerHTML=`<div class="cmH"><div class="ttl">Trader Lounge</div></div>
   <div class="cmWrap"><div id="cmLog" role="log" aria-live="off" aria-label="Messages"></div><button class="cmNew" id="cmNew" type="button">New messages ↓</button></div><div class="cmTy" id="cmTy"></div>
-  <div class="cmF"><input id="cmIn" placeholder="Message #traders-lounge" maxlength="300" autocomplete="off" aria-label="Your message"><button id="cmSend" type="button" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+  <div class="cmF"><input id="cmIn" placeholder="Message Trader Lounge" maxlength="300" autocomplete="off" aria-label="Your message"><button id="cmSend" type="button" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
   <div class="cmDis">Not financial advice. Trading and borrowing carry risk. Never share your seed phrase or passwords.</div>`;
   (document.getElementById("loungeSec")||document.getElementById("mkSec")||document.body).appendChild(d);
   try{const e=document.getElementById("uEmail"),h=(e&&e.textContent||"").split("@")[0].replace(/[^\w.]/g,"").slice(0,16);if(h)ME.n=h}catch(_){}
@@ -233,7 +260,7 @@ function build(){
     if(pl){const m=all.find(x=>x.id==+pl.dataset.poll);if(m&&!state.voted[m.id]){state.voted[m.id]=1;m.body.v[+pl.dataset.i]++;refreshMsg(m)}}});
   $("cmNew").onclick=toBottom;
   $("cmSend").onclick=userSay;$("cmIn").addEventListener("keydown",e=>{if(e.key==="Enter")userSay()});
-  setInterval(()=>{state.online=Math.max(300,Math.min(750,state.online+ri(-6,6)));const o=$("cmOn");if(o)o.innerHTML=onl()},5000);
+  
   setInterval(()=>{document.querySelectorAll("#cmLog .ago[data-ts]").forEach(x=>{x.textContent=ago(+x.dataset.ts)})},30000);
   setInterval(()=>{const polls=state.msgs.lounge.filter(m=>m.body&&m.body.poll);if(polls.length){const m=pick(polls);m.body.v[ri(0,m.body.v.length-1)]+=ri(1,2);refreshMsg(m)}},9000)}
 function start(){seed();build();schedule();setTimeout(()=>run("lounge"),3000)}
