@@ -28,6 +28,10 @@ const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"
 const rnd=(a,b)=>a+Math.random()*(b-a),ri=(a,b)=>Math.floor(rnd(a,b+1)),pick=a=>a[Math.floor(Math.random()*a.length)];
 const who=r=>pick(PEOPLE.filter(p=>p.role===r));
 const SYMS=["BTC","ETH","SOL","BNB","XRP"];
+/* neighbouring topics share a coin or a theme, so the room drifts instead of jumping */
+const TOPICS=[{sym:"BTC",kind:"price"},{sym:"BTC",kind:"setup"},{sym:"ETH",kind:"setup"},{sym:"ETH",kind:"price"},{sym:"SOL",kind:"price"},{sym:"SOL",kind:"setup"},{sym:"SOL",kind:"risk"},{sym:"BTC",kind:"risk"}];
+const TP={i:0,n:0,max:6};
+const tsym=()=>TOPICS[TP.i].sym;
 const px=s=>{try{const e=S.mk[s];if(e&&e.p>0)return e.p}catch(_){}return{BTC:98000,ETH:3400,SOL:210,BNB:640,XRP:2.3}[s]};
 const chg=s=>{try{const e=S.mk[s];if(e&&typeof e.chg==="number")return e.chg}catch(_){}return rnd(-3,3)};
 const fp=v=>v>=1000?v.toLocaleString(undefined,{maximumFractionDigits:0}):v>=10?v.toFixed(2):v.toFixed(3);
@@ -68,20 +72,31 @@ const MEME=["my portfolio when I check it every 5 minutes vs once a week. one gi
 const POLLS=[["Will BTC close higher today than yesterday?",["Yes 📈","No 📉"]],["Best strategy for beginners?",["DCA","Swing trading","Just hold"]],["How much of your account do you risk per trade?",["Under 1%","1 to 2%","More than 2%"]],["Do you use stop losses?",["Always","Sometimes","Never 😬"]],["Spot or leverage?",["Spot only","A bit of both","Leverage"]]];
 
 /* ---- thread factories (return [[delaySec, person, body], ...]) ---- */
-function market(){const s=pick(SYMS),a=who("chat"),b=who("vet"),c=who("chat"),p=px(s),ch=chg(s);
+function market(){const s=tsym(),a=who("chat"),b=who("vet"),c=who("chat"),p=px(s),ch=chg(s);
   return[[0,a,sub("{s} sitting around {p} ({c} today). {t}",{s,p:fp(p),c:sg(ch),t:pick(["thin volume, I would not chase here","watching how it reacts to this level","not doing anything until it picks a direction","funding looks calm so far"])})],[6,b,pick(["agreed, thin books make every wick look like a trend","I keep size small in chop like this","range until proven otherwise"])],[7,c,pick(["waiting for a clean retest 🙏","patience pays more than clicks","I will let it come to me"])]]}
 function qa(room){const [q,ans]=pick(QA[room]),a=who("new"),out=[[0,a,q]];ans.forEach((t,i)=>out.push([6+i*3,who("vet"),(i===0?mention(a)+" ":"")+t]));if(Math.random()<.65)out.push([6,a,pick(["thanks, that helps a lot 🙏","got it, never thought of it like that","ok that makes sense, appreciate it","saving this, thank you"])]);return out}
-function card(){const s=pick(SYMS),a=who("vet"),p=px(s),long=Math.random()<.58,e=p*(1+rnd(-.004,.004)),tg=e*(long?1+rnd(.03,.06):1-rnd(.03,.06)),st=e*(long?1-rnd(.015,.025):1+rnd(.015,.025));
+function card(){const s=tsym(),a=who("vet"),p=px(s),long=Math.random()<.58,e=p*(1+rnd(-.004,.004)),tg=e*(long?1+rnd(.03,.06):1-rnd(.03,.06)),st=e*(long?1-rnd(.015,.025):1+rnd(.015,.025));
   const out=[[0,a,{card:1,sym:s,side:long?"Long":"Short",e,tg,st}],[6,who("new"),pick(["what timeframe is this on?","how did you pick that stop?","what is the risk reward here?"])],[6,a,pick(["4h chart. I will cut it if the level breaks, no hero trades","stop is below the last swing low, target is the next resistance","about 1:2, I size it so the loss is small"])]];
   if(Math.random()<.5)out.push([10,who("chat"),pick(["clean levels, watching","respect for posting a stop, most people do not","nice setup 👀"])]);return out}
-function result(){const s=pick(SYMS),a=who("vet"),win=Math.random()<.62,r=win?rnd(1.6,6.2):-rnd(.9,2.4),p=px(s);
+function result(){const s=tsym(),a=who("vet"),win=Math.random()<.62,r=win?rnd(1.6,6.2):-rnd(.9,2.4),p=px(s);
   return[[0,a,{card:1,sym:s,side:Math.random()<.5?"Long":"Short",e:p,tg:p*1.04,st:p*.98,res:r}],[6,who("chat"),win?"nice one, did you take profit in parts?":"stops exist for a reason, next one"],[7,a,win?"half at the first target, rest trailing":"small loss, moving on. position was small so it does not hurt"]]}
 function lesson(){const a=who("vet");return[[0,a,pick(["post-mortem on yesterday's loss: I moved my stop because I 'felt' it would bounce. it did not. do not touch the stop 🙃","lesson of the week: I traded without a plan and paid for it. plan first, click second","I overtraded after a win and gave it all back. now I stop after two trades a day"])],[6,who("vet"),"we have all done it. write the rule down before the trade, not during"],[7,who("new"),"this is the kind of honesty I needed to read today, thanks"]]}
+function topicChat(){const t=TOPICS[TP.i],s=t.sym,p=px(s),a=who("chat"),b=who("chat");
+  const L={price:["{s} is the one I am watching today","{s} chop is annoying, anyone positioned?","what is everyone's level for {s} right now?","{s} holding around {p}, that is the line for me","{s} volume looks thin, I would not size up"],
+   setup:["anyone got a clean {s} setup today?","my {s} idea is simple: wait for the retest, small size","{s} setup looks decent but I want confirmation first","how are you guys placing stops on {s}?"],
+   risk:["how are you sizing {s} trades lately?","{s} moves a lot so I keep the position small and the stop honest","risk first on {s}: decide the loss before the entry","I cut my {s} size in half after last week, sleeping better"]}[t.kind];
+  return[[0,a,sub(pick(L),{s,p:fp(p)})],[5,b,pick(["same here, waiting for a clean level","yeah I am flat until it picks a side","fair, I am keeping size small","agreed, no rush","this is what I do too"])]]}
+function topicThread(){
+  if(++TP.n>TP.max){TP.n=0;TP.max=ri(5,8);const from=TOPICS[TP.i];TP.i=(TP.i+1)%TOPICS.length;const t=TOPICS[TP.i],a=who("vet");
+    const br=t.sym===from.sym?pick(["speaking of "+t.sym+", how are people handling "+t.kind+" on it?","ok different angle on "+t.sym+": what about "+t.kind+"?"]):pick(["same idea on "+t.sym+" though, anyone looking at it?","moving over to "+t.sym+" for a sec, what is the "+t.kind+" like there?"]);
+    return[[0,a,br],[6,who("chat"),pick(["good call, been meaning to check that","yeah that one is on my list too","I have thoughts, give me a sec"])]]}
+  const t=TOPICS[TP.i];
+  return pick(t.kind==="price"?[market,market,topicChat,topicChat]:t.kind==="setup"?[card,card,result,topicChat]:[risk,lesson,topicChat,topicChat])()}
 function banter(){return[[0,who("chat"),pick(CHAT)],[5,who("chat"),pick(CHAT)]]}
 function meme(){return[[0,who("chat"),pick(MEME)],[4,who("chat"),pick(["😂😂","too real","this is my whole personality 😭","felt this in my soul"])]]}
 function poll(){const [q,o]=pick(POLLS);return[[0,who("vet"),{poll:1,q,o,v:o.map(()=>ri(2,9)),my:-1}]]}
 function risk(){const a=who("vet");return[[0,a,pick(["rule number one for me: never risk more than 1 to 2 percent of the account on a single trade","position size matters more than the entry. a great entry with a huge size still ruins you"])],[6,who("vet"),"1 percent if the setup is average, 2 if I really like it. never more"],[7,who("new"),mention(a)+" how do you work out the size?"],[7,a,"risk amount divided by the distance to your stop. smaller stop distance means a bigger size, that is the formula"]]}
-const F={general:[market,market,banter,banter,meme,poll,risk,()=>qa("new")],ideas:[card,card,result,lesson,market,risk,poll],loans:[()=>qa("loans"),()=>qa("loans"),()=>qa("loans"),banter,poll],new:[()=>qa("new"),()=>qa("new"),()=>qa("new"),()=>qa("new"),banter,meme]};
+const F={general:[topicThread,topicThread,topicThread,topicThread,topicThread,topicThread,meme,poll],ideas:[topicThread,topicThread,topicThread,topicThread,poll],loans:[()=>qa("loans"),()=>qa("loans"),()=>qa("loans"),banter,poll],new:[()=>qa("new"),()=>qa("new"),()=>qa("new"),()=>qa("new"),banter,meme]};
 const REPLY=[[/\b(hi|hey|hello|gm|good (morning|evening))\b/i,["gm 👋 welcome in","hey, glad you are here 👋","hello! what are you trading these days?"]],
 [/\b(loan|borrow|collateral|repay|late fee)\b/i,["the loan screen shows the collateral, fees and every payment date before you confirm. read it carefully and only borrow what you can repay"]],
 [/\b(btc|bitcoin)\b/i,["BTC around __BTC__ here. I keep my size small until it picks a direction","bitcoin sets the mood for everything else so I watch it first"]],
@@ -111,14 +126,14 @@ function seed(){ROOMS.forEach(r=>{let t=Date.now()-ri(50,110)*60000;for(let i=0;
 function run(room){let d=0;pick(F[room])().forEach(x=>{d+=x[0]*1000+ri(300,1500);const p=x[1];
   setTimeout(()=>{if(room===state.room&&state.open){state.typing=p.n;render(true);setTimeout(()=>{state.typing=null;add(room,p,x[2])},ri(900,2200))}else add(room,p,x[2])},d)})}
 function notice(room,txt){const L=state.msgs[room];L.push({id:state.nid++,sys:1,p:{n:"",c:"#333"},body:txt,ts:Date.now(),rx:{}});if(L.length>90)L.shift();if(room===state.room&&state.open)render(true)}
-function schedule(){const lull=Math.random()<.2;setTimeout(()=>{const r=Math.random()<.55&&state.open?state.room:pick(ROOMS).id;
+function schedule(){const lull=Math.random()<.2;setTimeout(()=>{const r=Math.random()<.7?state.room:pick(ROOMS).id;
   if(Math.random()<.12)notice(r,pick(PEOPLE).n+" joined the room");else run(r);schedule()},lull?ri(25000,60000):ri(4000,12000))}
 
 /* ---- UI ---- */
 const css=`#cmBtn{position:fixed;right:16px;bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:12px 16px;background:var(--accent,#a995f5);color:#17131f;font:inherit;font-weight:750;box-shadow:0 6px 24px rgba(0,0,0,.35);cursor:pointer}
 #cmBtn .b{min-width:20px;height:20px;border-radius:10px;background:#ff4d4d;color:#fff;font-size:12px;display:none;place-items:center;padding:0 5px}
-#cmDlg{padding:0;border:1px solid var(--line,#282828);border-radius:22px;background:var(--s1,#151515);color:var(--text,#f5f5f5);width:min(96vw,580px);height:min(88vh,800px);max-height:none;overflow:hidden}
-#cmDlg[open]{display:flex;flex-direction:column}#cmDlg::backdrop{background:rgba(0,0,0,.65)}
+#cmDlg{display:flex;flex-direction:column;margin:18px 0 8px;border:1px solid var(--line,#282828);border-radius:20px;background:var(--s1,#151515);color:var(--text,#f5f5f5);height:540px;overflow:hidden}
+#cmBtn{display:none!important}
 .cmH{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 8px}.cmH b{font-size:19px}
 .cmOn{font-size:12px;color:var(--muted,#9a9a9f)}.cmOn i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#35e875;margin-right:6px}
 .cmX{border:1px solid var(--line,#303030);background:var(--s2,#202020);color:inherit;border-radius:50%;width:36px;height:36px;cursor:pointer}
@@ -144,7 +159,6 @@ const css=`#cmBtn{position:fixed;right:16px;bottom:calc(88px + env(safe-area-ins
 .cmF button{border:0;border-radius:14px;background:var(--accent,#a995f5);color:#17131f;font-weight:750;padding:0 16px;cursor:pointer}
 .cmDis{font-size:11px;color:var(--muted,#85858a);text-align:center;padding:0 16px 10px}
 .cmNew{position:sticky;bottom:4px;align-self:center;border:0;border-radius:999px;background:var(--accent,#a995f5);color:#17131f;padding:6px 12px;font:inherit;font-size:12px;font-weight:700;display:none;cursor:pointer}
-@media(max-width:560px){#cmDlg{width:100vw;height:100dvh;max-width:100vw;max-height:100dvh;border-radius:0;border:0}}
 @media(prefers-reduced-motion:no-preference){.cmM{animation:cmIn .25s ease}@keyframes cmIn{from{opacity:0;transform:translateY(6px)}}}`;
 function badge(){const b=$("cmBadge");if(!b)return;b.textContent=state.unread>99?"99+":state.unread;b.style.display=state.unread?"grid":"none"}
 const ago=t=>{const s=Math.max(0,(Date.now()-t)/1000);return s<60?"now":s<3600?Math.floor(s/60)+"m":new Date(t).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})};
@@ -175,19 +189,16 @@ function userSay(){
 function greet(){if(state.greeted)return;state.greeted=true;setTimeout(()=>botSay("general",who("chat"),"welcome "+mention(ME)+" 👋 glad you joined",0),1500);setTimeout(()=>botSay("general",who("vet"),mention(ME)+" the New to crypto room is great if you want to ask questions, nobody judges 🙂",0),5500)}
 function build(){
   const st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
-  const btn=document.createElement("button");btn.id="cmBtn";btn.type="button";btn.setAttribute("aria-label","Open community chat");
-  btn.innerHTML='<span aria-hidden="true">💬</span> Community <span class="b" id="cmBadge"></span>';document.body.appendChild(btn);
-  const d=document.createElement("dialog");d.id="cmDlg";d.setAttribute("aria-label","Traders lounge");
-  d.innerHTML=`<div class="cmH"><div><b>Traders Lounge</b><div class="cmOn" id="cmOn"></div></div><button class="cmX" id="cmX" aria-label="Close">✕</button></div>
+  const d=document.createElement("section");d.id="cmDlg";d.setAttribute("aria-label","Community lounge");
+  d.innerHTML=`<div class="cmH"><div><b>Community lounge</b><div class="cmOn" id="cmOn"></div></div></div>
   <div class="cmRooms">${ROOMS.map(r=>`<button data-r="${r.id}" class="${r.id===state.room?"on":""}"># ${r.name}</button>`).join("")}</div>
   ${PREVIEW?'<div class="cmBan"><b>Preview.</b> The members and conversations in this room are simulated (not real users) while the community is being set up.</div>':""}
   <div id="cmLog" role="log" aria-live="polite" aria-label="Messages"></div><div class="cmTy" id="cmTy"></div>
   <div class="cmF"><input id="cmIn" placeholder="Message the room" maxlength="300" autocomplete="off" aria-label="Your message"><button id="cmSend" type="button">Send</button></div>
   <div class="cmDis">Not financial advice. Trading and borrowing carry risk. Never share your seed phrase or passwords.</div>`;
-  document.body.appendChild(d);
+  (document.getElementById("mkSec")||document.body).appendChild(d);
   try{const e=document.getElementById("uEmail"),h=(e&&e.textContent||"").split("@")[0].replace(/[^\w.]/g,"").slice(0,16);if(h)ME.n=h}catch(_){}
-  btn.onclick=()=>{state.open=true;state.unread=0;badge();d.showModal();render(true);greet();setTimeout(()=>$("cmIn").focus(),60)};
-  d.addEventListener("close",()=>{state.open=false});$("cmX").onclick=()=>d.close();
+  state.open=true;render(true);greet();
   d.querySelectorAll(".cmRooms button").forEach(b=>b.onclick=()=>setRoom(b.dataset.r));
   $("cmSend").onclick=userSay;$("cmIn").addEventListener("keydown",e=>{if(e.key==="Enter")userSay()});
   setInterval(()=>{state.online=Math.max(100,Math.min(260,state.online+ri(-4,4)));if(state.open&&$("cmOn"))$("cmOn").innerHTML=`<i></i>${state.online} simulated online`},5000);

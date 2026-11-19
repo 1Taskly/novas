@@ -200,7 +200,7 @@ input:focus,select:focus{outline:none;border-color:var(--accent)}
     </section>
 
   <div id="assetsWrap"><div id="assets" class="card"><div class="empty">No loan offer available yet.</div></div><div id="sellNoteBox"></div></div>
-  <section id="mkSec"><div id="demo" class="demo"></div><div id="myAssets"></div><div class="h2">Exchange rates<span class="rateTf">24h</span></div><div class="chips" id="chips"><button data-c="all" class="on">All</button><button data-c="major">Majors</button><button data-c="meme">Meme coins</button></div><div id="mkts" class="card"></div></section>
+  <section id="mkSec"><div id="demo" class="demo"></div><div id="myAssets"></div><div class="h2">Top coins<span class="rateTf">24h</span></div><div class="chips" id="chips" style="display:none"><button data-c="all" class="on">All</button><button data-c="major">Majors</button><button data-c="meme">Meme coins</button></div><div id="mkts" class="card"></div></section>
   <section id="kycCard" class="card" style="display:none;border-color:var(--infobd);background:var(--infobg)"><div class="title" id="kycTitle"></div><div class="small" id="kycTxt" style="margin:0 0 12px;color:var(--infotx);font-size:14px"></div><a id="kycBtn" class="btn" href="kyc.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Verify my identity</a></section>
   <button id="sellBtn" class="btn" style="width:100%" disabled>Draw amount</button>
 
@@ -346,7 +346,7 @@ function spark(a,w,h,up,dot){if(!a||a.length<2)return"";const mn=Math.min(...a),
   return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${l.map((v,i)=>(i/(l.length-1)*w).toFixed(1)+","+(h-2-(v-mn)/r*(h-4)).toFixed(1)).join(" ")}" fill="none" stroke="${up?"#35e875":"#ff5b5b"}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>${dot?`<i class="beat" style="top:${((h-2-(l[l.length-1]-mn)/r*(h-4))/h*100).toFixed(1)}%;background:${up?"#35e875":"#ff5b5b"}"></i>`:""}`}
 const mkIcon=m=>LOGO[BORROW[m[1]]]||LOGO[m[1]]||`<span style="background:${m[3]};width:100%;height:100%;display:grid;place-items:center;color:#fff;font-size:${m[1].length>3?10:12}px;font-weight:800;position:relative;border-radius:50%;overflow:hidden">${m[1].slice(0,4)}<img alt="${m[1]}" src="${(S.img&&S.img[m[1]])||"https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/"+m[1].toLowerCase()+".png"}" data-alt="https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${m[1].toLowerCase()}.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;background:var(--s1);display:none" onload="this.style.display='block'" onerror="if(this.dataset.alt&&this.src!==this.dataset.alt){this.src=this.dataset.alt}else{this.remove()}"></span>`;
 function renderMk(){
-  const mkAll=MK.filter(m=>S.cat==="all"||m[4]===S.cat),mkMore=mkAll.length>6,mkList=S.mkAll||!mkMore?mkAll:mkAll.slice(0,6);
+  const mkAll=MK.slice(0,4),mkMore=false,mkList=S.mkAll||!mkMore?mkAll:mkAll.slice(0,6);
   $("mkts").innerHTML=mkList.map(m=>{const d=S.mk[m[1]],up=!d||d.chg>=0;
     return `<button class="asset mrow" data-s="${m[1]}"><div class="l"><div class="ico">${mkIcon(m)}</div><div><div class="nm">${m[2]}</div><div class="qty">${m[1]}</div></div></div><div class="sp">${d?spark(d.sp,64,28,up,true):""}</div><div class="r"><div class="nm" data-pr>${d?mpx(d.p):"—"}</div><div class="sub ${up?"up":"down"}" data-ch>${d?pcs(d.chg):""}</div></div></button>`}).join("")+(mkMore?`<button type="button" id="mkMoreBtn" class="mrow" style="justify-content:center;padding:14px;color:var(--accent);font-weight:700;border-bottom:0">${S.mkAll?"Show less":"Show all "+mkAll.length}</button>`:"");
   $("mkts").querySelectorAll(".mrow[data-s]").forEach(b=>b.onclick=()=>{S.sym=b.dataset.s;S.step="view";drawMk();$("mkDlg").showModal()});
@@ -551,7 +551,7 @@ function dpState(r){const go=$("tGo");
   else{dpUi(r.text||"Approve the payment on your phone\u2026");dpPoll()}}
 function dpPoll(){if(dpTimer)return;let n=0;
   dpTimer=setInterval(async()=>{if(!$("mkDlg").open){dpStop();return}
-    if(++n>40){dpStop();dpUi("Timed out waiting for approval. Try again.");const g=$("tGo");if(g)g.disabled=false;return}
+    if(++n>40){dpStop();dpUi("Still waiting for approval. If you already approved it on your phone, your balance will update shortly. Otherwise try again.");const g=$("tGo");if(g)g.disabled=false;loadWallet();return}
     try{const r=await fn({action:"status",reference:dpRef});if(r.ok&&r.state!=="pending")dpState(r)}catch(e){}},3000)}
 async function payIn(v){const msg=$("tMsg"),net=$("dpNet").value,phone=ghNum($("dpNum").value),provider=PROV_CODE[net];msg.className="msg";
   if(!provider||!phone){msg.textContent="Choose your network and enter a valid mobile money number.";return}
