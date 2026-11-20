@@ -151,7 +151,7 @@ button.pill{cursor:pointer}#avail{color:var(--accent);border-color:var(--accent)
 .trc{flex:0 0 min(82%,300px);scroll-snap-align:start;background:var(--s1);border:1px solid var(--line);border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 26px -16px rgba(0,0,0,.55)}
 .trc .t1{display:flex;align-items:center;gap:11px}
 .trc .av{position:relative;width:46px;height:46px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-weight:800;font-size:18px;overflow:hidden;box-shadow:0 0 0 2px var(--s1),0 0 0 4px var(--rc,#2f7bff)}
-.trc .av img,.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.trc .av img,.avatar img,.cmA img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .trc .nmw{flex:1;min-width:0}.trc .nmw b{display:flex;align-items:center;gap:5px;font-size:15.5px;font-weight:800;color:var(--strong);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .trc .nmw b svg{width:15px;height:15px;flex:none}.trc .nmw span{font-size:12.5px;color:var(--muted)}
 .trc .rk{font-size:11px;font-weight:800;color:var(--amber);background:rgba(245,185,66,.14);border-radius:999px;padding:4px 9px;flex:none}
@@ -240,11 +240,26 @@ input:focus,select:focus{outline:none;border-color:var(--accent)}
 .sHelp{margin-top:26px;padding-top:18px;border-top:1px solid var(--line)}.sHelp .sT{font-weight:700;font-size:16px}#helpBtns{display:grid;gap:8px;margin-top:10px}
 .brand{display:flex;align-items:center;gap:9px}.bmk{width:28px;height:28px;flex:none;border-radius:7px}
 </style>
-<script>/* Avatar files: put them in avatars-part1..4 (or "avatars") folders next to app.html; every folder is tried. */
-window.NT_AV_FOLDERS=["avatars-part1","avatars-part2","avatars-part3","avatars-part4","avatars"];
-window.ntAvList=function(n){var f=NT_AV_FOLDERS,r=[],x=["webp","jpg","jpeg","png"],i,j;for(j=0;j<x.length;j++)for(i=0;i<f.length;i++)r.push(encodeURI(f[i]+"/"+n+"."+x[j]));return r};
-window.ntAv=function(i){var l=ntAvList(i.dataset.n),k=+(i.dataset.e||0)+1;if(k>=l.length){i.remove();return}i.dataset.e=k;i.src=l[k]};
-window.ntImg=function(n){return '<img alt="" data-n="'+n+'" src="'+ntAvList(n)[0]+'" onerror="ntAv(this)">'}</script>
+<script>/* Avatars: finds which files really exist in avatars-part1..4 (or avatars), caches the list on the device, and gives every person/user one that exists. */
+(function(){
+var F=[["avatars-part1",1,300],["avatars-part2",1,300],["avatars-part3",1,300],["avatars-part4",1,300],["avatars-part5",301,400],["avatars-part6",401,500],["avatars-part7",501,600],["avatars-part8",601,700],["avatars-part9",701,800],["avatars",1,800]],MAXN=777,KEY="nt_avm6",map={},done=false,found=0;
+try{var c=JSON.parse(localStorage.getItem(KEY)||"null");if(c&&Date.now()-c.t<864e5&&c.m){map=c.m;done=!!c.d}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({t:Date.now(),m:map,d:done}))}catch(e){}}
+function res(seed){var n=Math.abs(seed|0)%MAXN+1;if(map[n])return map[n];if(done){for(var k=1;k<=MAXN;k++){var q=(n-1+k)%MAXN+1;if(map[q])return map[q]}}return""}
+function hash(x){if(typeof x==="number")return x;var h=2166136261;x=String(x);for(var i=0;i<x.length;i++){h^=x.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+window.ntAvUrl=function(seed){return res(hash(seed))};
+window.ntImg=function(seed){var u=res(hash(seed));return '<img class="ntav" alt="" data-s="'+hash(seed)+'"'+(u?' src="'+u+'"':'')+' onerror="this.removeAttribute(\'src\')">'};
+function refresh(){var l=document.querySelectorAll("img.ntav:not([src])");for(var i=0;i<l.length;i++){var u=res(+l[i].dataset.s);if(u)l[i].src=u}}
+window.ntAvRefresh=refresh;
+function pass(ext,cb){var items=[],n,j;for(n=1;n<=MAXN;n++){if(map[n])continue;for(j=0;j<F.length;j++)if(n>=F[j][1]&&n<=F[j][2])items.push([n,encodeURI(F[j][0]+"/"+n+"."+ext)])}
+ var idx=0,act=0,fin=false;
+ function next(){while(act<30&&idx<items.length){var it=items[idx++];if(map[it[0]])continue;(function(it){act++;var im=new Image();im.onload=function(){if(!map[it[0]]){map[it[0]]=it[1];found++;if(found%25===0)save()}act--;next()};im.onerror=function(){act--;next()};im.src=it[1]})(it)}
+  if(act===0&&idx>=items.length&&!fin){fin=true;cb()}}
+ next()}
+function go(){if(done)return;pass("webp",function(){if(!Object.keys(map).length){pass("jpg",function(){done=true;save();refresh()})}else{done=true;save();refresh()}})}
+var iv=setInterval(function(){refresh();if(done)clearInterval(iv)},400);
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",function(){refresh();go()});else{refresh();go()}
+})();</script>
 <script src="https://js.paystack.co/v1/inline.js"></script>
 </head>
 <body>
@@ -766,7 +781,7 @@ const T=[
  {n:"Michael Carter",h:"@mikecarter_fx",c:"#2f7bff",av:11,r:184.2,pnl:48210,w:78,f:12400,tag:"#1"},
  {n:"Emily Johnson",h:"@emilytrades",c:"#9945ff",av:52,r:131.7,pnl:31560,w:72,f:8900,tag:"#2"},
  {n:"James Walker",h:"@jwalker.sol",c:"#f7931a",av:203,r:97.4,pnl:22875,w:69,f:6150,tag:"#3"},
- {n:"Sophia Bennett",h:"@sophiabtc",c:"#26a17b",av:377,r:82.9,pnl:18340,w:66,f:4720,tag:"#4"}];
+ {n:"Sophia Bennett",h:"@sophiabtc",c:"#26a17b",av:151,r:82.9,pnl:18340,w:66,f:4720,tag:"#4"}];
 T.forEach((t,i)=>{t.s=[];let v=40;for(let k=0;k<32;k++){v+=(Math.random()-.36)*6+i*.2;t.s.push(Math.max(8,v))}});
 let fol={};try{fol=JSON.parse(localStorage.getItem("nt_copy")||"{}")}catch(e){}
 const k=n=>n>=1e3?(n/1e3).toFixed(n>=1e4?1:2).replace(/\.?0+$/,"")+"K":String(n);
@@ -1094,7 +1109,7 @@ function avSvg(seed){let a=2166136261;for(const ch of String(seed)){a^=ch.charCo
   else if(mouth===2)o+='<path d="M44 61q3 4 6 0q3 4 6 0" '+st+'/>';
   else o+='<ellipse cx="50" cy="62.6" rx="2.6" ry="3.1" fill="'+ink+'"/>';
   return o+'</g></svg>'}
-function showUser(){$("uEmail").textContent=uem||"Signed in";if(S.uid){let h=0;for(const c of S.uid)h=(h*31+c.charCodeAt(0))>>>0;$("profile").innerHTML=avSvg(S.uid)+ntImg(h%300+1);$("avBig").innerHTML=avSvg(S.uid)+ntImg(h%300+1)}}
+function showUser(){$("uEmail").textContent=uem||"Signed in";if(S.uid){let h=0;for(const c of S.uid)h=(h*31+c.charCodeAt(0))>>>0;$("profile").innerHTML=avSvg(S.uid)+ntImg(S.uid);$("avBig").innerHTML=avSvg(S.uid)+ntImg(S.uid)}}
 showUser();
 const BIZ={name:"NodeTray",whatsapp:"",phone:"",email:"",maps:"https://www.google.com/maps/search/?api=1&query=HQ4X%2B593%20Accra",address:"HQ4X+593, Liberia Road, Accra",hours:""}; // fill in your real details
 // Real mode: the server is the record of the loan, so every device shows the same loan.

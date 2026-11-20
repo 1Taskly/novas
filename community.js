@@ -10,7 +10,7 @@ const FIRST=["Mike","Jake","Tyler","Chris","Brandon","Austin","Cody","Dustin","T
 const NICK=["Big Mike","JT","TJ","Dave","Tex","Smitty","Doc","Chip","Bubba","Mac","Ace","Slim","Cap","Rev","Hutch","Rocco","Moose","Duke","Ziggy","Sully"];
 const SUF=["_trades","_hodl","_fx","_charts","_dca","_swing","_risk","_scalps","_ta","_flow","21","99","_btc","_daily","_longs","_atl","_nyc","_tx","_fl","_chi"];
 const COLORS=["#f7931a","#627eea","#9945ff","#26a17b","#e8505b","#2d9cdb","#f2994a","#bb6bd9","#27ae60","#eb5757","#56ccf2","#f2c94c","#6fcf97","#ff7a59"];
-const AVATAR_BASE="avatars/",AVATAR_COUNT=300,AVATAR_EXT="webp"; /* put numbered files in /avatars (1.jpg, 2.jpg ...) and set AVATAR_COUNT */
+const AVATAR_BASE="avatars/",AVATAR_COUNT=777,AVATAR_EXT="webp"; /* put numbered files in /avatars (1.jpg, 2.jpg ...) and set AVATAR_COUNT */
 const LAST=["A","B","C","D","E","G","H","J","K","L","M","N","P","R","S","T","W"];
 const NAMECOL=["#ff4d6d","#9d7bff","#3b8bff","#16c172","#ff9f1a","#e855d6","#12b5cb","#ff6b4a","#b388ff","#f5b800","#1fc9b0","#ff5fa2"];
 const PEOPLE=[],seen=new Set();
@@ -219,7 +219,7 @@ function bodyHtml(b,m){
   if(b.poll){const tot=b.v.reduce((a,c)=>a+c,0);return `<div class="cmCard cmPoll"><b>📊 ${esc(b.q)}</b>${b.o.map((o,i)=>`<button data-poll="${m.id}" data-i="${i}"><i style="width:${Math.round(b.v[i]/tot*100)}%"></i><span>${esc(o)}</span><span>${Math.round(b.v[i]/tot*100)}%</span></button>`).join("")}<div class="cmN" style="margin-top:6px"><span class="ago">${tot} votes</span></div></div>`}
   const L=b.side==="Long",res=b.res==null?"":`<div class="r ${b.res>=0?"w":"l"}">${b.res>=0?"Closed +":"Stopped "}${b.res.toFixed(1)}%</div>`;
   return `<div class="cmCard"><div class="t"><span>${b.sym}/USD</span><span class="s ${L?"L":"S"}">${b.side}</span></div><div class="g"><span>Entry<b>${fp(b.e)}</b></span><span>Target<b>${fp(b.tg)}</b></span><span>Stop<b>${fp(b.st)}</b></span></div>${res}</div>`}
-function avatar(p,sm){return `<div class="cmA${sm?" s":""}" style="background:${p.c}">${esc((p.n[0]||"?").toUpperCase())}${p.img?`${window.ntImg?window.ntImg(p.num).replace("<img ","<img loading=\"lazy\" "):`<img src="${esc(p.img)}" alt="" onerror="this.remove()">`}`:""}</div>`}
+function avatar(p,sm){return `<div class="cmA${sm?" s":""}" style="background:${p.c}">${esc((p.n[0]||"?").toUpperCase())}${p.img?`${window.ntImg?window.ntImg(p.num):`<img src="${esc(p.img)}" alt="" onerror="this.remove()">`}`:""}</div>`}
 function inner(m){const p=m.p;if(m.sys)return `<div class="cmN" style="justify-content:center;opacity:.75"><span class="ago">${esc(m.body)}</span></div>`;
   const re=m.re?`<div class="cmRe">${avatar(m.re.p,1)}<span class="rt"><b style="color:${m.re.p.nc}">@${esc(m.re.p.n)}</b> ${esc(m.re.t)}</span></div>`:"";
   const badge=p.role==="mod"?`<span class="bd">${GEM("#8b5cf6",15)}MOD</span>`:p.role==="vet"?`<span class="bd">${GEM("#2f7bff",15)}PRO</span>`:p.gem?`<span class="gm">${GEM(p.nc,17)}</span>`:"";
