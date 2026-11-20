@@ -769,10 +769,11 @@ startWs();
 // ---- Top traders (simulated, live-updating) ----
 (function(){
 const T=[
- {n:"Michael Carter",h:"@mikecarter_fx",c:"#2f7bff",av:11,r:184.2,pnl:48210,w:78,f:12400,tag:"#1"},
- {n:"Emily Johnson",h:"@emilytrades",c:"#9945ff",av:52,r:131.7,pnl:31560,w:72,f:8900,tag:"#2"},
- {n:"James Walker",h:"@jwalker.sol",c:"#f7931a",av:203,r:97.4,pnl:22875,w:69,f:6150,tag:"#3"},
- {n:"Sophia Bennett",h:"@sophiabtc",c:"#26a17b",av:151,r:82.9,pnl:18340,w:66,f:4720,tag:"#4"}];
+ {n:"Michael Carter",h:"@mikecarter_fx",c:"#2f7bff",av:11,cap:38000,r:12.6,w:71,f:12400,tr:24,tag:"#1"},
+ {n:"Emily Johnson",h:"@emilytrades",c:"#9945ff",av:52,cap:52000,r:9.8,w:68,f:8900,tr:19,tag:"#2"},
+ {n:"James Walker",h:"@jwalker.sol",c:"#f7931a",av:203,cap:31000,r:7.4,w:64,f:6150,tr:16,tag:"#3"},
+ {n:"Sophia Bennett",h:"@sophiabtc",c:"#26a17b",av:151,cap:44000,r:5.9,w:66,f:4720,tr:12,tag:"#4"}];
+T.forEach((t,i)=>{t.pnl=t.cap*t.r/100;t.wins=Math.round(t.tr*t.w/100);t.s=[];let v=40;for(let k=0;k<32;k++){v+=(Math.random()-.3)*3.2+i*.05;t.s.push(Math.max(8,v))}});
 T.forEach((t,i)=>{t.s=[];let v=40;for(let k=0;k<32;k++){v+=(Math.random()-.36)*6+i*.2;t.s.push(Math.max(8,v))}});
 let fol={};try{fol=JSON.parse(localStorage.getItem("nt_copy")||"{}")}catch(e){}
 const k=n=>n>=1e3?(n/1e3).toFixed(n>=1e4?1:2).replace(/\.?0+$/,"")+"K":String(n);
@@ -784,7 +785,7 @@ const cpLoad=()=>{try{return JSON.parse(localStorage.getItem("nt_copy2")||"{}")}
 let cp=cpLoad();
 const cpBtn=(i)=>cp[i]?`<button class="cp on" data-c="${i}">Copying · ${usd0(cp[i].amt)} · Stop</button>`:`<button class="cp" data-c="${i}">Copy trader</button>`;
 function draw(){const el=document.getElementById("trSec");if(!el)return;
- el.innerHTML=`<div class="trHead"><div class="h2">Top traders</div><span class="trTag"><span class="liveDot"></span>Live · simulated</span></div><div class="trList">${T.map((t,i)=>`<div class="trc" style="--rc:${t.c}" data-i="${i}"><div class="t1"><div class="av" style="background:linear-gradient(135deg,${t.c},#111)">${t.n[0]}${ntImg(t.av)}</div><div class="nmw"><b>${t.n}${chk}</b><span>${t.h} · ${k(t.f)} copiers</span></div><span class="rk">${t.tag}</span></div><div class="t2"><div class="ret" data-r>+${t.r.toFixed(1)}%<small>30-day return</small></div><div class="tsp" data-sp>${spk(t.s)}</div></div><div class="t3"><div><small>Profit</small><b data-p>${usd0(t.pnl)}</b></div><div><small>Win rate</small><b>${t.w}%</b></div><div><small>Trades</small><b data-t>${(300+i*77)}</b></div></div>${cpBtn(i)}<div class="cpMsg" data-m="${i}"></div></div>`).join("")}</div>`;
+ el.innerHTML=`<div class="trHead"><div class="h2">Top traders</div></div><div class="trList">${T.map((t,i)=>`<div class="trc" style="--rc:${t.c}" data-i="${i}"><div class="t1"><div class="av" style="background:linear-gradient(135deg,${t.c},#111)">${t.n[0]}${ntImg(t.av)}</div><div class="nmw"><b>${t.n}${chk}</b><span>${t.h} · ${k(t.f)} copiers</span></div><span class="rk">${t.tag}</span></div><div class="t2"><div class="ret" data-r>+${t.r.toFixed(1)}%<small>30-day ROI</small></div><div class="tsp" data-sp>${spk(t.s)}</div></div><div class="t3"><div><small>Profit</small><b data-p>${usd0(t.pnl)}</b></div><div><small>Win rate</small><b data-w>${t.w}%</b></div><div><small>Trades</small><b data-t>${t.tr}</b></div></div>${cpBtn(i)}<div class="cpMsg" data-m="${i}"></div></div>`).join("")}</div>`;
  el.querySelectorAll(".cp").forEach(b=>b.onclick=()=>cpClick(+b.dataset.c,b))}
 function cpMsg(i,t,deposit){const m=document.querySelector('#trSec .cpMsg[data-m="'+i+'"]');if(!m)return;m.innerHTML=t+(deposit?' <a href="#" data-dep>Deposit</a>':"");m.className="cpMsg show";const d=m.querySelector("[data-dep]");if(d)d.onclick=e=>{e.preventDefault();openFund()}}
 function cpClick(i,b){const t=T[i];
@@ -808,11 +809,14 @@ function cpOpen(i,cash){const t=T[i];let d=document.getElementById("cpDlg");if(!
   cp[i]={amt:v,ts:Date.now()};cpSave(cp);d.close();draw();cpMsg(i,"Copy request saved: "+usd(v)+" allocated to "+t.n+". Orders are not placed automatically yet (preview).")};
  d.showModal()}
 function tick(){if(document.hidden)return;const el=document.getElementById("trSec");if(!el)return;
- T.forEach((t,i)=>{const d=(Math.random()-.4)*.12;t.r=Math.max(1,t.r+d);t.pnl=Math.max(0,t.pnl+d*260);t.s.push(Math.max(8,t.s[t.s.length-1]+(Math.random()-.4)*5));t.s.shift();
+ T.forEach((t,i)=>{
+  // open positions drift a little; a trade only closes every few minutes
+  let d=(Math.random()-.47)*t.cap*.0004;
+  if(Math.random()<.011){const win=Math.random()<t.w/100,sz=t.cap*(win?(.002+Math.random()*.011):-(.001+Math.random()*.007));d+=sz;t.tr=Math.min(30,t.tr+1);if(win)t.wins++;t.w=Math.round(t.wins/t.tr*100)}
+  t.pnl=Math.max(t.cap*.012,t.pnl+d);t.r=t.pnl/t.cap*100;t.s.push(Math.max(8,t.s[t.s.length-1]+d/t.cap*900));t.s.shift();
   const c=el.querySelector('.trc[data-i="'+i+'"]');if(!c)return;
-  c.querySelector("[data-r]").firstChild.nodeValue="+"+t.r.toFixed(1)+"%";c.querySelector("[data-p]").textContent=usd0(t.pnl);c.querySelector("[data-sp]").innerHTML=spk(t.s);
-  if(Math.random()<.35){t.tr=(t.tr||300+i*77)+1;c.querySelector("[data-t]").textContent=t.tr}})}
-draw();setInterval(tick,2200);
+  c.querySelector("[data-r]").firstChild.nodeValue="+"+t.r.toFixed(1)+"%";c.querySelector("[data-p]").textContent=usd0(t.pnl);c.querySelector("[data-sp]").innerHTML=spk(t.s);c.querySelector("[data-t]").textContent=t.tr;c.querySelector("[data-w]").textContent=t.w+"%"})}
+draw();setInterval(tick,4000);
 })();
 // ---- Tabs: Trade (default) / Borrow ----
 function setTab(t){if(t==="borrow"){try{markBorrowDot(false);localStorage.setItem(tourKey("opened"),"1")}catch(e){}}$("pg").dataset.tab=t;document.querySelectorAll("#tabs button").forEach(b=>{b.classList.toggle("on",b.dataset.t===t);b.setAttribute("aria-current",b.dataset.t===t?"page":"false")});$("pg").scrollTop=0}

@@ -319,11 +319,12 @@ const $=id=>document.getElementById(id);
 
 /* ---------- intro -> page ---------- */
 const splash=$("splash"),main=$("main");
-let shown=false;
+let shown=false,introDone=false,wantApp=false;
+function goApp(){if(introDone&&wantApp)location.replace("app.html")} // a signed-in visitor only leaves once the intro has fully played
 function enter(){
   if(shown)return;shown=true;
   splash.classList.add("out");main.classList.add("in");
-  setTimeout(()=>{splash.style.display="none"},800);
+  setTimeout(()=>{splash.style.display="none";introDone=true;goApp()},800);
 }
 splash.addEventListener("click",enter);
 setTimeout(enter,matchMedia("(prefers-reduced-motion:reduce)").matches?300:3400);
@@ -351,7 +352,7 @@ $("eye").onclick=()=>{
 
 const sb=supabase.createClient("https://djkcnhlstjvozrtfcqse.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqa2NuaGxzdGp2b3pydGZjcXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMDc5MDYsImV4cCI6MjEwNjg4MzkwNn0.lS_p3mV4tdFOmcOVZBTIXN52HPDOgDAHhLluxUTdX_s");
 const RECOVERING=/(^|[#&?])type=recovery/.test(location.hash+location.search);
-sb.auth.getSession().then(({data})=>{if(data.session&&!RECOVERING)location.replace("app.html")});
+sb.auth.getSession().then(({data})=>{if(data.session&&!RECOVERING){wantApp=true;goApp()}});
 let mode="up";
 function setMode(m){
   mode=m;go.querySelector("#goTxt").textContent=m==="up"?"Create account":"Log in";

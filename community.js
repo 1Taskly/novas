@@ -12,7 +12,7 @@ const SUF=["_trades","_hodl","_fx","_charts","_dca","_swing","_risk","_scalps","
 const COLORS=["#f7931a","#627eea","#9945ff","#26a17b","#e8505b","#2d9cdb","#f2994a","#bb6bd9","#27ae60","#eb5757","#56ccf2","#f2c94c","#6fcf97","#ff7a59"];
 const AVATAR_BASE="avatars/",AVATAR_COUNT=477,AVATAR_EXT="webp"; /* put numbered files in /avatars (1.jpg, 2.jpg ...) and set AVATAR_COUNT */
 const LAST=["A","B","C","D","E","G","H","J","K","L","M","N","P","R","S","T","W"];
-const NAMECOL=["#ff4d6d","#9d7bff","#3b8bff","#16c172","#ff9f1a","#e855d6","#12b5cb","#ff6b4a","#b388ff","#f5b800","#1fc9b0","#ff5fa2"];
+const NAMECOL=["#ff3d7f","#9b6bff","#2d9bff","#00d27a","#ffa012","#f23fd0","#00c2e0","#ff6a3d","#b57bff","#ffc400","#00d9b5","#ff5c9a"];
 const PEOPLE=[],seen=new Set();
 for(let i=0;i<1000;i++){const f=FIRST[(i*7+Math.floor(i/50))%FIRST.length];let n;const k=i%7;
   const role=i%40===1?"mod":i%20<7?"new":i%20<14?"vet":"chat";
@@ -38,7 +38,7 @@ const SYMS=["BTC","ETH","SOL","BNB","XRP"];
 const TOPICS=[{sym:"BTC",kind:"price"},{sym:"BTC",kind:"setup"},{sym:"ETH",kind:"setup"},{sym:"ETH",kind:"price"},{sym:"SOL",kind:"price"},{sym:"SOL",kind:"setup"},{sym:"SOL",kind:"risk"},{sym:"BTC",kind:"risk"}];
 const TP={i:0,n:0,max:6};
 const tsym=()=>TOPICS[TP.i].sym;
-const px=s=>{try{const e=S.mk[s];if(e&&e.p>0)return e.p}catch(_){}return{BTC:98000,ETH:3400,SOL:210,BNB:640,XRP:2.3}[s]};
+const px=s=>{try{const e=S.mk[s];if(e&&e.p>0)return e.p}catch(_){}return{BTC:64000,ETH:2500,SOL:130,BNB:600,XRP:2}[s]};
 const chg=s=>{try{const e=S.mk[s];if(e&&typeof e.chg==="number")return e.chg}catch(_){}return rnd(-3,3)};
 const fp=v=>v>=1000?v.toLocaleString(undefined,{maximumFractionDigits:0}):v>=10?v.toFixed(2):v.toFixed(3);
 const sg=v=>(v>=0?"+":"")+v.toFixed(1)+"%";
@@ -161,38 +161,153 @@ function add(room,p,body,ts,silent,re){
   const L=state.msgs[room];L.push(m);if(L.length>400)L.shift();
   if(!silent&&state.open)appendMsg(m);return m}
 const wantReply=(prev,p,k)=>k>0&&prev&&prev.p!==p&&Math.random()<.78?prev:null;
-function seed(){let t=Date.now()-ri(50,110)*60000;for(let i=0;i<30;i++){let prev=null;fresh(pick(F.lounge)).forEach((x,k)=>{t+=ri(15,140)*1000;prev=add("lounge",x[1],x[2],t,true,wantReply(prev,x[1],k))})}}
-function run(room){let d=0,prev=null;fresh(pick(F[room])).forEach((x,k)=>{d+=x[0]*1000+ri(300,1500);const p=x[1];
-  setTimeout(()=>{const go=()=>{prev=add(room,p,x[2],undefined,false,wantReply(prev,p,k))};
-    if(state.open){setTyping(p);setTimeout(()=>{setTyping(null);go()},ri(900,2200))}else go()},d)})}
-function notice(room,txt){const L=state.msgs[room],m={id:state.nid++,sys:1,p:{n:"",c:"#333"},body:txt,ts:Date.now(),rx:{}};L.push(m);if(L.length>400)L.shift();if(state.open)appendMsg(m)}
-function schedule(){const lull=Math.random()<.2;setTimeout(()=>{const r="lounge";
-  if(Math.random()<.12)notice(r,pick(PEOPLE).n+" joined the room");else run(r);schedule()},lull?ri(20000,45000):ri(3500,9000))}
+/* ---- Scenes: a group of members stays on ONE live topic for 10-30 minutes, then drifts to the next ---- */
+let gold=0;
+function loadGold(){try{fetch("https://api.coingecko.com/api/v3/simple/price?ids=pax-gold&vs_currencies=usd").then(r=>r.json()).then(j=>{const v=j&&j["pax-gold"]&&j["pax-gold"].usd;if(v>500)gold=v}).catch(()=>{})}catch(e){}}
+const R=v=>lf(rn(v)),usdc=n=>"$"+Math.round(n).toLocaleString("en-US");
+const ACK=["my bad, thanks 🙏","ah right, I mixed that up","oh good catch, thanks","ok yeah I had that wrong","lol I stand corrected","thanks, still learning","yep you're right, wrong number in my head"];
+const CONF=["^ this","yep that's right","correct, same here","this is accurate","exactly","yeah, can confirm"];
+const GR=["same","this 💯","facts","lol true","fair point","been there","yeah I noticed that too","honestly yes","hmm not sure I agree","respect","interesting","that's what I've been seeing","good point","I was thinking the same"];
+const STORY=[["I got stopped out {t} and it reversed right after. classic","b"],["added too early {t} and had to sit through the dip","b"],["missed the bounce yesterday because I hesitated","b"],["took a small loss {t} and walked away instead of revenge trading, felt good","g"],["closed a position for a small win {t} and went to the gym instead of looking at charts","g"],["I've been flat since {t} and honestly it's been peaceful","g"],["started journaling {t}, my mistakes are so repetitive 😅","n"],["my last {n} trades were all small scratches, boring but I'll take it","n"]];
+const SRB=["rough, we've all been there","ouch 😬","brutal, hope you're ok","been there, it gets better","lol same thing happened to me","happens to everyone"],SRG=["nice, that's discipline","that's a solid way to handle it","love that, keeps you sane","respect for sticking to the plan"];
+const WRAP=["alright I'll leave it there, good chat","ok that's enough charts for me, going to grab food 🍕","thanks everyone, this was actually useful","I'm done for now, will check back later","good discussion, learned a couple of things"];
+const TRANS=["unrelated but ","btw ","random thought: ","ok different topic, ","speaking of which, ",""];
+const CHATTER=["gm everyone ☀️","coffee first, charts second","market feels slow today","lol this chat is the best part of my day","anyone else trading from their phone right now?","need a break from the screen 😅","this lounge is getting busy"];
+const TOPICS2=[
+{id:"fear",
+open:["everything is red today. btc at {btc} and the fear index is basically on the floor. are you buying or sitting out?","feels like capitulation vibes. is anyone actually buying this or are we all just watching?","btc {chg} on the day and sentiment is in extreme fear. interesting, but I'm still not rushing","ok so btc is testing {sup} again. what's the plan if it breaks?"],
+say:["I'm not catching knives, I want to see a base first","if {sup} goes, the next area I'm watching is around {sup2}","daily RSI is oversold, but oversold can stay oversold for weeks","funding is negative which means shorts are paying longs, usually a sign people are leaning too short","volume is thin so stops are getting run, keep size small","I'm just dca'ing the same amount every week and trying not to look at the chart","alts are down way more than btc, that's what hurts the most","I'd want a daily close back above {res} before I trust any bounce","I scaled in a little at {btc}, very small, with a stop under {sup}","the last liquidation flush cleared a lot of leverage, that's usually healthy","being flat is a position too, and it's paying me right now","I read the sentiment index as a contrarian signal, not a timing tool","remember we're down roughly {dd}% from the all-time high, so it's been a slow bleed, not a one day crash","if it reclaims {res} I'll think about adding, until then I do nothing"],
+ask:[["is this a good time to buy or are we going lower?",["nobody knows, so split it into parts instead of one entry","for a trade, wait for a reclaim of {res}. for long term dca, just keep going","depends on your timeframe, what's yours?"]],["where do you guys put your stop here?",["under {sup}, because that's where buyers showed up last time","I use a percent of account instead of a level, usually 1 to 2%","below the last swing low on the 4h"]],["how long do these fear periods usually last?",["no fixed rule, sometimes days, sometimes months","longer than you want and shorter than it feels 😅"]],["should I wait for the bottom?",["you won't catch the exact bottom, nobody does. scaling in beats guessing","I'd rather buy 3 times than try to pick one candle"]]],
+err:[["we're down like 80% from the top right now",["not 80%, it's closer to {dd}% from the all-time high. the 80% drops were 2018 and 2022","more like {dd}% from the high, 80% was the older bear markets"]],["extreme fear means a crash is coming",["it's a sentiment reading, not a prediction. extremes have often been near lows, not before crashes","not really, fear readings usually show up after the drop, not before it"]],["oversold means price has to bounce today",["no, oversold just means stretched, it can keep grinding lower","oversold isn't a buy signal by itself, it can stay that way a long time"]],["negative funding means price must go down",["negative funding means shorts pay longs, which often shows crowded shorts. it isn't a direction call","it just tells you who's paying whom, it doesn't call direction"]]],
+debate:[["buying fear is the best long term play","only if you size for it to go lower first, buying the first dip has burned a lot of people"]]},
+{id:"gold",
+open:["gold is slipping again too. I thought it was supposed to be the safe haven?","§ggold around {gold} and still dropping. everything is getting sold, not just crypto","who's trading gold alongside crypto? futures or PAXG?"],
+say:["a stronger dollar and higher yields hurt gold more than fear helps it","gold had a massive run, so a pullback isn't shocking","when everything gets sold, people sell what has profit in it to cover losses elsewhere, gold included","PAXG is a token backed by physical gold, so it tracks spot gold. handy if you want gold in the same wallet","§gI'm watching the {goldlvl} area for gold now","I keep a small gold position as a hedge, but it doesn't always act like one short term","gold and btc have been falling together, correlation goes up in a panic","real yields are the thing to watch for gold","I don't trade gold on CPI or Fed days, too whippy","gold moves slower than crypto, which is why I like it for balance"],
+ask:[["is PAXG actually backed by gold?",["yes, each token is backed by one fine troy ounce of gold held by Paxos, and they publish attestations","backed 1:1 by physical gold in vaults, but read their docs before putting size in"]],["why does gold drop when there's fear? shouldn't it go up?",["in a liquidity squeeze people sell whatever is liquid, gold included","it often rises with fear but not always, rates and the dollar can overpower it"]],["gold or btc as a hedge?",["different animals. gold is the older store of value, btc is higher risk and more volatile","I hold some of both, just size btc smaller than you think"]]],
+err:[["§ggold is at {goldw} right now",["it's around {gold}, {goldw} was a couple of years ago","spot is near {gold}, you're looking at an old price"]],["gold is quoted per gram on the big markets",["spot gold is quoted per troy ounce, which is about 31 grams","per troy ounce, not per gram, that's about 31.1 grams"]],["PAXG is just a coin with nothing behind it",["it's backed by physical gold, Paxos holds it and publishes reports","not true, each PAXG is redeemable against allocated physical gold, there are fees though"]],["gold and btc always move in opposite directions",["not always, in a sell off like this they've both dropped","correlation changes over time, lately they've moved together a lot"]]],
+debate:[["gold is the real safe haven, btc is just a risk asset","btc trades like a risk asset in a panic, but that's not the whole story long term"]]},
+{id:"fed",
+open:["fed minutes today. are you flat or trading the release?","CPI and Fed days always wick both directions. what's your approach?","everyone's waiting on the minutes, volume is dead until then"],
+say:["I cut size before the release, spreads widen right at the print","the first move is usually the fake one, I wait for the second","I just close the laptop on news days honestly","the market moves on rate expectations more than the actual numbers","higher for longer is hard on risk assets","a hawkish tone usually pressures btc and gold both","liquidity thins out right before big releases, that's when you get random wicks","I don't predict the number, I only react to the reaction","limit orders only around news, market orders get destroyed by slippage","every release looks obvious after the fact 😅"],
+ask:[["what are the minutes exactly? new to this",["notes from the previous Fed meeting, released a few weeks after. they show how members discussed rates","a written summary of the last meeting's discussion. the decision was already announced back then"]],["do rate hikes hurt crypto?",["tighter policy tends to pressure risk assets because money gets more expensive","usually in the short run, but it depends on what the market had already priced in"]],["why does price wick so much on news?",["liquidity thins out and stops get hit on both sides","algos react in milliseconds and the book is thin, so price overshoots"]]],
+err:[["the fed meets every month",["it's 8 scheduled meetings a year, roughly every six weeks","not monthly, eight times a year"]],["the minutes are where they announce the rate decision",["the decision is announced at the meeting, the minutes come out about three weeks later","minutes are the notes, the decision already happened"]],["CPI is published by the Fed",["CPI comes from the Bureau of Labor Statistics, the Fed just looks at it","it's the BLS that publishes it, not the Fed"]],["higher rates always mean btc goes down",["not always, it depends on expectations, markets often move before the decision","'always' is too strong, it's more about the surprise versus what's priced in"]]],
+debate:[["I trade the news, that's where the volume is","I'd rather wait 15 minutes after, the first spike is mostly noise"]]},
+{id:"leverage",
+open:["lost a big chunk of my account on a 20x long yesterday. what a lesson","how much leverage do you guys actually use? be honest","liquidations were wild this week, did anyone get caught?"],
+say:["at 20x a 5% move against you wipes the position, that's the whole problem","I never go above 3x, I like sleeping","isolated margin so one bad trade can't touch the rest of my balance","set the stop before the entry, always","your liquidation price should be way beyond your stop, otherwise the stop is decorative","funding adds up if you hold leveraged positions for days","leverage doesn't make a good setup better, it just makes mistakes more expensive","the traders who last are the ones who size small, not the ones with the best entries","I use leverage to free up capital, not to size up risk","I got liquidated twice early on, that's why I'm careful now"],
+ask:[["how do I know my liquidation price?",["your exchange shows it next to the position, check it before you enter, not after","it depends on leverage and margin, higher leverage puts it closer to your entry"]],["isolated or cross?",["isolated for anything risky, cross if you really know what you're doing","I start everyone on isolated, it caps the damage"]],["is 5x too much for a beginner?",["start at 1 to 2x until you've stuck to a plan for a few months","lower is easier to survive, and size matters more than the number"]]],
+err:[["at 10x you get liquidated at exactly -10%",["slightly earlier than that, maintenance margin and fees put it more like -9%","close, but fees and maintenance margin put it a bit before -10%"]],["cross margin means you can't lose more than the position",["cross uses your whole balance as margin so one bad trade can drain it. isolated is the one that caps it","other way round, isolated caps the loss to the margin on that position"]],["a stop loss guarantees your exit price",["it doesn't, in fast markets it fills at the next available price, that's slippage","stops trigger an order, they don't guarantee a price, gaps can skip right through"]],["leverage lowers your risk because you put in less money",["it raises risk per dollar, a small move hits a bigger position","you put in less but control more, so losses scale with the full position size"]]],
+debate:[["high leverage with tight stops is a legit strategy","tight stops at high leverage get hit by normal noise, I've seen it eat accounts"]]},
+{id:"memes",
+open:["memes are getting hit harder than majors. is the season over or is this a shakeout?","bonk, wif, pepe. which one actually holds up in a fear market?","every meme is bleeding and I'm still watching the charts like it'll change 😅"],
+say:["liquidity on memes dries up fast, so keep size tiny","I only trade memes with money I'm fine losing, full stop","memes move on attention, not fundamentals, so watch volume and social buzz","when btc dumps, memes dump harder, that's beta","the spread on small memes can eat you alive when you exit","take profit in memes earlier than you think, they don't wait","if it's down 30% and your plan didn't include that, the position was too big","bonk and wif being on solana means solana's health matters for them","pepe has the biggest community of the three, that helps in a bounce, not in a crash","I'd rather hold btc and trade memes for small bursts"],
+ask:[["what chain is bonk on?",["Solana, it launched as an airdrop to the Solana community","it's a Solana token"]],["is pepe supply capped?",["yes, fixed supply of around 420 trillion tokens","fixed supply, no minting, but that doesn't make it safe"]],["how big should a meme position be?",["small enough that going to zero doesn't change your month","I cap it at 1 to 2% of the account"]]],
+err:[["bonk is an ethereum token",["bonk is on Solana, not Ethereum","it's Solana, that's why it moves with sol"]],["pepe has unlimited supply so it always dilutes",["pepe has a fixed supply, it can't be minted more","supply is fixed, the risk is price, not dilution"]],["wif was launched back in 2021",["dogwifhat launched in late 2023 on Solana","wif is much newer, late 2023"]]],
+debate:[["memes are just gambling, stay away","it's gambling if you size it like a bet. with a tiny position and a plan it's just a high risk trade"]]},
+{id:"safety",
+open:["someone just DM'd me saying they're 'support' and need my seed phrase to fix my account. that's a scam, right?","reminder for the new people: nobody legit will ever ask for your seed phrase","anyone else getting spammed with fake giveaway links?"],
+say:["never share your seed phrase or password, with anyone, ever","use an authenticator app for 2FA instead of sms","bookmark the real site and only log in from the bookmark","if a giveaway says send 1 get 2 back, it's a scam every time","check the url carefully, fake sites change one letter","I keep a small amount on exchange and the rest in cold storage","a screenshot of your seed phrase in your photos is a bad idea","scammers love fear markets because people get desperate","a mod will never dm you first asking for anything, report it","urgency is the trick, take a minute before clicking anything","turn on withdrawal whitelist if your platform offers it","write the seed phrase on paper and store it somewhere safe"],
+ask:[["how do I tell if a site is fake?",["check the exact url, use bookmarks, and never click links from dms","real sites don't pressure you, scams always say hurry"]],["is sms 2fa enough?",["better than nothing, but an authenticator app or hardware key is safer","sim swaps are a thing, so use an app"]],["what do I do if I think I got scammed?",["move what you can to a fresh wallet, change passwords, and report it to the platform","stop sending anything, secure your accounts, and contact support through the official site"]]],
+err:[["it's fine to give support the seed phrase if they're verified",["no, nobody legit needs it, verified or not, never share it","absolutely not, support never needs your seed phrase"]],["sms 2fa is the safest option",["authenticator apps or hardware keys are safer, sim swaps beat sms","sms is the weakest 2fa, use an app"]],["if you send crypto to the wrong address you can call the bank to reverse it",["crypto transfers are final, there's no bank to call, double check addresses","no reversals on chain, that's why you test with a small amount first"]]],
+debate:[["I keep everything on the exchange, it's easier","easier until it isn't, I'd keep a chunk off exchange"]]},
+{id:"sizing",
+open:["how do you size trades, fixed dollars or percent of account?","trying to fix my risk management. with a ${acct} account how much do you risk per trade?"],
+say:["I risk {rp}% per trade, whatever the setup looks like","size comes from the stop, not the other way round","position size is the risk amount divided by the stop distance","with a {stop}% stop and ${risk} at risk, that's about a ${size} position","I write the risk down before I enter, it kills the temptation to size up","if you lose {n} in a row, the {rp}% rule keeps you alive","I cut size in half after a losing streak, then build back","fees matter, small accounts get eaten by frequent trades","I treat a stop out as the cost of the system, not a mistake"],
+ask:[["how do I calculate position size?",["risk amount divided by the stop distance in percent. ${risk} of risk with a {stop}% stop is about ${size}","decide how much you can lose first, then work back to size from your stop"]],["is {rp}% too small to be worth it?",["it adds up, survival comes first and returns come later","small risk lets you stay in the game long enough to get good"]]],
+err:[["with a ${acct} account and {rp}% risk, that's ${risk10} per trade",["that's ${risk}, you added a zero","check the math, {rp}% of ${acct} is ${risk}"]],["the 1% rule means you only put 1% of your account in the trade",["it means you risk 1% of the account, the position itself can be bigger depending on the stop","risk and position size are different, 1% is the loss if the stop hits"]],["a wider stop means a bigger position",["opposite, a wider stop means a smaller position for the same risk","for the same dollar risk, wider stop equals smaller size"]]],
+debate:[["fixed dollar risk is simpler","percent of account scales better as it grows"]]},
+{id:"stops",
+open:["what's killing your trades right now? mine is getting stopped out right before the move","tell me I'm not the only one getting wicked out at the lows 😅","what are people getting wrong this week? I feel like I keep chasing"],
+say:["stop hunts around round numbers like {round}, I put stops a bit beyond them","chasing green candles is my biggest leak","I widen stops on news days and cut the size to match","revenge trading cost me more than any bad setup","overtrading in chop, I should have just waited","I keep moving my stop and it never ends well","most of my losses come from entering without a plan","fees plus slippage in chop add up quietly","I take fewer trades now and my results are better","the move always happens when I'm away from the screen"],
+ask:[["how do you avoid getting stopped out before the move?",["put the stop beyond the level, not on it, and size smaller so you can afford the room","accept some stop outs, they're the cost of doing business"]],["how do you stop revenge trading?",["hard daily loss limit, once it's hit I'm done for the day","step away for an hour, charts will still be here"]]],
+err:[["stop hunts only happen in crypto",["liquidity grabs happen in every market, stocks and forex too","not just crypto, any market with obvious stop clusters sees it"]],["moving the stop further away is how you manage risk",["moving it away increases risk. risk management means keeping the stop where the plan put it","the plan sets the stop, moving it away just takes more risk"]]],
+debate:[["tight stops are always better","tight stops get hit by noise, the right stop is where the idea is wrong"]]},
+{id:"etf",
+open:["watching daily etf flows lately, they seem to lead the mood","are etf outflows the reason for this drop or just a symptom?"],
+say:["flows are a sentiment gauge, not a magic signal","when price drops, outflows usually follow, hard to say which caused which","I check the daily flow numbers but never trade off one day","institutions rebalance on their own schedule, it's not the same as retail panic","etf demand is part of the story, macro is the other part","with an etf the custodian holds the actual coins, you just own shares","I care more about the trend of flows over weeks than a single day"],
+ask:[["can I withdraw bitcoin from an etf?",["no, you own shares of the fund, the custodian holds the bitcoin","shares only, you can't withdraw coins from it"]],["is an etf better than holding btc yourself?",["different trade-offs. etf is convenient inside a brokerage, self custody gives you the coins","depends on whether you want convenience or control, and taxes"]]],
+err:[["with an etf you can send the btc to your own wallet",["no, an etf gives you shares, not coins","you hold shares of the fund, the coins stay with the custodian"]],["etfs trade 24/7 like crypto",["etfs trade during stock market hours only, crypto never closes","only market hours, that's why you see gaps on monday"]]],
+debate:[["etfs made btc more stable","more mainstream, but still volatile, we're seeing that now"]]},
+{id:"tax",
+open:["tax season is going to be a mess for me, anyone organized with their records?","do you guys track every trade for taxes or just wing it?"],
+say:["not tax advice, but keep records of every trade, it saves so much pain later","most tax software can import your exchange history","tracking cost basis from day one is the whole game","I set aside a percentage of every profit when I close a winner","rules differ a lot between countries, check yours","a good accountant pays for themselves","tax loss harvesting is a thing in some places, ask a pro"],
+ask:[["do I owe tax if I just hold?",["generally tax events come when you sell or swap, but rules vary, ask an accountant","in many places holding isn't a taxable event, selling or swapping is"]]],
+err:[["swapping btc to eth isn't taxable until you cash out to dollars",["in the US a crypto to crypto swap counts as a disposal, check your country's rules","in many countries swaps count as taxable events, not just cashing out"]],["losses can't be used for anything",["in many places capital losses can offset gains, with limits, ask a tax pro","often you can offset gains with losses, rules and limits vary"]]],
+debate:[["I'll sort the taxes at the end of the year","tracking as you go is way easier, rebuilding a year of trades is painful"]]},
+{id:"alts",
+open:["eth/btc keeps sliding. is it time to rotate or stay in btc?","anyone trading eth or sol here instead of btc right now?"],
+say:["eth/btc is the ratio people watch for alt appetite","when btc dominance rises, alts bleed more","I hold eth for staking but trade btc for the moves","sol's been the fast one both ways","ratio trades are a different game, you can be right on direction and wrong on the pair","eth near {eth} and sol near {sol}, I'm watching both for a bounce","alts need btc to stabilize first, then they move","I'd rather add to btc in fear and rotate later if it turns","liquidity is better on majors when things get ugly"],
+ask:[["what does btc dominance mean?",["btc's share of the total crypto market cap, when it rises alts usually underperform","the percentage of the whole market that's bitcoin"]]],
+err:[["eth/btc going up means eth price is going up",["not necessarily, it means eth is outperforming btc, both could be falling","the ratio can rise while eth falls, if btc falls faster"]],["staking eth has no risk",["staking has risks, slashing, lockups and smart contract risk, it isn't risk free","there are risks, validator penalties and withdrawal queues, it's not risk free"]]],
+debate:[["eth will catch up to btc soon","maybe, but I'd want the ratio to turn first, hope isn't a setup"]]}];
+const goodLine=t=>!(t.indexOf("§g")===0&&!gold);
+function ctxNow(sc){const b=px("BTC"),K=sc.K;return Object.assign({},K,{btc:R(b),sup:R(b*(1-rnd(.025,.05))),sup2:R(b*(1-rnd(.07,.11))),res:R(b*(1+rnd(.03,.06))),eth:R(px("ETH")),sol:R(px("SOL")),chg:sg(chg("BTC")),dd:String(Math.max(5,Math.round((1-b/126000)*100))),round:fp(Math.round(b/1000)*1000),gold:gold?R(gold):"",goldw:gold?R(gold*.56):"",goldlvl:gold?fp(Math.round(gold*.97/50)*50):"",t:pick(["today","this morning","since the open","last night","this week","since yesterday"]),c:pick(["btc","eth","sol"])})}
+const cleanL=(t,C)=>sub(String(t).replace(/^§g/,""),C);
+function pickLine(sc,arr,key,isSay){const ok=arr.filter(x=>goodLine(key?x[0]:x)&&!sc.used.has(key?x[0]:x));if(!ok.length){if(isSay)sc.dry=true;return null}const x=pick(ok);sc.used.add(key?x[0]:x);return x}
+function pickU(sc,arr){const u=sc.u2||(sc.u2=new Set());let c=arr.filter(x=>!u.has(x));if(!c.length){u.clear();c=arr.filter(x=>x!==sc.lastU)}const x=pick(c);u.add(x);sc.lastU=x;return x}
+function MEM(sc,roles,ex){let pool=sc.members.filter(p=>roles.indexOf(p.role)>-1&&ex.indexOf(p)<0);if(!pool.length)pool=sc.members.filter(p=>ex.indexOf(p)<0);pool=pool.concat(pool.filter(p=>sc.lead.indexOf(p)>-1));return pick(pool)}
+function pickN(a,n){const c=a.slice(),o=[];while(o.length<n&&c.length)o.push(c.splice(Math.floor(Math.random()*c.length),1)[0]);return o}
+function makeScene(prevId,start){const pool=TOPICS2.filter(t=>t.id!==prevId&&(t.id!=="gold"||gold)),T=pick(pool),by=r=>PEOPLE.filter(p=>p.role===r);
+  const members=pickN(by("vet"),5).concat(pickN(by("chat"),7),pickN(by("new"),6));if(Math.random()<.4)members.push(pick(by("mod")));
+  const acct=pick([2000,2500,5000,10000]),rp=pick([1,2]),stop=pick([2,3,4,5]),risk=acct*rp/100;
+  return{T,id:T.id,members,lead:members.slice(0,2),start,end:start+ri(10,30)*60000,used:new Set(),last:null,lastP:null,sinceErr:0,K:{acct:acct.toLocaleString("en-US"),rp,stop,risk:risk.toLocaleString("en-US"),risk10:(risk*10).toLocaleString("en-US"),size:Math.round(risk/(stop/100)).toLocaleString("en-US"),n:ri(3,5)}}}
+function beat(sc,kind){const C=ctxNow(sc),T=sc.T,out=[],F=t=>cleanL(t,C);
+  const push=(p,t,re,g)=>{out.push({p,t,re,g});sc.lastP=p};
+  const say=(ex)=>{const p=MEM(sc,["vet","chat","chat","new"],ex||[sc.lastP]),t=pickLine(sc,T.say,0,1);if(t)push(p,F(t),null,0);return p};
+  if(kind==="open"){const p=sc.lead[0],t=pickLine(sc,T.open);push(p,(sc.trans||"")+F(t),null,0);const n=ri(1,2);for(let i=0;i<n;i++)push(MEM(sc,["chat","new","vet"],[p]),pickU(sc,GR),0,ri(6,16));if(Math.random()<.6){say([p])}sc.sinceErr=0}
+  else if(kind==="say"){const p=say();if(Math.random()<.4){const q=MEM(sc,["chat","new","vet"],[p]);push(q,pickU(sc,GR),0,ri(6,16))}}
+  else if(kind==="ask"){const a=pickLine(sc,T.ask,1);if(!a)return beat(sc,"say");const asker=MEM(sc,["new","new","chat"],[sc.lastP]);push(asker,F(a[0]),null,0);
+    const ans=a[1].slice().sort(()=>Math.random()-.5),r1=MEM(sc,["vet","vet","chat"],[asker]);push(r1,(Math.random()<.6?mention(asker)+" ":"")+F(ans[0]),0,ri(8,20));
+    if(ans[1]&&Math.random()<.5){push(MEM(sc,["vet","chat"],[asker,r1]),F(ans[1]),0,ri(8,18))}
+    if(Math.random()<.6)push(asker,pick(["thanks, that helps 🙏","ok that makes sense","never thought of it that way","saving this","appreciate it 🙌","good tip, writing it down"]),out.length-1,ri(8,18))}
+  else if(kind==="err"){const e=pickLine(sc,T.err,1);if(!e)return beat(sc,"say");const w=MEM(sc,["chat","new"],[sc.lastP]);push(w,F(e[0]),null,0);
+    const fx=MEM(sc,["vet","vet","chat"],[w]);push(fx,(Math.random()<.65?mention(w)+" ":"")+F(pick(e[1])),0,ri(9,24));
+    if(Math.random()<.5)push(MEM(sc,["chat","vet"],[w,fx]),pickU(sc,CONF),1,ri(6,14));
+    if(Math.random()<.75)push(w,pickU(sc,ACK),1,ri(7,16));sc.sinceErr=-1}
+  else if(kind==="story"){const st=pickU(sc,STORY),p=MEM(sc,["chat","new","vet"],[sc.lastP]),pool=st[1]==="b"?SRB:st[1]==="g"?SRG:GR;push(p,F(st[0]),null,0);const n=ri(1,2),seen=[p];for(let i=0;i<n;i++){const q=MEM(sc,["chat","vet","new"],seen);seen.push(q);push(q,pickU(sc,pool),0,ri(6,16))}}
+  else if(kind==="debate"){const d=pickLine(sc,T.debate||[],1);if(!d)return beat(sc,"say");const a=MEM(sc,["chat","vet"],[sc.lastP]),b=MEM(sc,["vet","chat"],[a]);push(a,d[0],null,0);push(b,F(d[1]),0,ri(8,18));if(Math.random()<.6)push(a,pickU(sc,["fair, I'll give you that","hmm ok, good point","maybe, I still lean my way though","true, depends on the person"]),1,ri(8,18))}
+  else if(kind==="chat"){push(MEM(sc,["chat","new"],[sc.lastP]),pickU(sc,CHATTER),null,0)}
+  else if(kind==="wrap"){push(MEM(sc,["vet","chat"],[sc.lastP]),pick(WRAP),null,0)}
+  return out}
+function pickKind(sc){sc.sinceErr++;if(sc.sinceErr>=5)return"err";const r=Math.random();return r<.34?"say":r<.51?"ask":r<.63?"story":r<.71?"debate":r<.84?"chat":sc.sinceErr>=3?"err":"say"}
+function simulate(sc,from,to){let t=from,kind="open";state.scene=sc;
+  while(t<to){const msgs=beat(sc,kind),made=[];msgs.forEach((m,i)=>{t+=m.g*1000+ri(2,6)*1000;const re=m.re==null?null:made[m.re];made[i]=add("lounge",m.p,m.t,t,true,re&&re.p!==m.p?re:null);sc.last=made[i]});t+=ri(22,70)*1000;if(sc.dry)break;kind=pickKind(sc)}
+  return t}
+function seed(){const now=Date.now(),a=makeScene(null,now-ri(32,42)*60000);a.end=a.start+ri(10,16)*60000;
+  let t=simulate(a,a.start,a.end);const w=beat(a,"wrap")[0];add("lounge",w.p,w.t,t,true);
+  const b=makeScene(a.id,Math.min(now-ri(3,12)*60000,t+60000));b.sc2=1;b.trans=pick(TRANS);b.end=Math.max(b.start+ri(10,30)*60000,now+ri(5,14)*60000);simulate(b,b.start,now);b.trans="";state.scene=b}
+function playBeat(sc,kind,cb){const msgs=beat(sc,kind);let d=0;const made=[];
+  msgs.forEach((m,i)=>{d+=m.g*1000;const ty=Math.min(5200,Math.max(900,m.t.length*45))*rnd(.75,1.15),at=d;
+    setTimeout(()=>{if(state.open)setTyping(m.p);setTimeout(()=>{setTyping(null);const re=m.re==null?null:made[m.re];const x=add("lounge",m.p,m.t,undefined,false,re&&re.p!==m.p?re:null);made[i]=x;sc.last=x},ty)},at);d+=ty});
+  setTimeout(cb,d+(Math.random()<.2?ri(60,140):ri(22,60))*1000)}
+function live(){const sc=state.scene;
+  if(Date.now()>sc.end||sc.dry){playBeat(sc,"wrap",()=>{const n=makeScene(sc.id,Date.now());n.trans=pick(TRANS);state.scene=n;playBeat(n,"open",()=>{n.trans="";live()})})}
+  else playBeat(sc,pickKind(sc),live)}
 
 /* ---- UI ---- */
 const css=`#cmBtn{display:none!important}
 #cmDlg{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;margin:0;border:0;border-radius:0;background:transparent;color:var(--text,#f5f5f5);overflow:hidden;font-family:inherit}
 .cmH{display:flex;align-items:center;gap:10px;padding:2px 2px 10px}
-.cmH .ttl{display:flex;align-items:center;gap:8px;font-size:26px;font-weight:850;letter-spacing:-.6px;color:var(--strong,#fff)}.cmH .hs{color:var(--soft,#85858a);font-weight:700}
+.cmH .ttl{display:flex;align-items:center;gap:8px;font-size:21px;font-weight:800;letter-spacing:-.4px;color:var(--strong,#fff)}.cmH .hs{color:var(--soft,#85858a);font-weight:700}
 .cmOn{font-size:12px;color:var(--muted,#9a9a9f);margin-top:3px}.cmOn i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#35e875;margin-right:6px}
 .cmTag{flex:none;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--s2,#202020);color:var(--muted,#9a9a9f);border:1px solid var(--line,#303030)}
 .cmWrap{position:relative;flex:1;min-height:0;display:flex}
-#cmLog{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;overflow-anchor:none;padding:6px 2px 6px;display:flex;flex-direction:column;gap:22px;scrollbar-width:none}#cmLog::-webkit-scrollbar{display:none}
+#cmLog{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;overflow-anchor:none;padding:6px 2px 6px;display:flex;flex-direction:column;gap:16px;scrollbar-width:none}#cmLog::-webkit-scrollbar{display:none}
 .cmM{display:flex;flex-direction:column;flex:none}
 .cmRow{display:flex;gap:12px;align-items:flex-start}
-.cmA{flex:none;position:relative;overflow:hidden;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px}.cmA img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cmA{flex:none;position:relative;overflow:hidden;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}.cmA img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .cmA.s{width:20px;height:20px;font-size:10px}
-.cmRe{position:relative;display:flex;align-items:center;gap:7px;margin:0 0 5px 23px;padding-left:28px;min-height:22px;font-size:14.5px;color:var(--muted,#9a9a9f)}
+.cmRe{position:relative;display:flex;align-items:center;gap:7px;margin:0 0 4px 20px;padding-left:26px;min-height:20px;font-size:13px;color:var(--muted,#9a9a9f)}
 .cmRe:before{content:"";position:absolute;left:0;top:50%;bottom:-9px;width:24px;border-left:2px solid var(--bd,#303030);border-top:2px solid var(--bd,#303030);border-top-left-radius:9px}
 .cmRe .rt{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.cmRe .rt b{font-weight:750}
 .cmBody{min-width:0;flex:1}
 .cmN{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;line-height:1.25}
-.cmN .nm{font-size:19px;font-weight:800;letter-spacing:-.3px}
-.cmN .bd{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:2px 8px 2px 6px;border-radius:7px;background:var(--s2,#202020);border:1px solid var(--bd,#303030);color:var(--text,#f5f5f5)}
+.cmN .nm{font-size:15.5px;font-weight:700;letter-spacing:-.1px}
+.cmN .bd{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:2px 8px 2px 6px;border-radius:7px;background:var(--s2,#202020);border:1px solid var(--bd,#303030);color:var(--text,#f5f5f5)}
 .cmN .bd svg,.cmN .gm svg{display:block}
-.cmN .ago{font-size:12.5px;color:var(--muted,#85858a);font-weight:500}
-.cmT{font-size:18px;line-height:1.45;margin-top:4px;word-break:break-word;font-weight:450;letter-spacing:-.1px}
-.cmT .at{color:var(--accent,#2f7bff);font-weight:650;background:color-mix(in srgb,var(--accent,#2f7bff) 16%,transparent);padding:0 4px;border-radius:5px}
+.cmN .ago{font-size:11.5px;color:var(--muted,#85858a);font-weight:500}
+.cmT{font-size:15px;line-height:1.45;margin-top:2px;word-break:break-word;font-weight:400}
+.cmT .at{color:#5aa9ff;font-weight:650;background:rgba(90,169,255,.18);padding:0 4px;border-radius:5px}
 .cmM.me .cmRow{background:color-mix(in srgb,var(--accent,#2f7bff) 9%,transparent);margin:0 -8px;padding:6px 8px;border-radius:12px}
 .cmCard{margin-top:6px;padding:12px;border-radius:16px;background:var(--s1,#151515);border:1px solid var(--line,#303030);min-width:230px;max-width:340px}
 .cmCard .t{display:flex;justify-content:space-between;font-weight:750;margin-bottom:8px}.cmCard .s{padding:2px 9px;border-radius:999px;font-size:12px;font-weight:750}.s.L{background:#12301f;color:#35e875}.s.S{background:#3a1616;color:#ff8a8a}
@@ -200,7 +315,7 @@ const css=`#cmBtn{display:none!important}
 .cmCard .r{margin-top:8px;font-weight:750;font-size:13px}.r.w{color:#35e875}.r.l{color:#ff6b6b}
 .cmPoll button{display:flex;justify-content:space-between;width:100%;margin-top:6px;border:1px solid var(--line,#303030);background:var(--bg,#000);color:inherit;border-radius:10px;padding:9px 11px;font:inherit;font-size:14px;cursor:pointer;position:relative;overflow:hidden}
 .cmPoll button i{position:absolute;left:0;top:0;bottom:0;background:color-mix(in srgb,var(--accent,#2f7bff) 28%,transparent)}.cmPoll button span{position:relative}
-.cmRx{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}.cmRx button{border:1px solid var(--bd,#303030);background:var(--s2,#202020);color:inherit;border-radius:9px;padding:3px 9px;font-size:13px;cursor:pointer}
+.cmRx{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}.cmRx button{border:1px solid rgba(90,169,255,.35);background:rgba(90,169,255,.12);color:inherit;border-radius:9px;padding:3px 9px;font-size:13px;cursor:pointer}
 .cmTy{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted,#85858a);padding:0 16px 6px;min-height:22px}
 .cmTy .dots{display:inline-flex;gap:3px}.cmTy .dots i{width:7px;height:7px;border-radius:50%;background:var(--muted,#85858a);opacity:.5}
 @media(prefers-reduced-motion:no-preference){.cmTy .dots i{animation:cmd 1s infinite}.cmTy .dots i:nth-child(2){animation-delay:.15s}.cmTy .dots i:nth-child(3){animation-delay:.3s}}
@@ -240,7 +355,8 @@ function botSay(room,p,t,delay,re){setTimeout(()=>{if(state.open)setTyping(p);se
 function userSay(){
   const i=$("cmIn"),t=i.value.trim().slice(0,300);if(!t)return;i.value="";const mine=add("lounge",ME,t),room="lounge";
   let ans=null;for(const [re,o] of REPLY){if(re.test(t)){ans=pick(o).replace("__BTC__",fp(px("BTC")));break}}
-  ans=ans||(Math.random()<.75?pick(GENERIC):null);
+  if(!ans&&state.scene&&Math.random()<.85){const sc=state.scene,C=ctxNow(sc),T=sc.T;let l=null;if(/\?/.test(t)){const a=pickLine(sc,T.ask,1);if(a)l=pick(a[1])}if(!l)l=pickLine(sc,T.say);if(l)ans=cleanL(l,C)}
+  ans=ans||(Math.random()<.4?pick(GENERIC):null);
   if(ans){botSay(room,who(/\?/.test(t)?"vet":"chat"),mention(ME)+" "+ans,ri(1200,3200),mine);if(Math.random()<.4)botSay(room,who("chat"),pick(["agreed 👍","same here","good point"]),ri(5000,8000),mine)}}
 function greet(){if(state.greeted)return;state.greeted=true;setTimeout(()=>botSay("lounge",who("chat"),"welcome "+mention(ME)+" 👋 glad you joined",0),1500);setTimeout(()=>botSay("lounge",who("mod"),mention(ME)+" welcome! ask anything, nobody here minds beginner questions 🙂",0),5500)}
 function build(){
@@ -263,6 +379,7 @@ function build(){
   
   setInterval(()=>{document.querySelectorAll("#cmLog .ago[data-ts]").forEach(x=>{x.textContent=ago(+x.dataset.ts)})},30000);
   setInterval(()=>{const polls=state.msgs.lounge.filter(m=>m.body&&m.body.poll);if(polls.length){const m=pick(polls);m.body.v[ri(0,m.body.v.length-1)]+=ri(1,2);refreshMsg(m)}},9000)}
-function start(){seed();build();schedule();setTimeout(()=>run("lounge"),3000)}
+function boot(){seed();build();live()}
+function start(){loadGold();let n=0;(function w(){let ok=false;try{ok=S.mk&&S.mk.BTC&&S.mk.BTC.p>0}catch(e){}if((ok&&gold)||n++>16)boot();else setTimeout(w,250)})()}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
 })();
