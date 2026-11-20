@@ -169,6 +169,8 @@ button.pill{cursor:pointer}#avail{color:var(--accent);border-color:var(--accent)
  .pg{width:min(100%,1200px)}
  .pg[data-tab=trade]{grid-template-columns:minmax(0,1fr) 410px;grid-template-areas:"top top" "bal bal" "tr tr" "mk lounge";grid-template-rows:auto auto auto 1fr}
  #balSec{grid-area:bal}
+ .pg[data-tab=borrow]{width:min(100%,780px);grid-template-columns:minmax(0,1fr);grid-template-areas:"top" "mode" "rep" "hero" "ah" "assets" "mk" "kyc" "sell" "ord";row-gap:14px}
+ .pg[data-tab=borrow] #ordSec{margin-top:6px}
  .trList{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.trc .tsp{width:90px}.trc .ret{font-size:24px}.trc .t1 .rk{display:none}
  #trSec{grid-area:tr}#mkSec{grid-area:mk}
  #loungeSec{grid-area:lounge;position:sticky;top:6px;margin-top:44px;height:calc(var(--vh,100vh) - 150px);max-height:780px;align-self:start}
@@ -240,25 +242,14 @@ input:focus,select:focus{outline:none;border-color:var(--accent)}
 .sHelp{margin-top:26px;padding-top:18px;border-top:1px solid var(--line)}.sHelp .sT{font-weight:700;font-size:16px}#helpBtns{display:grid;gap:8px;margin-top:10px}
 .brand{display:flex;align-items:center;gap:9px}.bmk{width:28px;height:28px;flex:none;border-radius:7px}
 </style>
-<script>/* Avatars: finds which files really exist in avatars-part1..4 (or avatars), caches the list on the device, and gives every person/user one that exists. */
+<script src="avatars.js"></script>
+<script>/* Avatars are embedded in avatars.js, so every picture renders instantly with no per-image download. */
 (function(){
-var F=[["avatars-part1",1,300],["avatars-part2",1,300],["avatars-part3",1,300],["avatars-part4",1,300],["avatars-part5",301,400],["avatars-part6",401,500],["avatars-part7",501,600],["avatars-part8",601,700],["avatars-part9",701,800],["avatars",1,800]],MAXN=777,KEY="nt_avm6",map={},done=false,found=0;
-try{var c=JSON.parse(localStorage.getItem(KEY)||"null");if(c&&Date.now()-c.t<864e5&&c.m){map=c.m;done=!!c.d}}catch(e){}
-function save(){try{localStorage.setItem(KEY,JSON.stringify({t:Date.now(),m:map,d:done}))}catch(e){}}
-function res(seed){var n=Math.abs(seed|0)%MAXN+1;if(map[n])return map[n];if(done){for(var k=1;k<=MAXN;k++){var q=(n-1+k)%MAXN+1;if(map[q])return map[q]}}return""}
+var L=window.NT_AV||[];
 function hash(x){if(typeof x==="number")return x;var h=2166136261;x=String(x);for(var i=0;i<x.length;i++){h^=x.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
-window.ntAvUrl=function(seed){return res(hash(seed))};
-window.ntImg=function(seed){var u=res(hash(seed));return '<img class="ntav" alt="" data-s="'+hash(seed)+'"'+(u?' src="'+u+'"':'')+' onerror="this.removeAttribute(\'src\')">'};
-function refresh(){var l=document.querySelectorAll("img.ntav:not([src])");for(var i=0;i<l.length;i++){var u=res(+l[i].dataset.s);if(u)l[i].src=u}}
-window.ntAvRefresh=refresh;
-function pass(ext,cb){var items=[],n,j;for(n=1;n<=MAXN;n++){if(map[n])continue;for(j=0;j<F.length;j++)if(n>=F[j][1]&&n<=F[j][2])items.push([n,encodeURI(F[j][0]+"/"+n+"."+ext)])}
- var idx=0,act=0,fin=false;
- function next(){while(act<30&&idx<items.length){var it=items[idx++];if(map[it[0]])continue;(function(it){act++;var im=new Image();im.onload=function(){if(!map[it[0]]){map[it[0]]=it[1];found++;if(found%25===0)save()}act--;next()};im.onerror=function(){act--;next()};im.src=it[1]})(it)}
-  if(act===0&&idx>=items.length&&!fin){fin=true;cb()}}
- next()}
-function go(){if(done)return;pass("webp",function(){if(!Object.keys(map).length){pass("jpg",function(){done=true;save();refresh()})}else{done=true;save();refresh()}})}
-var iv=setInterval(function(){refresh();if(done)clearInterval(iv)},400);
-if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",function(){refresh();go()});else{refresh();go()}
+window.ntAvUrl=function(seed){return L.length?L[Math.abs(hash(seed))%L.length]:""};
+window.ntImg=function(seed){var u=window.ntAvUrl(seed);return u?'<img class="ntav" alt="" src="'+u+'">':""};
+window.ntAvRefresh=function(){};
 })();</script>
 <script src="https://js.paystack.co/v1/inline.js"></script>
 </head>
@@ -1111,7 +1102,7 @@ function avSvg(seed){let a=2166136261;for(const ch of String(seed)){a^=ch.charCo
   return o+'</g></svg>'}
 function showUser(){$("uEmail").textContent=uem||"Signed in";if(S.uid){let h=0;for(const c of S.uid)h=(h*31+c.charCodeAt(0))>>>0;$("profile").innerHTML=avSvg(S.uid)+ntImg(S.uid);$("avBig").innerHTML=avSvg(S.uid)+ntImg(S.uid)}}
 showUser();
-const BIZ={name:"NodeTray",whatsapp:"",phone:"",email:"",maps:"https://www.google.com/maps/search/?api=1&query=HQ4X%2B593%20Accra",address:"HQ4X+593, Liberia Road, Accra",hours:""}; // fill in your real details
+const BIZ={name:"NodeTray",whatsapp:"",phone:"",email:"",maps:"https://www.google.com/maps/search/?api=1&query=100%20New%20Montgomery%20St%2C%20San%20Francisco%2C%20CA%2094105",address:"100 New Montgomery St, San Francisco, CA 94105, USA",hours:""}; // fill in your real details
 // Real mode: the server is the record of the loan, so every device shows the same loan.
 async function syncLoans(){if(CFG.demoLoans!==false)return;
   try{let q=await sb.from("loans").select("*").eq("user_id",S.uid).not("usd","is",null).order("created_at",{ascending:false});if(q.error)q=await sb.from("loans").select("*").not("usd","is",null).order("created_at",{ascending:false});const {data,error}=q;if(error||!Array.isArray(data))return;
@@ -1122,11 +1113,11 @@ function renderBiz(){
   if(wa)x.push(`<a ${btn} href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>`);
   if(b.phone)x.push(`<a ${btn} href="tel:${esc(b.phone)}">Call us</a>`);
   if(b.email)x.push(`<a ${btn} href="mailto:${esc(b.email)}?subject=NodeTray%20support">Email us</a>`);
-  if(b.maps)x.push(`<a ${btn} href="${esc(b.maps)}" target="_blank" rel="noopener">Find our Ghana office</a>`);
+  if(b.maps)x.push(`<a ${btn} href="${esc(b.maps)}" target="_blank" rel="noopener">Find our office</a>`);
   $("helpBtns").innerHTML=x.join("");
   $("helpInfo").innerHTML=[b.hours?"Support hours: "+esc(b.hours):"",""].filter(Boolean).join("<br>");
   $("sideHelp").style.display=x.length?"":"none";
-  $("foot").innerHTML=(b.address?`<div class="fa"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Ghana office: ${b.maps?`<a href="${esc(b.maps)}" target="_blank" rel="noopener" style="color:inherit">${esc(b.address)}</a>`:esc(b.address)}</span></div>`:"")+`<div class="fb">© 2022–${new Date().getFullYear()} ${esc(b.name)}</div>`;
+  $("foot").innerHTML=(b.address?`<div class="fa"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Office: ${b.maps?`<a href="${esc(b.maps)}" target="_blank" rel="noopener" style="color:inherit">${esc(b.address)}</a>`:esc(b.address)}</span></div>`:"")+`<div class="fb">© 2022–${new Date().getFullYear()} ${esc(b.name)}</div>`;
 }
 renderBiz();
 S.kyc=null;S.kycState="loading";

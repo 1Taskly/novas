@@ -10,7 +10,7 @@ const FIRST=["Mike","Jake","Tyler","Chris","Brandon","Austin","Cody","Dustin","T
 const NICK=["Big Mike","JT","TJ","Dave","Tex","Smitty","Doc","Chip","Bubba","Mac","Ace","Slim","Cap","Rev","Hutch","Rocco","Moose","Duke","Ziggy","Sully"];
 const SUF=["_trades","_hodl","_fx","_charts","_dca","_swing","_risk","_scalps","_ta","_flow","21","99","_btc","_daily","_longs","_atl","_nyc","_tx","_fl","_chi"];
 const COLORS=["#f7931a","#627eea","#9945ff","#26a17b","#e8505b","#2d9cdb","#f2994a","#bb6bd9","#27ae60","#eb5757","#56ccf2","#f2c94c","#6fcf97","#ff7a59"];
-const AVATAR_BASE="avatars/",AVATAR_COUNT=777,AVATAR_EXT="webp"; /* put numbered files in /avatars (1.jpg, 2.jpg ...) and set AVATAR_COUNT */
+const AVATAR_BASE="avatars/",AVATAR_COUNT=477,AVATAR_EXT="webp"; /* put numbered files in /avatars (1.jpg, 2.jpg ...) and set AVATAR_COUNT */
 const LAST=["A","B","C","D","E","G","H","J","K","L","M","N","P","R","S","T","W"];
 const NAMECOL=["#ff4d6d","#9d7bff","#3b8bff","#16c172","#ff9f1a","#e855d6","#12b5cb","#ff6b4a","#b388ff","#f5b800","#1fc9b0","#ff5fa2"];
 const PEOPLE=[],seen=new Set();
