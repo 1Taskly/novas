@@ -30,8 +30,8 @@ button,input,select{font:inherit;color:inherit}button{cursor:pointer}
 .pg>*{flex:none}
 #sellBtn{margin-top:auto}
 .foot{flex:none;text-align:center;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--bg);font-size:12px;line-height:1.55;color:var(--soft)}
-.foot .fa{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-weight:600}
-.foot .fa svg{flex:none;color:var(--accent)}
+.foot .fa{text-align:center;color:var(--muted);font-weight:600;line-height:1.5}
+.foot .fa span{display:inline-flex;align-items:center;justify-content:center;gap:6px}.foot .fa svg{flex:none;width:24px;height:24px;color:var(--accent)}
 .foot .fb{margin-top:1px}
 .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .brand{font-size:23px;font-weight:750;letter-spacing:-.5px}
@@ -308,7 +308,7 @@ window.ntAvRefresh=function(){};
       <div class="seg" id="payMode" role="group" aria-label="How to receive your cash"><button type="button" data-pmode="mm" class="on" aria-pressed="true">Mobile money</button><button type="button" data-pmode="bank" aria-pressed="false">Bank account</button><button type="button" data-pmode="crypto" aria-pressed="false">Crypto</button></div>
       <div style="display:grid;gap:9px">
         <select id="pMethod" aria-label="Mobile money network"><option value="">Choose your mobile money network</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option><option hidden>Bank transfer</option><option hidden>Crypto transfer</option></select>
-        <select id="pBank" aria-label="Your bank" style="display:none"><option value="">Choose your bank</option><option>GCB Bank</option><option>Ecobank Ghana</option><option>Stanbic Bank</option><option>Absa Bank Ghana</option><option>Fidelity Bank</option><option>CalBank</option><option>Zenith Bank</option><option>Access Bank</option><option>Standard Chartered</option><option>First National Bank</option><option>Republic Bank</option><option>UBA</option><option>GTBank</option><option>Prudential Bank</option><option>Societe Generale Ghana</option><option>Agricultural Development Bank</option><option>Consolidated Bank Ghana</option></select>
+        <input id="pBankTxt" placeholder="Your bank's name" autocomplete="off" aria-label="Your bank" style="display:none"><select id="pBank" aria-label="Your bank" style="display:none"><option value="">Choose your bank</option><option>GCB Bank</option><option>Ecobank Ghana</option><option>Stanbic Bank</option><option>Absa Bank Ghana</option><option>Fidelity Bank</option><option>CalBank</option><option>Zenith Bank</option><option>Access Bank</option><option>Standard Chartered</option><option>First National Bank</option><option>Republic Bank</option><option>UBA</option><option>GTBank</option><option>Prudential Bank</option><option>Societe Generale Ghana</option><option>Agricultural Development Bank</option><option>Consolidated Bank Ghana</option></select>
         <select id="pChain" aria-label="Coin and network" style="display:none"><option value="">Choose the coin and network</option><option>USDT on Solana</option><option>USDT on Ethereum</option><option>USDT on Tron</option><option>USDT on BNB Chain</option><option>USDC on Solana</option><option>USDC on Ethereum</option></select>
         <button type="button" id="pConnect" class="btn ghost" style="display:none">Connect wallet</button>
         <input id="pNum" placeholder="Mobile money number" inputmode="numeric" autocomplete="off" aria-label="Mobile money number or bank account number">
@@ -334,15 +334,22 @@ window.ntAvRefresh=function(){};
 </dialog>
 
 <script>
-const CFG={intlLoans:false,colPer100:10,cols:{BTC:25,ETH:30,SOL:35},maxm:{BTC:3,ETH:3,SOL:2,USDC:6},fee1:20,fee2:20,fee3:20,fee6:20,capUsd:2000,minUsd:100,caps:{BTC:2000,ETH:2000,SOL:2000,USDC:2000},fallbackPx:{BTC:65000,ETH:3400},lateFeeUsd:50,lateDailyPct:0.5,balSnap:0,paystackKey:"pk_live_1530c74b9368aa99844bc2dd4c5d0ee1fd867c68",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,freezePct:10,demoLoans:true,rpcDevnet:"",rpcMainnet:""};
+const CFG={offramp:{gh:"Paychant",intl:"Transak"},transakKey:"",transakEnv:"STAGING",intlLoans:false,colPer100:10,cols:{BTC:25,ETH:30,SOL:35},maxm:{BTC:3,ETH:3,SOL:2,USDC:6},fee1:20,fee2:20,fee3:20,fee6:20,capUsd:2000,minUsd:100,caps:{BTC:2000,ETH:2000,SOL:2000,USDC:2000},fallbackPx:{BTC:65000,ETH:3400},lateFeeUsd:50,lateDailyPct:0.5,balSnap:0,paystackKey:"pk_live_1530c74b9368aa99844bc2dd4c5d0ee1fd867c68",fallbackSolUsd:150,fallbackUsdGhs:11,net:"devnet",simulatePayments:true,freezePct:10,demoLoans:true,rpcDevnet:"",rpcMainnet:""};
 const RPCS={devnet:"https://api.devnet.solana.com",mainnet:"https://api.mainnet-beta.solana.com"};
 const STAGES=["Sending to your mobile money","Paid out"];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const fmt=(n,d=2)=>Number(n||0).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
 const bigUsd=n=>"$"+Math.max(0,Number(n)||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
-const intl=()=>{try{return !!(S.kyc&&S.kyc.country&&S.kyc.country!=="GH")}catch(_){return false}};
-const usd=n=>"$"+fmt(n), ghs=n=>intl()?"$"+fmt(n/((S.px&&S.px.fx)||CFG.fallbackUsdGhs)):"GHS "+fmt(n);
+const intl=()=>{try{const c=(S.kyc&&S.kyc.country)||(CUR&&CUR.country)||"";return !!c&&c!=="GH"}catch(_){return false}}; // KYC country first, otherwise the country found from the IP address
+/* Local currency: found from the visitor's IP address. S.px.fx stays the USD->GHS rate (Paystack and the loan records are in cedis);
+   S.px.lfx is USD->the visitor's own currency and is what people see. */
+const CUR={code:"GHS",country:"GH",name:"Ghanaian cedi",ok:false};
+const curName=c=>{try{return new Intl.DisplayNames(["en"],{type:"currency"}).of(c)||c}catch(e){return c}};
+const LX=()=>(S.px&&S.px.lfx)||(S.px&&S.px.fx)||CFG.fallbackUsdGhs;
+const loc=(n,d)=>{if(!CUR.ok)return "…";const dd=d==null?(Math.abs(n)>=1e6?0:2):d;return CUR.code==="USD"?"$"+fmt(n,dd):CUR.code+" "+fmt(n,dd)}; // an amount already in the local currency
+const ghs=(n,d)=>loc(n/((S.px&&S.px.fx)||CFG.fallbackUsdGhs)*LX(),d); // an amount in cedis, shown in the local currency
+const usd=n=>"$"+fmt(n);
 const SOL_LOGO="data:image/png;base64,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";
 const S={sol:0,tokens:[],px:{sol:CFG.fallbackSolUsd,fx:CFG.fallbackUsdGhs,chg:0,live:false},idOk:false,colPaid:false,base:0};
 let orders=[];
@@ -357,12 +364,12 @@ async function rpc(method,params=[]){
   if(j.error) throw new Error(j.error.message||"Request failed");
   return j.result;
 }
-const COINS=["USDC"],COIN_NAME={BTC:"BTC",ETH:"ETH",SOL:"SOL",USDC:"USDT",USDT:"USDT"};
+const COINS=["USDC","BTC","ETH"],COIN_NAME={BTC:"BTC",ETH:"ETH",SOL:"SOL",USDC:"USDT",USDT:"USDT"};
 // Devnet testing: USDC is used behind the scenes but shown to users as USDT. Remove SHOW before going live with real money.
 const SHOW={USDC:"USDT"},dn=c=>SHOW[c]||c;
 const LOGO={SOL:`<img src="${SOL_LOGO}" alt="SOL">`,
- USDC:`<img alt="USDT" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2326A17B'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3ET%3C/text%3E%3C/svg%3E">`,
- USDT:`<img alt="USDT" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2326A17B'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3ET%3C/text%3E%3C/svg%3E">`};
+ USDC:`<img alt="USDT" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2326A17B'/%3E%3Cg transform='translate(3 6.3) scale(.1)'%3E%3Cpath fill='%23fff' d='M191.19,144.8v0c-1.2.09-7.4.46-21.23.46-11,0-18.81-.33-21.55-.46v0c-42.51-1.87-74.24-9.27-74.24-18.13s31.73-16.25,74.24-18.15v28.91c2.78.2,10.74.67,21.74.67,13.2,0,19.81-.55,21-.66v-28.9c42.42,1.89,74.08,9.29,74.08,18.13s-31.65,16.24-74.08,18.12Zm0-39.25V79.68h59.2V40.23H89.21V79.68H148.4v25.86c-48.11,2.21-84.29,11.74-84.29,23.16s36.18,20.94,84.29,23.16v82.9h42.78V151.83c48-2.21,84.12-11.73,84.12-23.14s-36.09-20.93-84.12-23.15Z'/%3E%3C/g%3E%3C/svg%3E">`,
+ USDT:`<img alt="USDT" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2326A17B'/%3E%3Cg transform='translate(3 6.3) scale(.1)'%3E%3Cpath fill='%23fff' d='M191.19,144.8v0c-1.2.09-7.4.46-21.23.46-11,0-18.81-.33-21.55-.46v0c-42.51-1.87-74.24-9.27-74.24-18.13s31.73-16.25,74.24-18.15v28.91c2.78.2,10.74.67,21.74.67,13.2,0,19.81-.55,21-.66v-28.9c42.42,1.89,74.08,9.29,74.08,18.13s-31.65,16.24-74.08,18.12Zm0-39.25V79.68h59.2V40.23H89.21V79.68H148.4v25.86c-48.11,2.21-84.29,11.74-84.29,23.16s36.18,20.94,84.29,23.16v82.9h42.78V151.83c48-2.21,84.12-11.73,84.12-23.14s-36.09-20.93-84.12-23.15Z'/%3E%3C/g%3E%3C/svg%3E">`};
 LOGO.BTC=`<img alt="BTC" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23f7931a'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3E%E2%82%BF%3C/text%3E%3C/svg%3E">`;LOGO.ETH=`<img alt="ETH" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23627eea'/%3E%3Ctext x='20' y='28' font-size='22' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3E%CE%9E%3C/text%3E%3C/svg%3E">`;
 try{const c=Number((localStorage.getItem("nodetray_fx")||localStorage.getItem("nova_fx")));if(c>1)S.px.fx=c}catch(e){}
 S.px.solLive=S.px.sol;S.px.chgLive=0;S.px.usdcLive=1;S.px.chgBy={SOL:0,USDC:0,BTC:0,ETH:0};S.px.chgOk=false;S.coin="SOL";S.baseBy={};S.liveBy={};S.totalUsd=0;
@@ -379,11 +386,37 @@ function availOf(sym,raw){
 }
 let okSol=false,okFx=false,lastFx=0,pulling=false;
 // Live USD -> GHS rate. Cached 2 minutes, forced fresh when someone opens the loan form or pays in. The last real rate is remembered for next time.
+function setCurIcon(){try{S.unitCoin=null;if($("unit")){prepCoins();renderEst()}}catch(e){}}
+function useCur(code,country){code=String(code||"USD").toUpperCase();CUR.code=code;CUR.country=country||CUR.country;CUR.name=curName(code);
+  if(code==="USD"){S.px.lfx=1;CUR.ok=true}
+  else if(code==="GHS"){S.px.lfx=S.px.fx;CUR.ok=true}
+  else{let r=0;try{const c=JSON.parse(localStorage.getItem("nt_lfx")||"null");if(c&&c.code===code)r=Number(c.rate)}catch(e){}
+    S.px.lfx=r>0?r:0;CUR.ok=r>0}
+  setCurIcon()}
+// Work out the visitor's country and currency from their IP address (free lookups, remembered for a day)
+const curReady=(async function(){
+  let hit=null;
+  try{const c=JSON.parse(localStorage.getItem("nt_cur")||"null");if(c&&c.code&&Date.now()-c.t<864e5)hit=c}catch(e){}
+  const ask=async(u,f)=>{const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),3500);try{return f(await (await fetch(u,{signal:ctl.signal})).json())}catch(e){return null}finally{clearTimeout(t)}};
+  if(!hit){
+    hit=await ask("https://ipwho.is/",j=>j&&j.success!==false&&j.country_code?{country:j.country_code,code:j.currency&&j.currency.code}:null);
+    if(!hit||!hit.code)hit=await ask("https://ipapi.co/json/",j=>j&&j.country_code&&j.currency?{country:j.country_code,code:j.currency}:null);
+    if(hit&&hit.code){try{localStorage.setItem("nt_cur",JSON.stringify({country:hit.country,code:hit.code,t:Date.now()}))}catch(e){}}
+  }
+  if(!hit||!hit.code){let tz="";try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||""}catch(e){}hit=tz==="Africa/Accra"?{country:"GH",code:"GHS"}:{country:"",code:"USD"}}
+  useCur(hit.code,hit.country)})();
 async function loadFx(force){
+  await curReady;
   if(!force&&okFx&&Date.now()-lastFx<120000)return;
   try{const j=await (await fetch("https://open.er-api.com/v6/latest/USD")).json();
-    if(j.rates&&j.rates.GHS){S.px.fx=j.rates.GHS;okFx=true;lastFx=Date.now();try{localStorage.setItem("nodetray_fx",String(j.rates.GHS))}catch(e){}}}catch(e){}
+    if(j.rates&&j.rates.GHS){S.px.fx=j.rates.GHS;okFx=true;lastFx=Date.now();try{localStorage.setItem("nodetray_fx",String(j.rates.GHS))}catch(e){}
+      let r=CUR.code==="USD"?1:j.rates[CUR.code];
+      if(r>0&&CUR.code!=="USD"&&CUR.code!=="GHS"){try{const b=await (await fetch("https://api.binance.com/api/v3/ticker/price?symbol=USDT"+CUR.code)).json(),bp=Number(b&&b.price);if(bp>0&&Math.abs(bp/r-1)<.15)r=bp}catch(e){}} // Binance's USDT price in the visitor's currency when it lists one, otherwise the daily rate feed
+      if(r>0){S.px.lfx=r;CUR.ok=true;if(CUR.code!=="USD"&&CUR.code!=="GHS"){try{localStorage.setItem("nt_lfx",JSON.stringify({code:CUR.code,rate:r}))}catch(e){}}}
+      else if(CUR.code!=="GHS"){useCur("USD",CUR.country)} // a currency the rate feed does not list: show dollars rather than a wrong number
+      refreshAvailSoon()}}catch(e){}
 }
+function refreshAvailSoon(){try{refreshAvail()}catch(e){}}
 async function loadRates(){
   if(S.frozen||pulling)return;pulling=true;
   try{
@@ -407,7 +440,7 @@ const BN={BTC:"btcusdt",ETH:"ethusdt",SOL:"solusdt",BNB:"bnbusdt",XRP:"xrpusdt",
 const BNR=Object.fromEntries(Object.entries(BN).map(([k,v])=>[v,k]));
 S.ck={};S.ckT={};S.ckF={};S.chart="line";S.img={};
 let ws=null,wsOk=false,wsRetry=0,rt=0;const dirty=new Set();
-const BORROW={USDT:"USDC"},FEE=.005;S.mk={};S.cat="all";S.side="buy";S.step="view";
+const BORROW={USDT:"USDC",BTC:"BTC",ETH:"ETH"},FEE=.005;S.mk={};S.cat="all";S.side="buy";S.step="view";
 const pcs=p=>(p>=0?"+":"-")+fmt(Math.abs(p),2)+"%";
 const mpx=p=>p>=1?usd(p):"$"+p.toFixed(Math.min(10,Math.max(2,2-Math.floor(Math.log10(p)))));
 const qf=q=>q.toLocaleString(undefined,{maximumFractionDigits:q<1?6:4});
@@ -511,6 +544,8 @@ async function bindSend(){
   seg.forEach(b=>b.onclick=()=>{sym=b.dataset.sc;draw()});draw()}
 function bindCashout(){const box=$("cwBody");if(!box)return;
   if(!S.idOk){box.innerHTML='<div class="empty">Verify your identity in the Borrow tab to withdraw funds.</div>';return}
+  if(intl()){const u=(CFG.transakEnv==="PRODUCTION"?"https://global.transak.com/":"https://global-stg.transak.com/")+"?"+new URLSearchParams({apiKey:CFG.transakKey,productsAvailed:"SELL",cryptoCurrencyCode:"USDT",fiatCurrency:CUR.code,themeColor:"2f7bff"}).toString();
+    box.innerHTML='<div class="small" style="margin:0 0 10px">Available '+usd(availCash())+'. Cash out in '+esc(CUR.name)+' through our partner '+esc(CFG.offramp.intl)+'. They pay it to your bank.</div><a class="btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="'+esc(u)+'" target="_blank" rel="noopener">Cash out with '+esc(CFG.offramp.intl)+'</a>';return}
   const fxN=()=>S.px.fx||CFG.fallbackUsdGhs,MIN=0.01;let armed=false;
   box.innerHTML='<div class="small" style="margin:0 0 8px">Available to withdraw '+usd(availCash())+(frozenUsd()>0.005?' ('+usd(frozenUsd())+' is frozen for your loan)':'')+'. Money goes to a mobile money wallet in your own name.</div>'+
     '<input id="cwAmt" type="number" min="0" step="any" inputmode="decimal" placeholder="$0" aria-label="Amount in dollars" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px"><div class="chips" id="cwQ">'+[25,50,100,"Max"].map(v=>'<button data-q="'+v+'">'+(v==="Max"?"Max":"$"+v)+'</button>').join("")+'</div>'+
@@ -521,7 +556,7 @@ function bindCashout(){const box=$("cwBody");if(!box)return;
   $("cwName").value=kycName();
   const nOk=()=>{const k=norm(kycName()),n=norm($("cwName").value);return k.length>1&&k.every(t=>n.includes(t))};
   const chk=()=>{const v=+$("cwAmt").value,net=$("cwNet").value,over=v>availCash()+.005,bad=$("cwName").value.trim()&&!nOk();armed=false;$("cwGo").textContent="Withdraw";
-    const e=$("cwEst");e.style.color=over?"var(--red)":"";e.textContent=over?"That is more than your cash balance.":v>0?"≈ GHS "+fmt(v*fxN(),2)+" (rate "+fmt(fxN(),2)+")":"Minimum $"+MIN;
+    const e=$("cwEst");e.style.color=over?"var(--red)":"";e.textContent=over?"That is more than your cash balance.":v>0?(CUR.code==="USD"?"":"≈ "+ghs(v*fxN())+" (1 USD = "+loc(LX()).replace(/^\$/,"")+")"):"Minimum $"+MIN;
     $("cwName").style.borderColor=bad?"var(--red)":"";$("cwNote").style.color=bad?"var(--red)":"";$("cwNote").textContent=bad?"The name must match your verified ID: "+kycName():"Must be in your own name"+(kycName()?": "+kycName():"");
     $("cwGo").disabled=!(v>=MIN&&!over&&PROV_CODE[net]&&ghNum($("cwNum").value)&&nOk())};
   ["cwAmt","cwNum","cwName"].forEach(i=>$(i).addEventListener("input",chk));$("cwNet").addEventListener("change",chk);
@@ -562,7 +597,7 @@ function drawMk(){
     <div class="seg" style="margin:12px 0 8px"><button data-ch="line" class="${S.chart!=="candle"||!BN[sym]?"on":""}">Line</button>${BN[sym]?`<button data-ch="candle" class="${S.chart==="candle"?"on":""}">Candles</button>`:""}</div>${BN[sym]?`<div class="seg" style="margin:0 0 8px">${TFS.map(t=>`<button data-tf="${t[0]}" class="${CH.tf===t[0]?"on":""}">${t[1]}</button>`).join("")}</div>`:""}<div id="chartBox" style="position:relative;height:250px"></div><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:6px 0 12px"><span class="small" id="chartNote"></span><span style="display:flex;gap:6px;flex:none"><button class="ctl" data-pl>${CH.pl?"Price line: On":"Price line: Off"}</button><button class="ctl" data-rs>Reset</button></span></div>
     ${held>0?`<div class="small" style="margin:0 0 10px">You hold ${qf(held)} ${sym}${d.p?" ≈ "+usd(held*d.p):""}</div>`:""}
     <div class="row" style="flex-direction:row"><button class="btn" id="bBuy" style="flex:1" ${d.p?"":"disabled"}>Buy</button><button class="btn ghost" id="bSell" style="flex:1" ${held>0&&d.p?"":"disabled"}>Sell</button></div>
-    ${c?`<button class="btn ghost" id="mkBor" ${can?"":"disabled"}>Borrow cedis</button><div class="small">${!S.idOk?"Verify your identity in the Borrow tab to borrow.":!can?"No "+sym+" is available to borrow right now.":"Borrow "+sym+" and cash out to mobile money."}</div>`:""}`}
+    ${c?`<button class="btn ghost" id="mkBor" ${can?"":"disabled"}>Borrow cash</button><div class="small">${!S.idOk?"Verify your identity in the Borrow tab to borrow.":!can?"No "+sym+" is available to borrow right now.":"Borrow "+sym+" and cash out to mobile money."}</div>`:""}`}
   else if(st==="trade"){$("mkT").textContent=(buy?"Buy ":"Sell ")+sym;
     h=`<div class="small" style="margin:0 0 8px">${buy?"Cash balance "+usd(availCash()):"You hold "+qf(held)+" "+sym+" ≈ "+usd(held*d.p)}</div>
     <input id="tAmt" type="number" min="0" step="any" inputmode="decimal" placeholder="$0" value="${S.amt||50}" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px">${chips(buy?[25,50,100,250]:[25,50,100,"Max"])}
@@ -578,10 +613,11 @@ function drawMk(){
     h=mine.length?'<div class="small" style="margin:0 0 6px">From</div><select id="swFrom" aria-label="Swap from">'+mine.map(x=>'<option value="'+x[1]+'" '+(x[1]===S.sf?"selected":"")+'>'+x[2]+' ('+x[1]+') · '+qf(W.h[x[1]])+'</option>').join("")+'</select><div class="row" style="flex-direction:row;margin-top:9px"><input id="swAmt" type="number" min="0" step="any" inputmode="decimal" placeholder="Amount" aria-label="Amount to swap" style="flex:1;min-width:0"><button class="btn ghost" id="swMax" style="min-width:64px">Max</button></div><div class="small" style="margin:14px 0 6px">To</div><select id="swTo" aria-label="Swap to"></select><div id="swEst" class="small" style="min-height:36px"></div><button class="btn" id="swGo" disabled>Swap</button><div id="swMsg" class="msg" role="status"></div>':'<div class="empty">You do not hold any assets to swap yet. Buy one first.</div>'}
   else if(st==="cashout"){$("mkT").textContent="Withdraw funds";h='<div id="cwBody"></div>'}
   else{$("mkT").textContent="Deposit funds";
-    h=`<div class="small" style="margin:0 0 8px">Deposit with mobile money. Your balance updates as soon as the payment is confirmed.</div><input id="tAmt" type="number" min="0.01" step="any" inputmode="decimal" placeholder="$0" value="${S.fund||50}" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px">${chips([25,50,100,250])}
+    S.dpm=intl()?"card":(S.dpm||"mm");
+    h=`${intl()?"":`<div class="seg" id="dpMode" role="group" aria-label="How to pay" style="margin:0 0 10px"><button type="button" data-dm="mm" class="${S.dpm==="mm"?"on":""}">Mobile money</button><button type="button" data-dm="card" class="${S.dpm==="card"?"on":""}">Card</button></div>`}<div class="small" id="dpIntro" style="margin:0 0 8px"></div><input id="tAmt" type="number" min="0.01" step="any" inputmode="decimal" placeholder="$0" value="${S.fund||50}" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px">${chips([25,50,100,250])}
     <div id="tEst" class="small" style="min-height:18px;text-align:center"></div>
-    <div style="display:grid;gap:9px;margin-top:6px"><select id="dpNet" aria-label="Mobile money network"><option value="">Choose your mobile money network</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option></select><input id="dpNum" placeholder="Mobile money number" inputmode="tel" autocomplete="tel" aria-label="Mobile money number"></div>
-    <button class="btn" id="tGo" style="width:100%;margin-top:12px">Deposit</button><div id="dpStatus" class="small" role="status"></div><div id="dpOtpBox" style="display:none;margin-top:8px"><div class="row" style="flex-direction:row"><input id="dpOtp" placeholder="Enter the code" inputmode="numeric" autocomplete="one-time-code" aria-label="Verification code"><button class="btn" id="dpOtpBtn">Submit</button></div></div><div id="tMsg" class="msg" role="status"></div>${off}${S.back?bk:""}`}
+    <div id="dpMM" style="display:grid;gap:9px;margin-top:6px"><select id="dpNet" aria-label="Mobile money network"><option value="">Choose your mobile money network</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option></select><input id="dpNum" placeholder="Mobile money number" inputmode="tel" autocomplete="tel" aria-label="Mobile money number"></div>
+    <div id="dpCardNote" style="display:none"></div><button class="btn" id="tGo" style="width:100%;margin-top:12px">Deposit</button><div id="dpStatus" class="small" role="status"></div><div id="dpOtpBox" style="display:none;margin-top:8px"><div class="row" style="flex-direction:row"><input id="dpOtp" placeholder="Enter the code" inputmode="numeric" autocomplete="one-time-code" aria-label="Verification code"><button class="btn" id="dpOtpBtn">Submit</button></div></div><div id="tMsg" class="msg" role="status"></div>${off}${S.back?bk:""}`}
   $("mkBody").innerHTML=h;
   $("mkBody").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{S.sym=b.dataset.p;S.step="trade";S.back="pick";S.amt=buy?50:25;drawMk()});
   $("mkBody").querySelectorAll("[data-cp]").forEach(b=>b.onclick=()=>{try{navigator.clipboard.writeText(b.dataset.cp);b.textContent="Copied"}catch(e){}});
@@ -599,12 +635,17 @@ function drawMk(){
   if(!amt)return;
   const upd=()=>{const v=+amt.value,go=q("tGo"),e=q("tEst");q("tMsg").textContent="";
     if(st==="trade"){e.textContent=v>0&&d.p?(buy?"You get ≈ "+qf(v*(1-FEE)/d.p)+" "+sym:"You get ≈ "+usd(v*(1-FEE)))+" · 0.5% fee":"";go.textContent=buy&&v>availCash()+.005?"Deposit":(buy?"Buy ":"Sell ")+sym}
-    else e.textContent=v>0?"≈ GHS "+fmt(v*fxN(),2)+" (rate "+fmt(fxN(),2)+")":""};
+    else e.textContent=v>0&&S.dpm!=="card"?(CUR.code==="USD"?"":"≈ "+ghs(v*fxN())+" (1 USD = "+loc(LX()).replace(/^\$/,"")+")"):""};
+  const dpSync=()=>{if(st!=="fund")return;const card=S.dpm==="card";$("dpMM").style.display=card?"none":"";$("dpCardNote").style.display=card?"":"none";
+    $("dpIntro").textContent=card?"Deposit with a debit or credit card. Your balance updates as soon as the payment is confirmed.":"Deposit with mobile money. Your balance updates as soon as the payment is confirmed.";
+    if(!q("tGo").disabled)q("tGo").textContent=card?"Pay with card":"Deposit";
+    $("dpCardNote").textContent="";if(card)q("tEst").textContent=""};
+  if(st==="fund"){document.querySelectorAll("#dpMode [data-dm]").forEach(b=>b.onclick=()=>{S.dpm=b.dataset.dm;document.querySelectorAll("#dpMode [data-dm]").forEach(x=>x.classList.toggle("on",x===b));dpSync()});amt.addEventListener("input",dpSync);dpSync()}
   amt.oninput=upd;upd();if(st==="fund")loadFx(true).then(()=>{if($("tAmt")===amt)upd()});
   $("qc").querySelectorAll("button").forEach(b=>b.onclick=()=>{amt.value=b.dataset.q==="Max"?(Math.floor(held*d.p*100)/100):b.dataset.q;upd()});
   q("tGo").onclick=async()=>{const v=+amt.value,msg=q("tMsg");msg.className="msg";
     if(!(v>0)){msg.textContent="Enter an amount.";return}
-    if(st==="fund"){if(!(v>0)){msg.textContent="Enter an amount.";return}return payIn(v)}
+    if(st==="fund"){if(!(v>0)){msg.textContent="Enter an amount.";return}return S.dpm==="card"?payCard(v):payIn(v)}
     if(buy&&v>availCash()+.005){S.step="fund";S.fund=Math.max(1,Math.ceil(v-availCash()));S.amt=v;S.back="trade";drawMk();return}
     q("tGo").disabled=true;
     try{applyW(await callTrade({action:"trade",side:S.side,sym,usd:v}));S.step="view";drawMk();}catch(e){msg.textContent=e.message;q("tGo").disabled=false}};
@@ -628,11 +669,30 @@ function dpPoll(){if(dpTimer)return;let n=0;
     try{const r=await fn({action:"status",reference:dpRef});if(r.ok&&r.state!=="pending")dpState(r)}catch(e){}},3000)}
 async function payIn(v){const msg=$("tMsg"),net=$("dpNet").value,phone=ghNum($("dpNum").value),provider=PROV_CODE[net];msg.className="msg";
   if(!provider||!phone){msg.textContent="Choose your network and enter a valid mobile money number.";return}
-  await loadFx(true);const amount=Math.round(v*(S.px.fx||CFG.fallbackUsdGhs)*100);
+  await loadFx(true);const amount=Math.round(v*(S.px.fx||CFG.fallbackUsdGhs)*100); // Paystack charges in cedis
   if(!(amount>=100)){msg.textContent="That amount is too small.";return}
   msg.textContent="";$("tGo").disabled=true;dpUi("Contacting your mobile money provider\u2026");
   try{dpState(await fn({action:"start",phone,provider,usd:v,purpose:"deposit"}))}
   catch(e){$("tGo").disabled=false;dpUi("Could not reach the payment service. Try again.")}}
+/* Card deposits (Paystack inline). The server fixes the cedi amount, we only open the pop-up; the balance is credited by the server after Paystack confirms. */
+async function cardFn(body){let tok=SB_KEY;try{const {data}=await sb.auth.getSession();if(data&&data.session)tok=data.session.access_token}catch(e){}
+  const r=await fetch(SB_URL+"/functions/v1/card",{method:"POST",headers:{"Content-Type":"application/json",apikey:SB_KEY,Authorization:"Bearer "+tok},body:JSON.stringify(body)});return r.json()}
+async function payCard(v){const msg=$("tMsg"),go=$("tGo");msg.className="msg";
+  if(!(v>=1)){msg.textContent="The smallest card deposit is $1.";return}
+  if(!window.PaystackPop){msg.textContent="The card form could not load. Check your connection and try again.";return}
+  go.disabled=true;dpUi("Opening the secure card form\u2026");
+  const done=t=>{go.disabled=false;go.textContent="Pay with card";dpUi(t||"")};
+  try{
+    const r=await cardFn({action:"init",usd:v});if(!r.ok)throw new Error(r.error||"Could not start the payment.");
+    PaystackPop.setup({key:CFG.paystackKey,email:r.email,amount:r.amount,currency:"GHS",ref:r.reference,channels:["card"],
+      callback:function(t){dpUi("Confirming your payment\u2026");
+        (async()=>{for(let i=0;i<6;i++){try{const x=await cardFn({action:"verify",reference:r.reference});
+            if(x.ok&&x.state==="success"){dpUi("");confirmIn(x.credited);return}
+            if(x.ok&&x.state==="failed"){done("The payment did not go through. You were not charged.");return}}catch(e){}
+          await new Promise(z=>setTimeout(z,2500))}
+          done("We are still confirming your payment. If you were charged, your balance will update shortly.");loadWallet()})()},
+      onClose:function(){if(go.disabled&&!$("dpStatus").textContent.startsWith("Confirming"))done("")}}).openIframe();
+  }catch(e){done(e.message||"Could not start the payment. Try again.")}}
 async function confirmIn(credited){const msg=$("tMsg");if(!msg)return;const amt=Number(credited)||Number(($("tAmt")||{}).value)||0;
   msg.className="msg ok";msg.textContent="Updating your balance\u2026";
   for(let i=0;i<4;i++){await loadWallet();if(W.ok)break;await new Promise(r=>setTimeout(r,1500))}
@@ -760,7 +820,7 @@ function flush(){
     COINS.forEach(sym=>{const qe=$("assets").querySelector('[data-aq="'+sym+'"]');if(!qe)return;
       const q=availOf(sym,true),val=q*priceOf(sym),g=$("assets").querySelector('[data-ag="'+sym+'"]');
       {const nr=$("sellNoteBox").querySelector('[data-nr="'+sym+'"]');if(nr){const t=ghs(priceOf(sym)*S.px.fx);if(nr.textContent!==t)nr.textContent=t}}
-      if(g&&q>0&&/^Up to/.test(qe.textContent)){const t=ghs(q*S.px.fx);if(g.textContent!==t)g.textContent=t} // cedis follow every USDT and rate tick
+      if(g&&q>0&&/^Up to/.test(qe.textContent)){const t=ghs(q*priceOf(sym)*S.px.fx);if(g.textContent!==t)g.textContent=t} // cedis follow every USDT and rate tick
       if(qe&&q>0&&/^Up to/.test(qe.textContent))qe.textContent="Up to "+q.toLocaleString(undefined,{maximumFractionDigits:sym==="USDC"?2:q<1?6:4})+" "+dn(sym)})}
 }
 setInterval(flush,1000);
@@ -855,7 +915,7 @@ function prepCoins(){
   const list=COINS.filter(c=>availOf(c)>0),sel=$("coinSel");
   sel.innerHTML=(list.length?list:[S.coin]).map(c=>`<option value="${c}">${dn(c)}</option>`).join("");sel.value=S.coin;
   sel.style.display="none";
-  if(S.unitCoin!==S.coin){const u=$("unit"),cur=u.value;u.innerHTML=`<option value="GHS">GHS</option><option value="${S.coin}">${dn(S.coin)}</option>`;u.value=cur===S.coin?S.coin:"GHS";S.unitCoin=S.coin}
+  if(S.unitCoin!==S.coin){const u=$("unit"),cur=u.value;u.innerHTML=`<option value="GHS">${esc(CUR.code)}</option><option value="${S.coin}">${dn(S.coin)}</option>`;u.value=cur===S.coin?S.coin:"GHS";S.unitCoin=S.coin}
 }
 function refreshAvail(){if(S.frozen)return;applyCoin();S.sol=availOf(S.coin);prepCoins();renderAssets();renderEst();showDebug()}
 // 24h change for an amount worth `val` now: how much it gained/lost, and the percent
@@ -879,8 +939,9 @@ function renderAssets(){
     const ok=a.qty>0,live=S.liveBy[a.sym],tag=ok?(live?'<span style="color:var(--green)"><i class="liveDot"></i>Live on-chain</span>':''):"";
     const sub=act?(a.sym===actSym?"Active loan":"Locked until you repay"):ok?"Up to "+a.qty.toLocaleString(undefined,{maximumFractionDigits:a.sym==="USDC"?2:a.qty<1?6:4})+" "+esc(dn(a.sym)):"Not available right now";
     const label=act?(a.sym===actSym?"Loan active":"Locked"):!S.idOk?"Verify identity to borrow":"Get loan";
-    return `<div class="asset" style="flex-wrap:wrap"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div style="font-size:11px;font-weight:700;margin-top:2px">${tag}</div></div></div><div class="r"><div class="nm" data-aq="${a.sym}">${sub}</div><div class="sub up" data-ag="${a.sym}">${ok&&!act?ghs(a.qty*S.px.fx):""}</div></div><button class="btn" data-loan="${a.sym}" style="flex-basis:100%;margin:10px 0 0;min-height:42px" ${ok&&!act?"":"disabled"}>${label}</button></div>`}).join("");
-  {const na=rows.find(r=>r.qty>0);$("sellNoteBox").innerHTML=(na&&!act)?`<div class="sellNote">By clicking <b>Get loan</b>, you are selling the ${esc(dn(na.sym))} tokens to <b>Paychant</b> at the current market price.<br><b>1 ${esc(dn(na.sym))} = <span data-nr="${na.sym}">${ghs(priceOf(na.sym)*S.px.fx)}</span></b></div>`:""}
+    return `<div class="asset" style="flex-wrap:wrap"><div class="l"><div class="ico">${a.icon}</div><div><div class="nm">${esc(a.name)}</div><div style="font-size:11px;font-weight:700;margin-top:2px">${tag}</div></div></div><div class="r"><div class="nm" data-aq="${a.sym}">${sub}</div><div class="sub up" data-ag="${a.sym}">${ok&&!act?ghs(a.qty*priceOf(a.sym)*S.px.fx):""}</div></div><button class="btn" data-loan="${a.sym}" style="flex-basis:100%;margin:10px 0 0;min-height:42px" ${ok&&!act?"":"disabled"}>${label}</button></div>`}).join("");
+  {const av=rows.filter(r=>r.qty>0),pool=av.length?av:rows,partner=esc(intl()?CFG.offramp.intl:CFG.offramp.gh);
+   $("sellNoteBox").innerHTML=act?"":`<div class="sellNote">By clicking <b>Get loan</b>, you are selling the ${pool.map(r=>esc(dn(r.sym))).join(" / ")} tokens to <b>${partner}</b> at the current market price.<br>${rows.map(r=>`<b>1 ${esc(dn(r.sym))} = <span data-nr="${r.sym}">${ghs(priceOf(r.sym)*S.px.fx)}</span></b>`).join("<br>")}</div>`}
   $("assets").querySelectorAll("[data-loan]").forEach(b=>b.onclick=()=>S.idOk?openLoan(b.dataset.loan):location.href="kyc.html");
   try{renderKyc()}catch(e){}$("sellBtn").style.display="none";
 }
@@ -898,14 +959,17 @@ function fmtAmtInput(el){const raw=el.value,pos=el.selectionStart==null?raw.leng
   const out=dp===undefined?ip:ip+"."+dp.slice(0,(S.coin==="USDC"||$("unit").value==="GHS")?2:6);el.value=out;
   let n=0,q=0;while(q<out.length&&n<before){if(/[\d.]/.test(out[q]))n++;q++}try{el.setSelectionRange(q,q)}catch(e){}}
 const CEDI='<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="20" fill="#f4b400"/><path d="M27.4 13.4A10 10 0 1 0 27.4 26.6" fill="none" stroke="#3b2a00" stroke-width="3.4" stroke-linecap="round"/><path d="M20 7.5v25" stroke="#3b2a00" stroke-width="3" stroke-linecap="round"/></svg>';
-function setCur(){const i=$("curIco");if(!i)return;const v=$("unit").value;i.innerHTML=v==="GHS"?CEDI:(LOGO[v]||LOGO.USDT)}
-const amtSol=()=>{const v=amtNum();return $("unit").value!=="GHS"?v:v/(S.px.sol*S.px.fx)};
+function curIcon(){if(CUR.code==="GHS")return CEDI;let sy=CUR.code;try{const p=new Intl.NumberFormat("en",{style:"currency",currency:CUR.code,currencyDisplay:"narrowSymbol"}).formatToParts(0).find(x=>x.type==="currency");if(p&&p.value)sy=p.value}catch(e){}
+  const t=sy.length>3?sy.slice(0,3):sy,fs=t.length>=3?11:t.length===2?14:19;
+  return '<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="20" fill="#2f7bff"/><text x="20" y="'+(20+fs*.36)+'" font-size="'+fs+'" font-weight="800" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif">'+esc(t)+'</text></svg>'}
+function setCur(){const i=$("curIco");if(!i)return;const v=$("unit").value;i.innerHTML=v==="GHS"?curIcon():(LOGO[v]||LOGO.USDT)}
+const amtSol=()=>{const v=amtNum();return $("unit").value!=="GHS"?v:v/(S.px.sol*LX())};
 function fillMonths(){
   const mx=maxMonths(),sel=Number($("months").value)||3,m=$("months");
   if(m.options.length!==mx){m.innerHTML=Array.from({length:mx},(_,i)=>`<option value="${i+1}">Repay in ${i+1} month${i?"s":""}</option>`).join("");m.value=Math.min(sel,mx)}
 }
 function calc(){
-  const v=amtNum(),k=S.px.sol*S.px.fx,sol=$("unit").value!=="GHS"?v:v/k,val=sol*k;
+  const v=amtNum(),k=S.px.sol*S.px.fx,sol=$("unit").value!=="GHS"?v:v/(S.px.sol*LX()),val=sol*k;
   const m=Number($("months").value)||1,u=sol*S.px.sol,totU=u+u/100*fee100(m);
   return{sol,usd:u,val,m,totU,tot:totU*S.px.fx,mo:totU/m*S.px.fx};
 }
@@ -918,7 +982,7 @@ const fdate=d=>d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"n
 const er=(k,v)=>`<div class="er"><span>${k}</span><b>${v}</b></div>`;
 const payDest=o=>o.pm==="Crypto transfer"?(o.pbank||"Crypto")+" · "+(String(o.pnum).length>14?String(o.pnum).slice(0,6)+"…"+String(o.pnum).slice(-6):o.pnum):o.pm==="Bank transfer"?(o.pbank||"Bank")+" · "+o.pnum:o.pm+" · "+o.pnum;
 const stage0=o=>o.pm==="Crypto transfer"?"Sending to your wallet":STAGES[0];
-function applyRegion(){const ok=intl()?["crypto"]:["mm","bank","crypto"];document.querySelectorAll("#payMode [data-pmode]").forEach(b=>b.style.display=ok.includes(b.dataset.pmode)?"":"none");$("payMode").style.display=ok.length>1?"":"none"}
+function applyRegion(){const ok=intl()?["bank","crypto"]:["mm","bank","crypto"];document.querySelectorAll("#payMode [data-pmode]").forEach(b=>b.style.display=ok.includes(b.dataset.pmode)?"":"none");$("payMode").style.display=ok.length>1?"":"none"}
 $("pConnect").onclick=async()=>{const m=$("sellMsg");m.className="msg";m.textContent="";
   try{const ch=$("pChain").value;
     if(/Solana/.test(ch)||(!ch&&window.solana)){if(!window.solana)throw new Error("No Solana wallet found. Install Phantom, or paste your address.");const r=await window.solana.connect();$("pNum").value=r.publicKey.toString();if(!ch)$("pChain").value="USDT on Solana"}
@@ -933,14 +997,14 @@ function renderEst(){
   fillMonths();setCur();const c=calc();
   {const fu=CFG.lateFeeUsd,fx=S.px.fx||CFG.fallbackUsdGhs;
    $("lateNote").innerHTML="<b>Overdue payments.</b> If you do not pay on the agreed date, a flat late fee of "+usd(fu)+" ("+ghs(fu*fx)+") is charged, and your interest goes up by "+CFG.lateDailyPct+"% of the overdue amount for every extra day it stays unpaid.";}
-  $("avail").textContent="Up to GHS "+fmt(Math.floor(S.sol*S.px.sol*S.px.fx),0);
-  $("rateInfo").textContent=`1 ${dn(S.coin)} = ${usd(S.px.sol)} ${intl()?"":" · $1 = "+ghs(S.px.fx)}`+(S.px.live?"":" · estimated rates");
-  if(!c.sol){$("est").textContent="Enter an amount to see what you get and what you pay each month.";$("agreeTxt").textContent="I understand the loan is paid "+(isCrypto()?"in crypto to the wallet address I entered":"in Ghana cedis to a mobile money number or bank account in my own name")+", and I will repay the full amount shown. I accept the late fee and daily overdue interest."}
+  $("avail").textContent="Up to "+loc(Math.floor(S.sol*S.px.sol*LX()),0);
+  $("rateInfo").textContent=`1 ${dn(S.coin)} = ${usd(S.px.sol)} ${CUR.code==="USD"?"":" · $1 = "+loc(LX())}`+(S.px.live?"":" · estimated rates");
+  if(!c.sol){$("est").textContent="Enter an amount to see what you get and what you pay each month.";$("agreeTxt").textContent="I understand the loan is paid "+(isCrypto()?"in crypto to the wallet address I entered":"in "+CUR.name+" to a payout account in my own name")+", and I will repay the full amount shown. I accept the late fee and daily overdue interest."}
   else if(c.sol>S.sol+1e-9){$("est").innerHTML='<span style="color:var(--red)">That is more than your available loan.</span>'}
-  else if(c.usd<minLoan()-1e-9){$("est").innerHTML='<span style="color:var(--red)">The smallest loan is '+ghs(Math.ceil(minLoan()*(S.px.fx||CFG.fallbackUsdGhs)))+'.</span>'}
+  else if(c.usd<minLoan()-1e-9){$("est").innerHTML='<span style="color:var(--red)">The smallest loan is '+ghs(minLoan()*(S.px.fx||CFG.fallbackUsdGhs),0)+'.</span>'}
   else{
-    $("est").innerHTML=er("You get",fmt(c.sol,S.coin==="USDC"?2:4)+" "+dn(S.coin))+er(isCrypto()?"Paid to you in crypto":intl()?"Paid to you":"Paid to you in cedis",ghs(c.val))+er("You repay in total",ghs(c.tot))+schedHtml(c.tot,c.m,Date.now());
-    $("agreeTxt").textContent=`I understand the loan is paid ${isCrypto()?"in crypto to the wallet address I entered. Crypto transfers cannot be reversed, so I have checked the address and network":"in Ghana cedis to a mobile money number or bank account in my own name"}, and I will repay ${ghs(c.tot)} ${c.m===1?"in 30 days":"over "+c.m+" months"}. I accept the late fee and daily overdue interest.`;
+    $("est").innerHTML=er("You get",fmt(c.sol,S.coin==="USDC"?2:4)+" "+dn(S.coin))+er(isCrypto()?"Paid to you in crypto":"Paid to you in "+CUR.code,ghs(c.val))+er("You repay in total",ghs(c.tot))+schedHtml(c.tot,c.m,Date.now());
+    $("agreeTxt").textContent=`I understand the loan is paid ${isCrypto()?"in crypto to the wallet address I entered. Crypto transfers cannot be reversed, so I have checked the address and network":"in "+CUR.name+" to a payout account in my own name"}, and I will repay ${ghs(c.tot)} ${c.m===1?"in 30 days":"over "+c.m+" months"}. I accept the late fee and daily overdue interest.`;
   }
   $("agree2Txt").textContent=c.sol>0?`I agree that ${usd(freezeUsd())} (${FZ()}% of my loan) in my portfolio balance is frozen until I finish repaying. I cannot withdraw it until then.`:`I agree that ${FZ()}% of my loan amount in my portfolio balance is frozen until I finish repaying. I cannot withdraw it until then.`;
   $("freezeNeed").style.display="none";
@@ -966,16 +1030,16 @@ let autoNet="";
 function payUiSync(){const b=isBank(),c=isCrypto(),det=(b||c)?"":detNet($("pNum").value);
   if(det){if($("pMethod").value!==det)$("pMethod").value=det;autoNet=det}else if(autoNet&&!b&&!c){$("pMethod").value="";autoNet=""}
   $("pNetNote").style.display=det?"":"none";$("pNetNote").textContent=det?"Network detected: "+det:"";
-  $("pBank").style.display=b?"":"none";$("pMethod").style.display=(b||c||det)?"none":"";$("pChain").style.display=c?"":"none";$("pConnect").style.display=c?"":"none";$("pName").style.display=c?"none":"";$("pHint").style.display=b?"":"none";
+  $("pBank").style.display=b&&!intl()?"":"none";$("pBankTxt").style.display=b&&intl()?"":"none";$("pMethod").style.display=(b||c||det)?"none":"";$("pChain").style.display=c?"":"none";$("pConnect").style.display=c?"":"none";$("pName").style.display=c?"none":"";$("pHint").style.display=b?"":"none";
   $("pNum").placeholder=c?"Your wallet address":b?"Account number":"Mobile money number";$("pNum").inputMode=c?"text":"numeric";$("pNum").setAttribute("aria-label",c?"Wallet address":b?"Bank account number":"Mobile money number");
   if(!$("pName").value&&kycName())$("pName").value=kycName();
   const bad=!c&&$("pName").value.trim()&&!nameOk();$("pName").style.borderColor=bad?"var(--red)":"";
   $("pNameNote").style.color=bad?"var(--red)":"";$("pNameNote").textContent=c?"":bad?"The name must match your verified ID: "+kycName():"Must be in your own name"+(kycName()?": "+kycName():"")}
 function validate(){
   payUiSync();
-  $("confirm").disabled=!(S.idOk&&amtOk()&&$("pMethod").value&&(isCrypto()?($("pChain").value&&addrOk($("pChain").value,$("pNum").value)):(nameOk()&&(isBank()?$("pBank").value&&$("pNum").value.replace(/\D/g,"").length>=10:$("pNum").value.trim().length>=9)))&&$("agree").checked&&$("agree2").checked);
+  $("confirm").disabled=!(S.idOk&&amtOk()&&$("pMethod").value&&(isCrypto()?($("pChain").value&&addrOk($("pChain").value,$("pNum").value)):(nameOk()&&(isBank()?$("pBank").value&&(intl()?$("pNum").value.replace(/[^A-Za-z0-9]/g,"").length>=8:$("pNum").value.replace(/\D/g,"").length>=10):$("pNum").value.trim().length>=9)))&&$("agree").checked&&$("agree2").checked);
 }
-function resetFlow(){$("amt").value="";["pMethod","pBank","pChain","pName","pNum"].forEach(i=>$(i).value="");$("agree").checked=false;$("agree2").checked=false;$("freezeNeed").style.display="none";$("confirm").textContent="Get loan";$("sellMsg").textContent="";applyRegion();setPayMode(intl()?"crypto":"mm");setLock();renderEst()}
+function resetFlow(){$("amt").value="";["pMethod","pBank","pBankTxt","pChain","pName","pNum"].forEach(i=>$(i).value="");$("agree").checked=false;$("agree2").checked=false;$("freezeNeed").style.display="none";$("confirm").textContent="Get loan";$("sellMsg").textContent="";applyRegion();setPayMode(intl()?"bank":"mm");setLock();renderEst()}
 $("coinSel").onchange=()=>{S.coin=$("coinSel").value;$("amt").value="";refreshAvail()};
 $("sellBtn").onclick=()=>{if(intl()&&!CFG.intlLoans){alert("Loans for your country are opening soon. We will let you know as soon as they are available.");return}resetFlow();$("sellFlow").style.display="";$("doneView").style.display="none";dlg.showModal()};
 $("close").onclick=$("doneClose").onclick=()=>dlg.close();
@@ -984,9 +1048,10 @@ let loanHist=false;
 dlg.addEventListener("close",()=>{S.frozen=false;refreshAvail();if(loanHist){loanHist=false;if(history.state&&history.state.nlLoan)history.back()}});
 addEventListener("popstate",()=>{if(dlg.open){loanHist=false;dlg.close()}});
 $("amt").oninput=()=>{fmtAmtInput($("amt"));renderEst()};$("months").onchange=renderEst;
-$("unit").onchange=()=>{const v=amtNum(),k=S.px.sol*S.px.fx;if(v>0)setAmt($("unit").value==="GHS"?Math.floor(v*k):Math.floor(v/k*100)/100);setCur();renderEst()};
-const fillMax=()=>{const k=S.px.sol*S.px.fx,dp=S.coin==="USDC"?100:1e6;setAmt(S.sol>0?($("unit").value!=="GHS"?Math.floor(S.sol*dp)/dp:Math.floor(S.sol*k)):0);renderEst()};
+$("unit").onchange=()=>{const v=amtNum(),k=S.px.sol*LX();if(v>0)setAmt($("unit").value==="GHS"?Math.floor(v*k):Math.floor(v/k*100)/100);setCur();renderEst()};
+const fillMax=()=>{const k=S.px.sol*LX(),dp=S.coin==="USDC"?100:1e6;setAmt(S.sol>0?($("unit").value!=="GHS"?Math.floor(S.sol*dp)/dp:Math.floor(S.sol*k)):0);renderEst()};
 $("avail").onclick=fillMax;
+$("pBankTxt").addEventListener("input",()=>{const t=$("pBankTxt").value.trim();$("pBank").innerHTML=t?"<option>"+esc(t)+"</option>":"<option value=\"\">Choose your bank</option>";$("pBank").value=t;validate()});
 ["pMethod","pBank","pChain","pName","pNum","agree","agree2"].forEach(i=>{$(i).addEventListener("input",validate);$(i).addEventListener("change",validate)});
 const SB_URL="https://djkcnhlstjvozrtfcqse.supabase.co",SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqa2NuaGxzdGp2b3pydGZjcXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMDc5MDYsImV4cCI6MjEwNjg4MzkwNn0.lS_p3mV4tdFOmcOVZBTIXN52HPDOgDAHhLluxUTdX_s";
 const PROV_CODE={"MTN Mobile Money":"mtn","Telecel Cash":"vod","AirtelTigo Money":"atl"};
@@ -1121,7 +1186,7 @@ function renderBiz(){
   $("helpBtns").innerHTML=x.join("");
   $("helpInfo").innerHTML=[b.hours?"Support hours: "+esc(b.hours):"",""].filter(Boolean).join("<br>");
   $("sideHelp").style.display=x.length?"":"none";
-  $("foot").innerHTML=(b.address?`<div class="fa"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Office: ${b.maps?`<a href="${esc(b.maps)}" target="_blank" rel="noopener" style="color:inherit">${esc(b.address)}</a>`:esc(b.address)}</span></div>`:"")+`<div class="fb">© 2022–${new Date().getFullYear()} ${esc(b.name)}</div>`;
+  $("foot").innerHTML=(b.address?`<div class="fa"><span><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7.5 7.5 0 0 0-7.5 7.5C4.5 15.3 12 22 12 22s7.5-6.7 7.5-12.5A7.5 7.5 0 0 0 12 2zm0 10.2a2.7 2.7 0 1 1 0-5.4 2.7 2.7 0 0 1 0 5.4z"/></svg>Office: ${b.maps?`<a href="${esc(b.maps)}" target="_blank" rel="noopener" style="color:inherit">${esc(b.address)}</a>`:esc(b.address)}</span></div>`:"")+`<div class="fb">© 2022–${new Date().getFullYear()} ${esc(b.name)}</div>`;
 }
 renderBiz();
 S.kyc=null;S.kycState="loading";
