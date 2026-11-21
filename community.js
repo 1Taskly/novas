@@ -28,7 +28,7 @@ for(let i=0;i<1000;i++){const f=FIRST[(i*7+Math.floor(i/50))%FIRST.length];let n
   PEOPLE.push({n,c:COLORS[(i*5+3)%COLORS.length],nc:NAMECOL[(i*7+3)%NAMECOL.length],role,gem:role==="chat"&&Math.random()<.35,num:AVATAR_COUNT?((i*7919)%AVATAR_COUNT)+1:0,img:AVATAR_COUNT?AVATAR_BASE+(((i*7919)%AVATAR_COUNT)+1)+"."+AVATAR_EXT:"",
     style:{lower:Math.random()<.6,emoji:Math.random()<.35,typo:Math.random()<.3,terse:Math.random()<.4}})}
 function ri0(a,b){return Math.floor(a+Math.random()*(b-a+1))}
-const ME={n:"you",c:"#2f7bff",nc:"#2f7bff",me:1};
+const ME={n:"you",c:"#2f7bff",nc:"#ff9f1a",me:1,img:1};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const rnd=(a,b)=>a+Math.random()*(b-a),ri=(a,b)=>Math.floor(rnd(a,b+1)),pick=a=>a[Math.floor(Math.random()*a.length)];
@@ -153,11 +153,19 @@ function human(p,t){if(typeof t!=="string"||p.me||!p.style||p.role==="mod")retur
   if(st.emoji&&Math.random()<.3)t+=" "+pick(["😅","👀","💀","🫡","🤝","😬"]);
   return t}
 const prevTxt=b=>typeof b==="string"?b:b.poll?"📊 "+b.q:"📈 "+b.sym+" "+b.side+" idea";
+const RXE=["🔥","👍","📈","😂","🙏"];
+/* reactions arrive one at a time, 1-3 seconds apart, after the message is posted */
+function trickle(m){const mine=m.p.me,total=mine?(Math.random()<.7?ri(1,3):0):(Math.random()<.4?ri(1,6):0);if(!total)return;
+  const main=pick(RXE);let n=0;
+  (function next(){setTimeout(()=>{n++;const e=(n>2&&Math.random()<.3)?pick(RXE):main;m.rx[e]=(m.rx[e]||0)+1;
+    const log=document.getElementById("cmLog");if(log&&state.open&&log.querySelector('[data-id="'+m.id+'"]')){const st=atBottom(log);refreshMsg(m);if(st)log.scrollTop=log.scrollHeight}
+    if(n<total)next()},ri(1000,3000))})()}
 function add(room,p,body,ts,silent,re){
   body=human(p,body);
   const m={id:state.nid++,p,body,ts:ts||Date.now(),rx:{}};
-  if(re)m.re={p:re.p,t:prevTxt(re.body)};
-  if(Math.random()<.4)m.rx[pick(["🔥","👍","📈","😂","🙏"])]=ri(1,8);
+  if(re&&!re.p.me)m.re={p:re.p,t:prevTxt(re.body)};
+  if(ts||silent){if(Math.random()<.35)m.rx[pick(RXE)]=ri(1,6)} /* old history shows its reactions straight away */
+  else trickle(m);
   const L=state.msgs[room];L.push(m);if(L.length>400)L.shift();
   if(!silent&&state.open)appendMsg(m);return m}
 const wantReply=(prev,p,k)=>k>0&&prev&&prev.p!==p&&Math.random()<.78?prev:null;
@@ -286,13 +294,13 @@ function live(){const sc=state.scene;
 
 /* ---- UI ---- */
 const css=`#cmBtn{display:none!important}
-#cmDlg{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;margin:0;border:0;border-radius:0;background:transparent;color:var(--text,#f5f5f5);overflow:hidden;font-family:inherit}
-.cmH{display:flex;align-items:center;gap:10px;padding:2px 2px 10px}
+#cmDlg{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;margin:0;border:2px solid color-mix(in srgb,var(--accent,#2f7bff) 70%,var(--bd,#303030));border-radius:18px;background:var(--s1,#151515);color:var(--text,#f5f5f5);overflow:hidden;font-family:inherit}
+.cmH{flex:none;display:flex;align-items:center;gap:10px;padding:13px 16px;background:var(--s2,#202020);border-radius:16px 16px 0 0;border-bottom:2px solid color-mix(in srgb,var(--accent,#2f7bff) 70%,var(--bd,#303030))}
 .cmH .ttl{display:flex;align-items:center;gap:8px;font-size:21px;font-weight:800;letter-spacing:-.4px;color:var(--strong,#fff)}.cmH .hs{color:var(--soft,#85858a);font-weight:700}
 .cmOn{font-size:12px;color:var(--muted,#9a9a9f);margin-top:3px}.cmOn i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#35e875;margin-right:6px}
 .cmTag{flex:none;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--s2,#202020);color:var(--muted,#9a9a9f);border:1px solid var(--line,#303030)}
 .cmWrap{position:relative;flex:1;min-height:0;display:flex}
-#cmLog{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;overflow-anchor:none;padding:6px 2px 6px;display:flex;flex-direction:column;gap:16px;scrollbar-width:none}#cmLog::-webkit-scrollbar{display:none}
+#cmLog{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:auto;overflow-anchor:none;padding:12px 14px 10px;display:flex;flex-direction:column;gap:16px;scrollbar-width:none}#cmLog::-webkit-scrollbar{display:none}
 .cmM{display:flex;flex-direction:column;flex:none}
 .cmRow{display:flex;gap:12px;align-items:flex-start}
 .cmA{flex:none;position:relative;overflow:hidden;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}.cmA img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -308,7 +316,6 @@ const css=`#cmBtn{display:none!important}
 .cmN .ago{font-size:11.5px;color:var(--muted,#85858a);font-weight:500}
 .cmT{font-size:15px;line-height:1.45;margin-top:2px;word-break:break-word;font-weight:400}
 .cmT .at{color:#5aa9ff;font-weight:650;background:rgba(90,169,255,.18);padding:0 4px;border-radius:5px}
-.cmM.me .cmRow{background:color-mix(in srgb,var(--accent,#2f7bff) 9%,transparent);margin:0 -8px;padding:6px 8px;border-radius:12px}
 .cmCard{margin-top:6px;padding:12px;border-radius:16px;background:var(--s1,#151515);border:1px solid var(--line,#303030);min-width:230px;max-width:340px}
 .cmCard .t{display:flex;justify-content:space-between;font-weight:750;margin-bottom:8px}.cmCard .s{padding:2px 9px;border-radius:999px;font-size:12px;font-weight:750}.s.L{background:#12301f;color:#35e875}.s.S{background:#3a1616;color:#ff8a8a}
 .cmCard .g{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:12px;color:var(--muted,#9a9a9f)}.cmCard .g b{display:block;color:var(--text,#f5f5f5);font-size:14px}
@@ -316,11 +323,12 @@ const css=`#cmBtn{display:none!important}
 .cmPoll button{display:flex;justify-content:space-between;width:100%;margin-top:6px;border:1px solid var(--line,#303030);background:var(--bg,#000);color:inherit;border-radius:10px;padding:9px 11px;font:inherit;font-size:14px;cursor:pointer;position:relative;overflow:hidden}
 .cmPoll button i{position:absolute;left:0;top:0;bottom:0;background:color-mix(in srgb,var(--accent,#2f7bff) 28%,transparent)}.cmPoll button span{position:relative}
 .cmRx{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}.cmRx button{border:1px solid rgba(90,169,255,.35);background:rgba(90,169,255,.12);color:inherit;border-radius:9px;padding:3px 9px;font-size:13px;cursor:pointer}
-.cmTy{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted,#85858a);padding:0 16px 6px;min-height:22px}
+.cmTy{flex:none;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted,#85858a);padding:0 16px 6px;min-height:22px}
 .cmTy .dots{display:inline-flex;gap:3px}.cmTy .dots i{width:7px;height:7px;border-radius:50%;background:var(--muted,#85858a);opacity:.5}
 @media(prefers-reduced-motion:no-preference){.cmTy .dots i{animation:cmd 1s infinite}.cmTy .dots i:nth-child(2){animation-delay:.15s}.cmTy .dots i:nth-child(3){animation-delay:.3s}}
 @keyframes cmd{50%{opacity:1;transform:translateY(-2px)}}
-.cmF{display:flex;align-items:center;gap:8px;margin:4px 0 8px;padding:6px 6px 6px 16px;border-radius:26px;background:var(--s2,#202020);border:1px solid var(--bd,#303030)}
+.cmFoot{flex:none;border-top:2px solid color-mix(in srgb,var(--accent,#2f7bff) 70%,var(--bd,#303030));padding:10px 10px 0;background:var(--s1,#151515);border-radius:0 0 18px 18px}
+.cmF{display:flex;align-items:center;gap:8px;margin:0 0 6px;padding:6px 6px 6px 16px;border-radius:26px;background:var(--s2,#202020);border:1px solid var(--bd,#303030)}
 .cmF input{flex:1;min-width:0;background:none;border:0;padding:8px 0;font:inherit;font-size:16px;color:inherit;outline:none}
 .cmF button{flex:none;display:grid;place-items:center;width:44px;height:40px;border:0;border-radius:14px;background:var(--accent,#2f7bff);color:#fff;cursor:pointer}.cmF button svg{width:20px;height:20px}
 .cmDis{font-size:11px;color:var(--soft,#85858a);text-align:center;padding:0 16px 10px;line-height:1.4}
@@ -334,7 +342,7 @@ function bodyHtml(b,m){
   if(b.poll){const tot=b.v.reduce((a,c)=>a+c,0);return `<div class="cmCard cmPoll"><b>📊 ${esc(b.q)}</b>${b.o.map((o,i)=>`<button data-poll="${m.id}" data-i="${i}"><i style="width:${Math.round(b.v[i]/tot*100)}%"></i><span>${esc(o)}</span><span>${Math.round(b.v[i]/tot*100)}%</span></button>`).join("")}<div class="cmN" style="margin-top:6px"><span class="ago">${tot} votes</span></div></div>`}
   const L=b.side==="Long",res=b.res==null?"":`<div class="r ${b.res>=0?"w":"l"}">${b.res>=0?"Closed +":"Stopped "}${b.res.toFixed(1)}%</div>`;
   return `<div class="cmCard"><div class="t"><span>${b.sym}/USD</span><span class="s ${L?"L":"S"}">${b.side}</span></div><div class="g"><span>Entry<b>${fp(b.e)}</b></span><span>Target<b>${fp(b.tg)}</b></span><span>Stop<b>${fp(b.st)}</b></span></div>${res}</div>`}
-function avatar(p,sm){return `<div class="cmA${sm?" s":""}" style="background:${p.c}">${esc((p.n[0]||"?").toUpperCase())}${p.img?`${window.ntImg?window.ntImg(p.num):`<img src="${esc(p.img)}" alt="" onerror="this.remove()">`}`:""}</div>`}
+function avatar(p,sm){if(p.me){p.num=(window.S&&S.uid)||"me"}return `<div class="cmA${sm?" s":""}" style="background:${p.c}">${esc((p.n[0]||"?").toUpperCase())}${p.img?`${window.ntImg?window.ntImg(p.num):`<img src="${esc(p.img)}" alt="" onerror="this.remove()">`}`:""}</div>`}
 function inner(m){const p=m.p;if(m.sys)return `<div class="cmN" style="justify-content:center;opacity:.75"><span class="ago">${esc(m.body)}</span></div>`;
   const re=m.re?`<div class="cmRe">${avatar(m.re.p,1)}<span class="rt"><b style="color:${m.re.p.nc}">@${esc(m.re.p.n)}</b> ${esc(m.re.t)}</span></div>`:"";
   const badge=p.role==="mod"?`<span class="bd">${GEM("#8b5cf6",15)}MOD</span>`:p.role==="vet"?`<span class="bd">${GEM("#2f7bff",15)}PRO</span>`:p.gem?`<span class="gm">${GEM(p.nc,17)}</span>`:"";
@@ -364,8 +372,8 @@ function build(){
   const d=document.createElement("section");d.id="cmDlg";d.setAttribute("aria-label","Traders lounge");
   d.innerHTML=`<div class="cmH"><div class="ttl">Trader Lounge</div></div>
   <div class="cmWrap"><div id="cmLog" role="log" aria-live="off" aria-label="Messages"></div><button class="cmNew" id="cmNew" type="button">New messages ↓</button></div><div class="cmTy" id="cmTy"></div>
-  <div class="cmF"><input id="cmIn" placeholder="Message Trader Lounge" maxlength="300" autocomplete="off" aria-label="Your message"><button id="cmSend" type="button" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
-  <div class="cmDis">Not financial advice. Trading and borrowing carry risk. Never share your seed phrase or passwords.</div>`;
+  <div class="cmFoot"><div class="cmF"><input id="cmIn" placeholder="Message Trader Lounge" maxlength="300" autocomplete="off" aria-label="Your message"><button id="cmSend" type="button" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+  <div class="cmDis">Not financial advice. Trading and borrowing carry risk. Never share your seed phrase or passwords.</div></div>`;
   (document.getElementById("loungeSec")||document.getElementById("mkSec")||document.body).appendChild(d);
   try{const e=document.getElementById("uEmail"),h=(e&&e.textContent||"").split("@")[0].replace(/[^\w.]/g,"").slice(0,16);if(h)ME.n=h}catch(_){}
   state.open=true;render();greet();
@@ -375,6 +383,13 @@ function build(){
     if(rx){const m=all.find(x=>x.id==+rx.dataset.m);if(m){m.rx[rx.dataset.e]=(m.rx[rx.dataset.e]||0)+1;refreshMsg(m)}}
     if(pl){const m=all.find(x=>x.id==+pl.dataset.poll);if(m&&!state.voted[m.id]){state.voted[m.id]=1;m.body.v[+pl.dataset.i]++;refreshMsg(m)}}});
   $("cmNew").onclick=toBottom;
+  (function(){const lg=$("cmLog");let pin=true;lg.addEventListener("scroll",()=>{pin=atBottom(lg)},{passive:true});
+    try{new ResizeObserver(()=>{if(pin)lg.scrollTop=lg.scrollHeight}).observe(lg)}catch(e){} /* the log stays pinned to the newest message when it is resized or first shown */
+    })();
+  (function(){const lg=$("cmLog"),pg=document.getElementById("pg")||lg.closest(".pg");
+    lg.addEventListener("wheel",e=>{const up=e.deltaY<0,end=up?lg.scrollTop<=0:lg.scrollTop+lg.clientHeight>=lg.scrollHeight-1;
+      if(end&&pg&&e.deltaY){pg.scrollTop+=e.deltaY;e.preventDefault()}},{passive:false});
+    })();
   $("cmSend").onclick=userSay;$("cmIn").addEventListener("keydown",e=>{if(e.key==="Enter")userSay()});
   
   setInterval(()=>{document.querySelectorAll("#cmLog .ago[data-ts]").forEach(x=>{x.textContent=ago(+x.dataset.ts)})},30000);
