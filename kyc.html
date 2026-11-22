@@ -99,7 +99,7 @@ input.bad,select.bad{border-color:var(--red)}
     </div>
 
 
-    <div class="card">
+    <div class="card" id="addrCard">
       <div class="title">Proof of address</div>
       <label for="addrType">Document type</label><select id="addrType"><option>Utility bill</option><option>Bank statement</option><option>Government letter</option><option>Tenancy agreement</option></select>
       <div class="slot" id="stmt" tabindex="-1"><div class="lab" id="stmtLbl">Photo or screenshot of your proof of address</div><div class="sbox" id="stmtBox"></div><div class="scap" id="stmtCap"></div><div class="acts"><button type="button" class="act cam" data-pick="stmt" data-how="cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>Take photo</button><button type="button" class="act" data-pick="stmt" data-how="up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload</button></div><input type="file" accept="image/*" capture="environment" hidden id="stmt_cam"><input type="file" accept="image/*" hidden id="stmt_up"><div class="sname" id="stmtName"></div></div>
@@ -285,7 +285,8 @@ function renderCountry(){
   const c=$("country").value,list=IDS[c]||IDS.DEFAULT,cur=$("idType").value;
   $("idType").innerHTML=list.map(x=>`<option>${x}</option>`).join("");
   if(list.includes(cur))$("idType").value=cur;
-  $("need").innerHTML=c?`<b>What you will need</b><br>1. One valid government ID: ${list.join(", ")}<br>2. A live selfie<br>3. A proof of address dated within the last 3 months`:"Choose your country to see what you need.";
+  const needAddr=!!c&&c!=="GH";$("addrCard").style.display=needAddr?"":"none";
+  $("need").innerHTML=c?`<b>What you will need</b><br>1. One valid government ID: ${list.join(", ")}<br>2. A live selfie`+(needAddr?"<br>3. A proof of address dated within the last 3 months":""):"Choose your country to see what you need.";
   $("phone").placeholder=c==="GH"?"024 000 0000":"+1 555 000 0000";
   $("phHint").textContent=c==="GH"?"":"Include your country code, for example +44 7700 900000.";
   renderGuides();
@@ -313,7 +314,7 @@ $("form").addEventListener("submit",async e=>{
   e.preventDefault();const msg=$("msg");msg.className="msg";msg.textContent="";
   document.querySelectorAll(".bad").forEach(x=>x.classList.remove("bad"));
   const v={fn:$("fn").value.trim(),ln:$("ln").value.trim(),dob:$("dob").value,phone:normPhone($("phone").value,$("country").value),addr:$("addr").value.trim(),job:$("job").value.trim(),idn:$("idNum").value.trim()};
-  const need=[["fn",v.fn.length>=2],["ln",v.ln.length>=2],["dob",!!v.dob],["country",!!$("country").value],["phone",!!v.phone],["addr",v.addr.length>=4],["job",v.job.length>=2],["idNum",v.idn.length>=6],["front",!!files.front],["stmt",!!files.stmt],["back",!!files.back],["self",!!files.self]];
+  const need=[["fn",v.fn.length>=2],["ln",v.ln.length>=2],["dob",!!v.dob],["country",!!$("country").value],["phone",!!v.phone],["addr",v.addr.length>=4],["job",v.job.length>=2],["idNum",v.idn.length>=6],["front",!!files.front],["stmt",$("country").value==="GH"||!!files.stmt],["back",!!files.back],["self",!!files.self]];
   const miss=need.filter(n=>!n[1]);
   if(miss.length){miss.forEach(n=>$(n[0]).classList.add("bad"));msg.textContent="Please complete the highlighted fields.";focusEl(miss[0][0]);return}
   const age=(Date.now()-new Date(v.dob).getTime())/31557600000;
@@ -321,13 +322,12 @@ $("form").addEventListener("submit",async e=>{
   if(!$("agree").checked){msg.textContent="Please tick the box to confirm.";return}
   if(busy>0){msg.textContent="Please wait a moment. A photo is still being prepared.";return}
   if(!uid){msg.textContent="Please log in again.";return}
-  $("go").disabled=true;$("go").textContent="Uploading 1 of 4…";
+  $("go").disabled=true;const needAddr=$("country").value!=="GH",tot=needAddr?4:3;$("go").textContent="Uploading 1 of "+tot+"…";
   try{
-    const front_path=await upload(files.front,"front");$("go").textContent="Uploading 2 of 4…";
-    const back_path=await upload(files.back,"back");$("go").textContent="Uploading 3 of 4…";
-    const selfie_path=await upload(files.self,"selfie");$("go").textContent="Uploading 4 of 4…";
-    const address_proof_path=await upload(files.stmt,"address");
-    const row={user_id:uid,first_name:v.fn,last_name:v.ln,date_of_birth:v.dob,phone:v.phone,address:v.addr,occupation:v.job,employer:$("emp").value.trim()||null,id_type:$("idType").value,id_number:v.idn,front_path,back_path,selfie_path,country:$("country").value,ip_country:ipCountry||null,address_proof_path,address_proof_type:$("addrType").value,status:"pending",reject_reason:null};
+    const front_path=await upload(files.front,"front");$("go").textContent="Uploading 2 of "+tot+"…";
+    const back_path=await upload(files.back,"back");$("go").textContent="Uploading 3 of "+tot+"…";
+    const selfie_path=await upload(files.self,"selfie");let address_proof_path=null;if(needAddr){$("go").textContent="Uploading 4 of 4…";address_proof_path=await upload(files.stmt,"address")}
+    const row={user_id:uid,first_name:v.fn,last_name:v.ln,date_of_birth:v.dob,phone:v.phone,address:v.addr,occupation:v.job,employer:$("emp").value.trim()||null,id_type:$("idType").value,id_number:v.idn,front_path,back_path,selfie_path,country:$("country").value,ip_country:ipCountry||null,address_proof_path,address_proof_type:needAddr?$("addrType").value:null,status:"pending",reject_reason:null};
     const {error}=await sb.from("kyc").upsert(row,{onConflict:"user_id"});
     if(error){console.error("save kyc",error);throw new Error(/country|address_proof|ip_country/i.test(error.message||"")?"We could not save your details yet. Please try again later.":"Could not save your details. Try again. (Detail: "+(error.message||error)+")")}
     msg.className="msg ok";msg.textContent="Submitted. Taking you to your dashboard…";

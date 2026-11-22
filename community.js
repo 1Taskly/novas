@@ -27,6 +27,8 @@ for(let i=0;i<1000;i++){const f=FIRST[(i*7+Math.floor(i/50))%FIRST.length];let n
   while(seen.has(n))n+=ri0(0,9);seen.add(n);
   PEOPLE.push({n,c:COLORS[(i*5+3)%COLORS.length],nc:NAMECOL[(i*7+3)%NAMECOL.length],role,gem:role==="chat"&&Math.random()<.35,num:AVATAR_COUNT?((i*7919)%AVATAR_COUNT)+1:0,img:AVATAR_COUNT?AVATAR_BASE+(((i*7919)%AVATAR_COUNT)+1)+"."+AVATAR_EXT:"",
     style:{lower:Math.random()<.6,emoji:Math.random()<.35,typo:Math.random()<.3,terse:Math.random()<.4}})}
+/* the Top traders on the Trade page are also community members, with the same names and pictures */
+[["Michael_Carter",11],["Emily_Johnson",52],["James_Walker",203],["Sophia_Bennett",151]].forEach((t,i)=>{const p=PEOPLE.filter(x=>x.role==="vet")[i];if(p){p.n=t[0];p.num=t[1];if(AVATAR_COUNT)p.img=AVATAR_BASE+t[1]+"."+AVATAR_EXT}});
 function ri0(a,b){return Math.floor(a+Math.random()*(b-a+1))}
 const ME={n:"you",c:"#2f7bff",nc:"#ff9f1a",me:1,img:1};
 const $=id=>document.getElementById(id);
@@ -313,7 +315,7 @@ const postsList=[];
 function neg(t){return /(stopped|stop out|loss|lost|dip|missed|rough|revenge|liquidat|wicked|bleed)/i.test(t)}
 function makePost(sc,kind,ts,live){
   const msgs=beat(sc,kind);if(!msgs.length)return null;
-  const h=msgs[0],p=h.p,C=ctxNow(sc),tm=TM[sc.id]||TM.fear,id=state.nid++;
+  const h=msgs[0],p=(Math.random()<.08&&PEOPLE.some(x=>x.n==="Michael_Carter"))?pick(PEOPLE.filter(x=>["Michael_Carter","Emily_Johnson","James_Walker","Sophia_Bennett"].includes(x.n))):h.p,C=ctxNow(sc),tm=TM[sc.id]||TM.fear,id=state.nid++;
   const P={id,p,ts,kind,text:tk(human(p,h.t)),media:null,chips:[],tag:null,comments:[],likes:0,reposts:0,views:0,fresh:!!live,topic:sc.id};
   const ropen=kind==="open",r=Math.random();
   if(kind==="say"&&r<.38){const ss=tm.syms.filter(x=>CH[x]);if(ss.length){const s=pick(ss);P.media={t:"chart",svg:chartSVG(s,CH[s].k,CH[s].iv),sym:s}}}
@@ -327,7 +329,7 @@ function makePost(sc,kind,ts,live){
   let t=ts;msgs.slice(1).forEach(m=>{t+=m.g*1000+ri(3,12)*1000;P.comments.push({p:m.p,t:tk(human(m.p,m.t)),ts:t,likes:Math.random()<.35?ri(1,9):0})});
   return P}
 function addPost(P,top){postsList.unshift(P);if(postsList.length>70)postsList.pop();
-  if(top&&state.open)prependEl(P)}
+  if(top&&state.open)appendEl(P)}
 /* ---- rendering ---- */
 const tagCls=t=>t==="Bearish"?"bear":t==="Bullish"?"bull":t==="Question"?"qn":"top";
 const txt2=t=>esc(t).replace(/\$[A-Z]{2,6}\b/g,m=>`<span class="tk">${m}</span>`).replace(/@[\w.]+/g,m=>`<span class="at">${m}</span>`);
@@ -355,11 +357,12 @@ function mkEl(P){const el=document.createElement("article");el.className=kinds(P
 function elOf(id){return $("cmLog")&&$("cmLog").querySelector('.cmP[data-id="'+id+'"]')}
 function refresh(P){const el=elOf(P.id);if(!el)return;let v="",f=false;const i=el.querySelector(".cmCin input");if(i){v=i.value;f=document.activeElement===i}
   el.innerHTML=postInner(P);const j=el.querySelector(".cmCin input");if(j&&v){j.value=v;if(f)j.focus()}}
-function prependEl(P){const log=$("cmLog");if(!log)return;const el=mkEl(P);el.classList.add("pin");const at=log.scrollTop<40,h0=log.scrollHeight;log.insertBefore(el,log.firstChild);
-  if(!at){log.scrollTop+=log.scrollHeight-h0;state.newCount++;showNew()}
-  while(log.children.length>Math.max(70,state.lim||14))log.lastElementChild.remove()}
-function render(){const log=$("cmLog");log.innerHTML="";const f=document.createDocumentFragment();postsList.slice(0,state.lim||14).forEach(P=>f.appendChild(mkEl(P)));log.appendChild(f);const m=$("cmMore");if(m)m.style.display=postsList.length>(state.lim||14)?"block":"none"}
-function showNew(){const b=$("cmNew");if(!b)return;b.textContent="↑ "+state.newCount+(state.newCount===1?" new post":" new posts");b.style.display=state.newCount?"block":"none"}
+const toEnd=()=>{const l=$("cmLog");if(l)l.scrollTop=l.scrollHeight};
+function appendEl(P){const log=$("cmLog");if(!log)return;const el=mkEl(P);el.classList.add("pin");const stick=state.stick!==false;log.appendChild(el);
+  if(stick)toEnd();else{state.newCount++;showNew()}
+  while(log.children.length>Math.max(70,state.lim||14))log.firstElementChild.remove()}
+function render(){const log=$("cmLog");log.innerHTML="";const f=document.createDocumentFragment();postsList.slice(0,state.lim||14).slice().reverse().forEach(P=>f.appendChild(mkEl(P)));log.appendChild(f);state.stick=true;toEnd();const m=$("cmMore");if(m)m.style.display=postsList.length>(state.lim||14)?"block":"none"}
+function showNew(){const b=$("cmNew");if(!b)return;b.textContent="↓ "+state.newCount+(state.newCount===1?" new post":" new posts");b.style.display=state.newCount?"block":"none"}
 const ago=t=>{const s=Math.max(0,(Date.now()-t)/1000);return s<60?"now":s<3600?Math.floor(s/60)+"m":s<86400?Math.floor(s/3600)+"h":new Date(t).toLocaleDateString([],{month:"short",day:"numeric"})};
 const GEM=(c,s)=>`<svg width="${s||14}" height="${s||14}" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12l4 6-10 12L2 9z" fill="${c}"/><path d="M2 9h20M9 3l-2 6 5 12 5-12-2-6" fill="none" stroke="rgba(255,255,255,.65)" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
 /* ---- scheduling ---- */
@@ -398,20 +401,33 @@ function newsPost(it,live){
   P.likes=Math.floor(ri(8,60)*(1+age*.6));P.reposts=Math.floor(P.likes*rnd(.05,.2));P.views=Math.floor(P.likes*ri(30,90)+age*ri(200,700));
   let t=pub;const seen=[];ms.slice(0,5).forEach(m=>{if(seen.indexOf(m.t)>-1)return;seen.push(m.t);t+=ri(40,420)*1000;P.comments.push({p:m.p,t:tk(human(m.p,m.t)),ts:t,likes:Math.random()<.35?ri(1,9):0})});
   return P}
+const CC="https://min-api.cryptocompare.com/data/v2/news/?lang=EN",RSS=u=>"https://api.rss2json.com/v1/api.json?rss_url="+encodeURIComponent(u);
+const SRC=[
+ {k:"cc",u:CC},{k:"cc",u:CC+"&categories=Exchange,Regulation,Market"},{k:"cc",u:CC+"&categories=Trading,Business,Mining"},
+ {k:"rss",n:"Cointelegraph",u:RSS("https://cointelegraph.com/rss")},{k:"rss",n:"Decrypt",u:RSS("https://decrypt.co/feed")},
+ {k:"rss",n:"CoinDesk",u:RSS("https://www.coindesk.com/arc/outboundfeeds/rss/")},{k:"rss",n:"Bitcoin Magazine",u:RSS("https://bitcoinmagazine.com/.rss/full/")},
+ {k:"rss",n:"CryptoSlate",u:RSS("https://cryptoslate.com/feed/")}];
+const imgOf=x=>{let u=(x.thumbnail||"");if(!/^https:\/\//.test(u)&&x.enclosure&&x.enclosure.link&&/image|jpe?g|png|webp/i.test((x.enclosure.type||"")+x.enclosure.link))u=x.enclosure.link;
+  if(!/^https:\/\//.test(u)){const m=/<img[^>]+src=["'](https:[^"']+)["']/i.exec((x.content||"")+(x.description||""));u=m?m[1]:""}return /^https:\/\//.test(u)?u:""};
+async function grab(src){
+  const c=new AbortController(),to=setTimeout(()=>c.abort(),10000);
+  try{const r=await fetch(src.u,{signal:c.signal});const j=await r.json();clearTimeout(to);
+    if(src.k==="cc")return((j&&j.Data)||[]).map(x=>({id:"cc"+x.id,title:x.title,url:x.url,imageurl:x.imageurl,source:(x.source_info&&x.source_info.name)||x.source||"News",published_on:+x.published_on,categories:x.categories}));
+    return((j&&j.items)||[]).map(x=>({id:"r"+x.link,title:String(x.title||"").replace(/<[^>]+>/g,""),url:x.link,imageurl:imgOf(x),source:src.n,published_on:Math.floor(Date.parse(String(x.pubDate||"").replace(" ","T")+(/Z|[+-]\d\d:?\d\d$/.test(x.pubDate||"")?"":"Z"))/1000)||Math.floor(Date.now()/1000),categories:(x.categories||[]).join("|")}))}
+  catch(_){clearTimeout(to);return[]}}
 async function fetchNews(){
-  let list=[];
-  try{const c=new AbortController(),to=setTimeout(()=>c.abort(),9000);
-    const r=await fetch("https://min-api.cryptocompare.com/data/v2/news/?lang=EN",{signal:c.signal});clearTimeout(to);
-    const j=await r.json();list=(j&&j.Data)||[]}catch(_){return}
-  if(!Array.isArray(list)||!list.length)return;
-  const fresh=list.filter(x=>x&&x.id&&!newsSeen.has(x.id)&&/^https:\/\//.test(x.imageurl||""));fresh.forEach(x=>newsSeen.add(x.id));
-  if(!fresh.length)return;
+  const all=await Promise.all(SRC.map(grab));
+  const seenT=new Set(),lists=all.map(l=>l.filter(x=>x&&x.title&&/^https:\/\//.test(x.url||"")&&/^https:\/\//.test(x.imageurl||"")&&!newsSeen.has(x.id)).sort((a,b)=>b.published_on-a.published_on));
+  /* take one from each source in turn so many outlets show up */
+  const mixed=[];for(let n=0;n<8;n++)lists.forEach(l=>{const x=l[n];if(x){const k=x.title.toLowerCase().slice(0,40);if(!seenT.has(k)){seenT.add(k);mixed.push(x)}}});
+  if(!mixed.length)return;mixed.forEach(x=>newsSeen.add(x.id));
   if(!state.newsInit){state.newsInit=true;
-    fresh.slice(0,7).forEach(it=>{const P=newsPost(it,false);if(!P)return;const now=Date.now();P.comments=P.comments.filter(c=>c.ts<now-4000);postsList.push(P)});
+    mixed.slice(0,14).forEach(it=>{const P=newsPost(it,false);if(!P)return;const now=Date.now();P.comments=P.comments.filter(c=>c.ts<now-4000);postsList.push(P)});
     postsList.sort((a,b)=>b.ts-a.ts);if(state.open)render()}
-  else fresh.slice(0,4).forEach(it=>newsQueue.push(it))}
-function drainNews(){const it=newsQueue.shift();if(it){const P=newsPost(it,true);if(P){const all=P.comments.slice();P.comments=[];all.forEach(c=>{const d=ri(3,40)*1000+(c.ts-P.ts)/20;setTimeout(()=>{c.ts=Date.now();P.comments.push(c);if(state.open)refresh(P)},d)});addPost(P,true)}}
-  setTimeout(drainNews,ri(150,300)*1000)}
+  else mixed.slice(0,8).forEach(it=>newsQueue.push(it))}
+function drainNews(){const it=newsQueue.shift();let d=30000;
+  if(it){const P=newsPost(it,true);if(P){const all=P.comments.slice();P.comments=[];all.forEach(c=>{const dl=ri(4,40)*1000+(c.ts-P.ts)/20;setTimeout(()=>{c.ts=Date.now();P.comments.push(c);if(state.open)refresh(P)},dl)});addPost(P,true)}d=ri(15,40)*1000}
+  setTimeout(drainNews,d)}
 /* ---- you: post, like, comment ---- */
 function answerFor(t){let ans=null;for(const [re,o] of REPLY){if(re.test(t)){ans=pick(o).replace("__BTC__",fp(px("BTC")));break}}
   if(!ans&&state.scene&&Math.random()<.85){const sc=state.scene,C=ctxNow(sc),T=sc.T;let l=null;if(/\?/.test(t)){const a=pickLine(sc,T.ask,1);if(a)l=pick(a[1])}if(!l)l=pickLine(sc,T.say);if(l)ans=cleanL(l,C)}
@@ -419,7 +435,7 @@ function answerFor(t){let ans=null;for(const [re,o] of REPLY){if(re.test(t)){ans
 function trickleLikes(P,n){let k=0;(function nx(){setTimeout(()=>{k++;P.likes++;P.views+=ri(3,25);if(state.open)refresh(P);if(k<n)nx()},ri(1000,3000))})()}
 function userPost(){const i=$("cmIn"),t=i.value.trim().slice(0,400);if(!t)return;i.value="";
   const P={id:state.nid++,p:ME,ts:Date.now(),kind:"user",text:tk(t),media:null,chips:[],tag:null,comments:[],likes:0,reposts:0,views:ri(1,6),topic:"you"};
-  addPost(P,true);const log=$("cmLog");log.scrollTop=0;state.newCount=0;showNew();
+  addPost(P,true);state.stick=true;toEnd();state.newCount=0;showNew();
   if(Math.random()<.85)trickleLikes(P,ri(2,8));
   const ans=answerFor(t),n=ans?ri(1,3):0;
   if(ans)setTimeout(()=>{P.comments.push({p:who(/\?/.test(t)?"vet":"chat"),t:tk(mention(ME)+" "+ans),ts:Date.now(),likes:0});if(state.open)refresh(P)},ri(4000,9000));
@@ -470,7 +486,7 @@ const css=`#cmBtn{display:none!important}
 .cmC{display:flex;gap:9px;padding:7px 0}.cmC .cb{min-width:0;flex:1}.cmC .cn{font-size:14px;font-weight:800;margin-right:7px}.cmC .ago{font-size:12px;color:var(--muted,#85858a)}.cmC .ct{font-size:14.5px;line-height:1.45;word-break:break-word}.ct .tk{color:#d9a100;font-weight:800}
 .cmCin{display:flex;gap:8px;margin-top:6px}.cmCin input{flex:1;min-width:0;background:var(--s2,#202020);border:1px solid var(--bd,#303030);border-radius:20px;padding:9px 14px;font:inherit;font-size:15px;color:inherit;outline:none}
 .cmCin button{border:0;border-radius:20px;background:var(--accent,#2f7bff);color:#fff;font-weight:800;padding:0 16px;cursor:pointer}
-.cmNew{position:absolute;top:10px;left:50%;transform:translateX(-50%);box-shadow:0 4px 14px rgba(0,0,0,.4);border:0;border-radius:999px;background:var(--accent,#2f7bff);color:#fff;padding:7px 14px;font:inherit;font-size:13px;font-weight:700;display:none;cursor:pointer;z-index:2}
+.cmNew{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);box-shadow:0 4px 14px rgba(0,0,0,.4);border:0;border-radius:999px;background:var(--accent,#2f7bff);color:#fff;padding:7px 14px;font:inherit;font-size:13px;font-weight:700;display:none;cursor:pointer;z-index:2}
 .cmComp{display:flex;align-items:center;gap:10px;margin:10px 0 6px;padding:7px 7px 7px 8px;border-radius:30px;background:var(--s2,#202020);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--bd,#303030) 60%,transparent);transition:box-shadow .2s}
 .cmComp:focus-within{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,#f0b90b 70%,transparent),0 4px 18px rgba(240,185,11,.12)}
 .cmComp .cmA{width:36px;height:36px;font-size:14px}
@@ -484,16 +500,18 @@ function build(){
   const st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
   const d=document.createElement("section");d.id="cmDlg";d.setAttribute("aria-label","Trader lounge");
   d.innerHTML=`<div class="cmH"><div class="ttl">Trader Lounge</div><div class="cmTabs" role="tablist"><button class="on" data-f="">Discover</button><button data-f="n">News</button><button data-f="q">Questions</button><button data-f="c">Charts</button></div></div>
-  <form class="cmComp" onsubmit="return false"><div id="cmMe"></div><input id="cmIn" placeholder="What's on your mind? ✨" maxlength="400" autocomplete="off" aria-label="Write a post"><button id="cmSend" type="button" aria-label="Post"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></form>
   <div class="cmWrap"><div id="cmLog" role="feed" aria-label="Posts"></div><button class="cmNew" id="cmNew" type="button"></button></div>
+  <form class="cmComp" onsubmit="return false"><div id="cmMe"></div><input id="cmIn" placeholder="What's on your mind? ✨" maxlength="400" autocomplete="off" aria-label="Write a post"><button id="cmSend" type="button" aria-label="Post"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></form>
   <button id="cmMore" type="button">Show more posts</button>`;
   (document.getElementById("loungeSec")||document.getElementById("mkSec")||document.body).appendChild(d);
   try{const e=document.getElementById("uEmail"),h=(e&&e.textContent||"").split("@")[0].replace(/[^\w.]/g,"").slice(0,16);if(h)ME.n=h}catch(_){}
   state.open=true;state.openC={};state.lim=70;const me=$("cmMe");me.outerHTML=avatar(ME);render();$("cmMore").onclick=()=>{state.lim+=14;render()};
   const log=$("cmLog");
-  d.querySelector(".cmTabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;d.querySelectorAll(".cmTabs button").forEach(x=>x.classList.toggle("on",x===b));log.dataset.f=b.dataset.f;log.scrollTop=0});
-  log.addEventListener("scroll",()=>{if(log.scrollTop<40){state.newCount=0;showNew()}},{passive:true});
-  $("cmNew").onclick=()=>{log.scrollTo({top:0,behavior:"smooth"});state.newCount=0;showNew()};
+  d.querySelector(".cmTabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;d.querySelectorAll(".cmTabs button").forEach(x=>x.classList.toggle("on",x===b));log.dataset.f=b.dataset.f;toEnd()});
+  ["wheel","touchstart","touchmove","pointerdown","keydown"].forEach(ev=>log.addEventListener(ev,()=>{state.userT=Date.now()},{passive:true}));
+  log.addEventListener("scroll",()=>{const near=log.scrollTop+log.clientHeight>=log.scrollHeight-60;if(near)state.stick=true;else if(Date.now()-(state.userT||0)<1500)state.stick=false;if(state.stick){state.newCount=0;showNew()}},{passive:true});
+  log.addEventListener("load",e=>{if(state.stick&&e.target.tagName==="IMG")toEnd()},true);
+  $("cmNew").onclick=()=>{log.scrollTo({top:log.scrollHeight,behavior:"smooth"});state.newCount=0;showNew()};
   log.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b)return;const el=b.closest(".cmP"),P=postsList.find(x=>x.id==+el.dataset.id);if(!P)return;const a=b.dataset.a;
     if(a==="lk"){P.lk=!P.lk;P.likes+=P.lk?1:-1;refresh(P)}
     else if(a==="rp"){P.rp=!P.rp;P.reposts+=P.rp?1:-1;refresh(P)}
@@ -507,14 +525,14 @@ function build(){
     log.addEventListener("touchmove",e=>{const y=e.touches[0].clientY,d=ly-y;ly=y;if(!pg||!d)return;
       const top=log.scrollTop<=0,end=log.scrollTop+log.clientHeight>=log.scrollHeight-1;
       /* finger moving up (d>0) at the last post, or down at the first: hand the swipe to the whole page */
-      if((d>0&&end)||(d<0&&top)){pg.scrollTop+=d;e.preventDefault()}},{passive:false});
-    log.addEventListener("wheel",e=>{const up=e.deltaY<0,end=up?log.scrollTop<=0:log.scrollTop+log.clientHeight>=log.scrollHeight-1;
-      if(end&&pg&&e.deltaY){pg.scrollTop+=e.deltaY;e.preventDefault()}},{passive:false})})();
+      if(d>0&&end){pg.scrollTop+=d;e.preventDefault()}},{passive:false});
+    log.addEventListener("wheel",e=>{const end=e.deltaY>0&&log.scrollTop+log.clientHeight>=log.scrollHeight-1;
+      if(end&&pg){pg.scrollTop+=e.deltaY;e.preventDefault()}},{passive:false})})();
   $("cmSend").onclick=userPost;$("cmIn").addEventListener("keydown",e=>{if(e.key==="Enter")userPost()});
   setInterval(()=>{document.querySelectorAll("#cmLog .ago[data-ts]").forEach(x=>{x.textContent=ago(+x.dataset.ts)});
     document.querySelectorAll("#cmLog .chip[data-s]").forEach(x=>{const c=chgS(x.dataset.s);x.innerHTML=x.dataset.s+' <b class="'+(c>=0?"up":"dn")+'">'+sg(c)+"</b>"})},30000);
   setInterval(()=>{const now=Date.now();postsList.filter(P=>now-P.ts<25*60000&&Math.random()<.6).slice(0,2).forEach(P=>{P.views+=ri(5,60);if(Math.random()<.5)P.likes++;if(state.open)refresh(P)})},6000)}
-function boot(){seedFeed();build();setTimeout(live,ri(14,28)*1000);fetchNews();fetchCharts();setInterval(fetchNews,600000);setInterval(fetchCharts,900000);(function(){let u=null;setInterval(()=>{try{if(myUid()&&myUid()!==u){u=myUid();const m=document.querySelector(".cmComp .cmA");if(m)m.outerHTML=avatar(ME);document.querySelectorAll("#cmLog .cmA").forEach(x=>{})}}catch(_){}},1500)})();setTimeout(drainNews,ri(90,180)*1000)}
+function boot(){seedFeed();build();setTimeout(live,ri(14,28)*1000);fetchNews();fetchCharts();setInterval(fetchNews,300000);setInterval(fetchCharts,900000);(function(){let u=null;setInterval(()=>{try{if(myUid()&&myUid()!==u){u=myUid();const m=document.querySelector(".cmComp .cmA");if(m)m.outerHTML=avatar(ME);document.querySelectorAll("#cmLog .cmA").forEach(x=>{})}}catch(_){}},1500)})();setTimeout(drainNews,ri(90,180)*1000)}
 function start(){loadGold();let n=0;(function w(){let ok=false;try{ok=S.mk&&S.mk.BTC&&S.mk.BTC.p>0}catch(e){}if((ok&&gold)||n++>16)boot();else setTimeout(w,250)})()}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
 })();

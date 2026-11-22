@@ -329,13 +329,19 @@ const $=id=>document.getElementById(id);
 /* ---------- intro -> page ---------- */
 const splash=$("splash"),main=$("main");
 let shown=false,introDone=false,wantApp=false;
-function goApp(){if(introDone&&wantApp)location.replace("app.html")} // a signed-in visitor only leaves once the intro has fully played
-function enter(){
-  if(shown)return;shown=true;
-  splash.classList.add("out");main.classList.add("in");
-  setTimeout(()=>{splash.style.display="none";introDone=true;goApp()},800);
+let sessKnown=false,sessP=null;
+function goApp(){location.replace("app.html")}
+async function enter(force){
+  if(shown)return;
+  /* Wait for the sign-in check first, so a signed-in visitor never sees the login form */
+  if(!sessKnown){try{await Promise.race([sessP,new Promise(r=>setTimeout(r,2500))])}catch(_){}}
+  if(shown)return;
+  if(force===true&&!sessKnown)return;
+  if(wantApp){shown=true;splash.classList.add("out");setTimeout(goApp,750);return}  // signed in: finish the intro, then straight to the app, no login screen
+  shown=true;splash.classList.add("out");main.classList.add("in");
+  setTimeout(()=>{splash.style.display="none";introDone=true},800);
 }
-splash.addEventListener("click",enter);
+splash.addEventListener("click",()=>{if(sessKnown&&!wantApp)enter()});
 setTimeout(enter,matchMedia("(prefers-reduced-motion:reduce)").matches?300:3400);
 
 /* ---------- form ---------- */
@@ -361,7 +367,7 @@ $("eye").onclick=()=>{
 
 const sb=supabase.createClient("https://djkcnhlstjvozrtfcqse.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqa2NuaGxzdGp2b3pydGZjcXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMDc5MDYsImV4cCI6MjEwNjg4MzkwNn0.lS_p3mV4tdFOmcOVZBTIXN52HPDOgDAHhLluxUTdX_s");
 const RECOVERING=/(^|[#&?])type=recovery/.test(location.hash+location.search);
-sb.auth.getSession().then(({data})=>{if(data.session&&!RECOVERING){wantApp=true;goApp()}});
+sessP=sb.auth.getSession().then(({data})=>{if(data.session&&!RECOVERING)wantApp=true;sessKnown=true}).catch(()=>{sessKnown=true});
 let mode="up";
 function setMode(m){
   mode=m;$("tabUp").setAttribute("aria-selected",m==="up");$("tabIn").setAttribute("aria-selected",m==="in");
