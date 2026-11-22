@@ -478,8 +478,7 @@ const css=`#cmBtn{display:none!important}
 .cmComp button{flex:none;display:grid;place-items:center;width:40px;height:40px;border:0;border-radius:50%;background:linear-gradient(135deg,#ffd75e,#f0b90b 60%,#ff9f1a);color:#1a1a1a;cursor:pointer;box-shadow:0 3px 10px rgba(240,185,11,.35);transition:transform .15s}.cmComp button:active{transform:scale(.92)}.cmComp button svg{width:18px;height:18px}
 #cmMore{display:none;width:100%;margin:8px 0 4px;padding:12px;border:0;border-radius:24px;background:var(--s2,#202020);color:var(--strong,#fff);font:inherit;font-weight:800;font-size:15px;cursor:pointer}
 #cmLog[data-f="n"] .cmP:not(.kn){display:none}
-@media(min-width:900px){#cmMore{display:none!important}}
-@media(max-width:899px){#loungeSec{height:auto!important;max-height:none!important;min-height:0!important}#cmDlg{display:block}.cmWrap{display:block}#cmLog{overflow:visible!important;height:auto}.cmNew{position:sticky;display:none;margin:0 auto}}
+#cmMore{display:none!important}
 `;
 function build(){
   const st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
@@ -490,7 +489,7 @@ function build(){
   <button id="cmMore" type="button">Show more posts</button>`;
   (document.getElementById("loungeSec")||document.getElementById("mkSec")||document.body).appendChild(d);
   try{const e=document.getElementById("uEmail"),h=(e&&e.textContent||"").split("@")[0].replace(/[^\w.]/g,"").slice(0,16);if(h)ME.n=h}catch(_){}
-  state.open=true;state.openC={};state.lim=innerWidth>=900?70:14;const me=$("cmMe");me.outerHTML=avatar(ME);render();$("cmMore").onclick=()=>{state.lim+=14;render()};
+  state.open=true;state.openC={};state.lim=70;const me=$("cmMe");me.outerHTML=avatar(ME);render();$("cmMore").onclick=()=>{state.lim+=14;render()};
   const log=$("cmLog");
   d.querySelector(".cmTabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;d.querySelectorAll(".cmTabs button").forEach(x=>x.classList.toggle("on",x===b));log.dataset.f=b.dataset.f;log.scrollTop=0});
   log.addEventListener("scroll",()=>{if(log.scrollTop<40){state.newCount=0;showNew()}},{passive:true});
@@ -503,7 +502,12 @@ function build(){
     else if(a==="sh"){try{navigator.clipboard.writeText(location.href)}catch(_){}b.innerHTML=ICON.sh+"<span>Link copied</span>";setTimeout(()=>{b.innerHTML=ICON.sh},1800)}
     else if(a==="send"){const i=el.querySelector(".cmCin input");userComment(P,i.value)}});
   log.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.closest(".cmCin")){const el=e.target.closest(".cmP"),P=postsList.find(x=>x.id==+el.dataset.id);if(P)userComment(P,e.target.value)}});
-  (function(){const pg=document.getElementById("pg")||log.closest(".pg");
+  (function(){const pg=document.getElementById("pg")||log.closest(".pg");let y0=0,ly=0;
+    log.addEventListener("touchstart",e=>{y0=ly=e.touches[0].clientY},{passive:true});
+    log.addEventListener("touchmove",e=>{const y=e.touches[0].clientY,d=ly-y;ly=y;if(!pg||!d)return;
+      const top=log.scrollTop<=0,end=log.scrollTop+log.clientHeight>=log.scrollHeight-1;
+      /* finger moving up (d>0) at the last post, or down at the first: hand the swipe to the whole page */
+      if((d>0&&end)||(d<0&&top)){pg.scrollTop+=d;e.preventDefault()}},{passive:false});
     log.addEventListener("wheel",e=>{const up=e.deltaY<0,end=up?log.scrollTop<=0:log.scrollTop+log.clientHeight>=log.scrollHeight-1;
       if(end&&pg&&e.deltaY){pg.scrollTop+=e.deltaY;e.preventDefault()}},{passive:false})})();
   $("cmSend").onclick=userPost;$("cmIn").addEventListener("keydown",e=>{if(e.key==="Enter")userPost()});
