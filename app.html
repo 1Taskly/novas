@@ -480,13 +480,13 @@ function paintPchg(){const el=$("pchg");if(!el)return;const pv=pvOf();
 function pvOf(){let pv=W.usd;for(const k in W.h){const d=S.mk[k];if(d)pv+=W.h[k]*d.p}return pv}
 function renderWallet(){const pv=pvOf();
   const ic=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${p}"/></svg>`,
-  A=[["buy","Buy","M12 5v14M5 12h14"],["sell","Sell","M5 12h14"],["swap","Swap","M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"],["receive","Receive","M12 4v12M6 11l6 6 6-6M5 20h14"],["send","Send","M12 20V8M6 13l6-6 6 6M5 4h14"]];
-  $("demo").innerHTML=`<div class="lbl">Portfolio balance</div><div class="v" id="pv">${bigUsd(pv)}</div><div class="pchg" id="pchg" style="display:none"></div>${frozenUsd()>0.005?`<div class="frz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>${usd(frozenUsd())} frozen until your loan is repaid</div>`:""}<div class="addfw"><button class="addf" id="addFunds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Deposit</button><button class="addf g" id="cashOut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Withdraw</button></div><div id="mgBanner"></div><div class="acts">${A.map(x=>`<button class="act" data-a="${x[0]}"><i>${ic(x[2])}</i>${x[1]}</button>`).join("")}</div>`;
-  paintPchg();paintMgBanner();renderMine();$("addFunds").onclick=openFund;$("cashOut").onclick=()=>{S.sym=null;S.back=null;S.step="cashout";drawMk();$("mkDlg").showModal()};
+  A=[["buy","Buy","M12 5v14M5 12h14"],["sell","Sell","M5 12h14"],["swap","Swap","M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"],["receive","Deposit","M12 4v12M6 11l6 6 6-6M5 20h14"],["send","Withdraw","M12 20V8M6 13l6-6 6 6M5 4h14"]];
+  $("demo").innerHTML=`<div class="lbl">Portfolio balance</div><div class="v" id="pv">${bigUsd(pv)}</div><div class="pchg" id="pchg" style="display:none"></div>${frozenUsd()>0.005?`<div class="frz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>${usd(frozenUsd())} frozen until your loan is repaid</div>`:""}<div id="mgBanner"></div><div class="acts">${A.map(x=>`<button class="act" data-a="${x[0]}"><i>${ic(x[2])}</i>${x[1]}</button>`).join("")}</div>`;
+  paintPchg();paintMgBanner();renderMine();
   $("demo").querySelectorAll(".act").forEach(b=>b.onclick=()=>{const a=b.dataset.a;S.sym=null;S.back=null;
     if(a==="buy"||a==="sell"){S.side=a;S.step="pick"}else S.step=a;
     drawMk();$("mkDlg").showModal()})}
-function openFund(){S.sym=null;S.back=null;S.fund=50;S.dep=1;S.step=intl()?"receive":"fund";if(intl())S.rc=S.rc||"USDT";drawMk();$("mkDlg").showModal()}
+function openFund(){S.sym=null;S.back=null;S.fund=50;S.dep=1;S.step="receive";S.rc=S.rc||"USDT";drawMk();$("mkDlg").showModal()}
 function renderMine(){const el=$("myAssets");if(!el)return;
   const mine=MK.filter(m=>(W.h[m[1]]||0)>0);
   const cash=W.usd>0.005?`<div class="asset"><div class="l"><div class="ico" style="background:var(--s2);color:var(--strong);display:grid;place-items:center;font-weight:800;font-size:18px">$</div><div><div class="nm">US Dollar</div><div class="qty">Cash balance${frozenUsd()>0.005?" · "+usd(frozenUsd())+" frozen":""}</div></div></div><div class="r"><div class="nm">${usd(W.usd)}</div></div></div>`:"";
@@ -510,14 +510,21 @@ function bindReceive(){
   const show=async sym=>{S.rc=sym;seg.forEach(b=>b.classList.toggle("on",b.dataset.rc===sym));
     const box=$("rcBody");box.innerHTML='<div class="empty">Loading…</div>';
     const name=WCOINS.find(x=>x[0]===sym)[1],cfg=await wcfg();if(S.step!=="receive"||S.rc!==sym)return;
-    if(!cfg.on||!cfg.on[sym]){box.innerHTML='<div class="empty">Deposits for '+name+' are not available yet.</div>';return}
-    try{const r=await callWallet({action:"address",chain:sym==="BTC"?"BTC":"ETH"});if(S.step!=="receive"||S.rc!==sym)return;
-      const note=sym==="USDT"?"Send USDT on the Ethereum network (ERC-20) only. Other networks will be lost.":sym==="ETH"?"Send Ethereum (ETH) on the Ethereum network only.":"Send Bitcoin (BTC) only.";
-      const netName=sym==="BTC"?"Bitcoin":"Ethereum (ERC-20)",buyNet=sym==="BTC"?"mainnet":"ethereum";
+    const nets=sym==="BTC"?(cfg.on&&cfg.on.BTC?[["BTC","Bitcoin","mainnet"]]:[]):sym==="ETH"?(cfg.on&&cfg.on.ETH?[["ETH","Ethereum","ethereum"]]:[]):[...(cfg.on&&cfg.on.TRON?[["TRON","Tron (TRC-20)","tron"]]:[]),...(cfg.on&&cfg.on.USDT?[["ETH","Ethereum (ERC-20)","ethereum"]]:[])];
+    if(!nets.length){box.innerHTML='<div class="empty">Deposits for '+name+' are not available yet.</div>';return}
+    const nk=sym+"Net",cur=nets.find(n=>n[0]===S[nk])||nets[0];S[nk]=cur[0];
+    try{const r=await callWallet({action:"address",chain:cur[0],coin:sym});if(S.step!=="receive"||S.rc!==sym)return;
+      const netName=cur[1],buyNet=cur[2];
+      const note=sym==="BTC"?"Send Bitcoin (BTC) only.":"Send "+sym+" on the "+netName+" network only. Other networks will be lost.";
+      const netSeg=nets.length>1?'<div class="small" style="margin:12px 0 6px">Network</div><div class="seg" id="rcNet">'+nets.map(n=>'<button data-nt="'+n[0]+'" class="'+(n[0]===cur[0]?"on":"")+'">'+esc(n[1])+'</button>').join("")+'</div>'+(cur[0]==="TRON"?'<div class="small" style="margin-top:6px">Recommended: low fees and fast.</div>':''):'<div class="small" style="margin:12px 0 0">Network: <b style="color:var(--strong)">'+netName+'</b></div>';
       const buyUrl=(CFG.transakEnv==="PRODUCTION"?"https://global.transak.com/":"https://global-stg.transak.com/")+"?"+new URLSearchParams({apiKey:CFG.transakKey,productsAvailed:"BUY",cryptoCurrencyCode:sym,network:buyNet,walletAddress:r.address,disableWalletAddressForm:"true",fiatCurrency:CUR.code,themeColor:"2f7bff"}).toString();
-      const how=' in any exchange app you already use (Coinbase, Binance, Kraken, Bybit, Crypto.com) with a card or bank transfer. In that app choose Withdraw or Send, paste the address above and pick the <b>'+netName+'</b> network. Send a small test first if it is your first time.',
-        help='<details style="margin-top:12px"><summary style="cursor:pointer;font-weight:700;font-size:14px">How do I get '+sym+'?</summary><div class="small" style="margin-top:8px;line-height:1.6">'+(CFG.transakKey?'<b>Easiest:</b> tap <b>Buy with card or bank</b> above. Pay in your own currency and the coins go straight to your address.<br><br><b>Or</b> buy '+sym+how:'Buy '+sym+how)+'</div></details>';
-      box.innerHTML='<div class="small" style="margin:12px 0 0">Network: <b style="color:var(--strong)">'+netName+'</b></div>'+(CFG.transakKey?'<a class="btn" href="'+esc(buyUrl)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin-top:10px">Buy with card or bank</a>':'')+'<div class="step" style="margin-top:12px"><div class="stepHead"><span>Your '+name+' deposit address</span></div><div class="addr" id="rcAddr">'+esc(r.address)+'</div><button class="btn ghost" id="rcCopy" style="width:100%">Copy address</button></div><div class="small">'+note+' Deposits are added to your balance once the network confirms them (Bitcoin about 20 minutes, Ethereum a few minutes).</div><div id="rcStat" class="small" role="status"></div>'+help;
+      const L=(u,t)=>'<a href="'+u+'" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700">'+t+'</a>';
+      const where='<details style="margin-top:12px"'+(CFG.transakKey?'':' open')+'><summary style="cursor:pointer;font-weight:700;font-size:14px">Where do I buy '+sym+'?</summary><div class="small" style="margin-top:8px;line-height:1.65">'
+        +'<b>Pay another person (P2P):</b> '+L("https://p2p.binance.com","Binance P2P")+', '+L("https://www.bybit.com/fiat/trade/otc/","Bybit P2P")+', '+L("https://www.okx.com/p2p-markets","OKX P2P")+'. Pick a seller in your currency, pay by bank or mobile money, and they release the '+sym+' to you.<br>'
+        +'<b>Card or bank in an app:</b> '+L("https://www.coinbase.com","Coinbase")+', '+L("https://www.kraken.com","Kraken")+', '+L("https://www.binance.com","Binance")+', '+L("https://www.bybit.com","Bybit")+'.<br><br>'
+        +'Then choose <b>Withdraw</b> or <b>Send</b> in that app, paste the address above and pick the <b>'+netName+'</b> network. Send a small test first if it is your first time.</div></details>';
+      box.innerHTML=netSeg+(CFG.transakKey?'<a class="btn" href="'+esc(buyUrl)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin-top:10px">Buy with card or bank</a>':'')+'<div class="step" style="margin-top:12px"><div class="stepHead"><span>Your '+name+' deposit address</span></div><div class="addr" id="rcAddr">'+esc(r.address)+'</div><button class="btn ghost" id="rcCopy" style="width:100%">Copy address</button></div><div class="small">'+note+' Deposits are added to your balance once the network confirms them (Bitcoin about 20 minutes, Ethereum a few minutes, Tron about a minute).</div><div id="rcStat" class="small" role="status"></div>'+where;
+      box.querySelectorAll("[data-nt]").forEach(b=>b.onclick=()=>{S[nk]=b.dataset.nt;show(sym)});
       $("rcCopy").onclick=async()=>{try{await navigator.clipboard.writeText(r.address);$("rcCopy").textContent="Copied"}catch(e){}}
     }catch(e){box.innerHTML='<div class="msg">'+esc(e.message)+'</div>'}};
   seg.forEach(b=>b.onclick=()=>show(b.dataset.rc));show(S.rc||"USDT");
@@ -614,9 +621,9 @@ function drawMk(){
     <div id="tEst" class="small" style="min-height:18px;text-align:center"></div><button class="btn" id="tGo">Continue</button><div id="tMsg" class="msg" role="status"></div>${off}${bk}`}
   else if(st==="pick"){const rows=MK.filter(x=>buy||(W.h[x[1]]||0)>0);$("mkT").textContent=buy?"Buy which asset?":"Sell which asset?";
     h=rows.length?rows.map(x=>{const e=S.mk[x[1]],u=!e||e.chg>=0;return `<button class="asset mrow" data-p="${x[1]}"><div class="l"><div class="ico">${mkIcon(x)}</div><div><div class="nm">${x[2]}</div><div class="qty">${buy?x[1]:qf(W.h[x[1]])+" "+x[1]}</div></div></div><div class="r"><div class="nm">${e?mpx(e.p):"—"}</div><div class="sub ${u?"up":"down"}">${e?pcs(e.chg):""}</div></div></button>`}).join(""):'<div class="empty">You do not hold any assets to sell yet.</div>'}
-  else if(st==="receive"){$("mkT").textContent=S.dep?"Deposit crypto":"Receive";
-    h=(S.dep?'<div class="small" style="margin:0 0 10px">Choose the coin, then send it to your address. Your balance updates by itself once the network confirms it.</div>':'')+'<div class="seg" style="margin-top:2px">'+WCOINS.map(x=>'<button data-rc="'+x[0]+'" class="'+((S.rc||"USDT")===x[0]?"on":"")+'">'+x[0]+'</button>').join("")+'</div><div id="rcBody"><div class="empty">Loading…</div></div>'+(S.dep&&!intl()?'<button class="btn ghost" id="rcMM" style="width:100%;margin-top:10px">Use mobile money instead</button>':'')+(S.back?bk:"")}
-  else if(st==="send"){$("mkT").textContent="Send";
+  else if(st==="receive"){$("mkT").textContent="Deposit crypto";S.dep=1;
+    h=(S.dep?'<div class="small" style="margin:0 0 10px">Choose the coin, then send it to your address. Your balance updates by itself once the network confirms it.</div>':'')+'<div class="seg" style="margin-top:2px">'+WCOINS.map(x=>'<button data-rc="'+x[0]+'" class="'+((S.rc||"USDT")===x[0]?"on":"")+'">'+x[0]+'</button>').join("")+'</div><div id="rcBody"><div class="empty">Loading…</div></div>'+(false?'<button class="btn ghost" id="rcMM" style="width:100%;margin-top:10px">Use mobile money instead</button>':'')+(S.back?bk:"")}
+  else if(st==="send"){$("mkT").textContent="Withdraw crypto";
     h='<div class="seg" style="margin-top:2px">'+WCOINS.map(x=>'<button data-sc="'+x[0]+'" class="'+((S.sc||"BTC")===x[0]?"on":"")+'">'+x[0]+'</button>').join("")+'</div><div id="sdBody"><div class="empty">Loading…</div></div>'}
   else if(st==="swap"){$("mkT").textContent="Swap";
     const mine=MK.filter(x=>(W.h[x[1]]||0)>0);
@@ -656,7 +663,7 @@ function drawMk(){
   q("tGo").onclick=async()=>{const v=+amt.value,msg=q("tMsg");msg.className="msg";
     if(!(v>0)){msg.textContent="Enter an amount.";return}
     if(st==="fund"){if(!(v>0)){msg.textContent="Enter an amount.";return}return payIn(v)}
-    if(buy&&v>availCash()+.005){S.dep=1;S.step=intl()?"receive":"fund";S.fund=Math.max(1,Math.ceil(v-availCash()));S.amt=v;S.back="trade";drawMk();return}
+    if(buy&&v>availCash()+.005){S.dep=1;S.step="receive";S.fund=Math.max(1,Math.ceil(v-availCash()));S.amt=v;S.back="trade";drawMk();return}
     q("tGo").disabled=true;
     try{applyW(await callTrade({action:"trade",side:S.side,sym,usd:v}));S.step="view";drawMk();}catch(e){msg.textContent=e.message;q("tGo").disabled=false}};
   if(st==="fund"&&$("dpOtpBtn"))$("dpOtpBtn").onclick=async()=>{const otp=$("dpOtp").value.trim();if(!otp)return;$("dpOtpBtn").disabled=true;

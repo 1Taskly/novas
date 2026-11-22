@@ -281,18 +281,24 @@ const TM={
  alts:{e:"🔀",g:["#1d1240","#7a5cff"],syms:["ETH","SOL"],h:[()=>"ETH/BTC ratio sits near multi-month lows",()=>"Altcoins bleed as bitcoin dominance rises"]}};
 const PAIR={BTC:"BTCUSDT",ETH:"ETHUSDT",SOL:"SOLUSDT",BNB:"BNBUSDT",XRP:"XRPUSDT",BONK:"BONKUSDT",WIF:"WIFUSDT",PEPE:"PEPEUSDT"};
 let rs=1;const rr=()=>{rs=(rs*16807)%2147483647;return rs/2147483647};
-function chartSVG(sym,seed){rs=(seed*7919+13)%2147483647||7;
-  const up=chgS(sym)>=0,n=46,W=300,H=200,L=8,R=44,T=40,B=24,p0=pxS(sym);
-  const vals=[];let v=0;for(let i=0;i<n;i++){v+=(rr()-(up?.45:.55))*1.6;vals.push(v)}
-  const cs=vals.map((x,i)=>{const o=i?vals[i-1]:x-.3,c=x,h=Math.max(o,c)+rr()*.9,l=Math.min(o,c)-rr()*.9;return{o,c,h,l}});
+const CH={};
+function chartSVG(sym,K,iv){const n=K.length,W=300,H=200,L=8,R=46,T=40,B=24;
+  const cs=K.map(k=>({o:+k[1],h:+k[2],l:+k[3],c:+k[4],v:+k[5]}));
   const mn=Math.min(...cs.map(c=>c.l)),mx=Math.max(...cs.map(c=>c.h)),Y=a=>T+(H-T-B)*(1-(a-mn)/(mx-mn||1)),sx=(W-L-R)/n;
-  const last=cs[n-1].c,scale=(a)=>p0*(1+(a-last)*.004);
-  let g="";for(let i=0;i<6;i++){const y=T+(H-T-B)*i/5,val=scale(mx-(mx-mn)*i/5);g+=`<line x1="${L}" x2="${W-R+4}" y1="${y}" y2="${y}" stroke="#2b3139" stroke-width=".5"/><text x="${W-R+7}" y="${y+2.5}" fill="#848e9c" font-size="7">${fp(val)}</text>`}
+  const last=cs[n-1].c,ch=(last/cs[0].o-1)*100,col0=ch>=0?"#0ecb81":"#f6465d";
+  let g="";for(let i=0;i<6;i++){const y=T+(H-T-B)*i/5,val=mx-(mx-mn)*i/5;g+=`<line x1="${L}" x2="${W-R+4}" y1="${y}" y2="${y}" stroke="#2b3139" stroke-width=".5"/><text x="${W-R+7}" y="${y+2.5}" fill="#848e9c" font-size="7">${fp(val)}</text>`}
   let k="";cs.forEach((c,i)=>{const x=L+i*sx+sx/2,col=c.c>=c.o?"#0ecb81":"#f6465d",y1=Y(Math.max(c.o,c.c)),y2=Y(Math.min(c.o,c.c));k+=`<line x1="${x}" x2="${x}" y1="${Y(c.h)}" y2="${Y(c.l)}" stroke="${col}" stroke-width=".8"/><rect x="${x-sx*.33}" y="${y1}" width="${sx*.66}" height="${Math.max(.8,y2-y1)}" fill="${col}"/>`});
-  let ma="";const pts=cs.map((c,i)=>{const a=cs.slice(Math.max(0,i-8),i+1).reduce((t,q)=>t+q.c,0)/Math.min(i+1,9);return(L+i*sx+sx/2).toFixed(1)+","+Y(a).toFixed(1)}).join(" ");ma=`<polyline points="${pts}" fill="none" stroke="#f0b90b" stroke-width=".9"/>`;
-  const ly=Y(last),m1=Math.floor(8+rr()*14),m2=Math.floor(24+rr()*18),mk=(i,t,c)=>{const q=cs[i],x=L+i*sx+sx/2;return`<circle cx="${x}" cy="${Y(q.l)+9}" r="5" fill="${c}"/><text x="${x}" y="${Y(q.l)+11.6}" fill="#fff" font-size="6.5" text-anchor="middle" font-weight="700">${t}</text>`};
-  const ch=chgS(sym),pr=pxS(sym);
-  return`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${sym} chart"><rect width="${W}" height="${H}" rx="10" fill="#161a1e"/><text x="10" y="16" fill="${ch>=0?"#0ecb81":"#f6465d"}" font-size="13" font-weight="700">${fp(pr)}</text><text x="10" y="28" fill="#848e9c" font-size="7.5">${PAIR[sym]||sym+"USDT"} · ${sg(ch)}</text><text x="${W-10}" y="14" fill="#848e9c" font-size="7" text-anchor="end">24h Vol ${ri(40,950)}.${ri(10,99)}M</text><text x="${W-10}" y="25" fill="#848e9c" font-size="7" text-anchor="end">1D 4h 1h 15m</text>${g}${k}${ma}<line x1="${L}" x2="${W-R+4}" y1="${ly}" y2="${ly}" stroke="#848e9c" stroke-width=".6" stroke-dasharray="2 2"/><rect x="${W-R+2}" y="${ly-5}" width="40" height="10" rx="2" fill="#2b3139"/><text x="${W-R+6}" y="${ly+2.5}" fill="#eaecef" font-size="7">${fp(pr)}</text>${mk(m1,"B","#0ecb81")}${mk(m2,"S","#f6465d")}<text x="${L}" y="${H-8}" fill="#848e9c" font-size="6.5">Vol: ${ri(10,90)}.${ri(1,9)}K   MA(5): ${ri(20,120)}K</text></svg>`}
+  const pts=cs.map((c,i)=>{const a=cs.slice(Math.max(0,i-8),i+1).reduce((t,q)=>t+q.c,0)/Math.min(i+1,9);return(L+i*sx+sx/2).toFixed(1)+","+Y(a).toFixed(1)}).join(" ");
+  const ly=Y(last),vol=cs.reduce((t,c)=>t+c.v,0);
+  return`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${sym} chart" text-rendering="geometricPrecision"><rect width="${W}" height="${H}" rx="10" fill="#161a1e"/><text x="10" y="16" fill="${col0}" font-size="13" font-weight="700">${fp(last)}</text><text x="10" y="28" fill="#848e9c" font-size="7.5">${PAIR[sym]||sym+"USDT"} · ${iv} · ${sg(ch)} over ${n} candles</text><text x="${W-10}" y="14" fill="#848e9c" font-size="7" text-anchor="end">Binance live data</text>${g}${k}<polyline points="${pts}" fill="none" stroke="#f0b90b" stroke-width=".9"/><line x1="${L}" x2="${W-R+4}" y1="${ly}" y2="${ly}" stroke="#848e9c" stroke-width=".6" stroke-dasharray="2 2"/><rect x="${W-R+2}" y="${ly-5}" width="42" height="10" rx="2" fill="#2b3139"/><text x="${W-R+6}" y="${ly+2.5}" fill="#eaecef" font-size="7">${fp(last)}</text><text x="${L}" y="${H-8}" fill="#848e9c" font-size="6.5">Volume ${kfmt(Math.round(vol))} ${sym} · MA(9)</text></svg>`}
+async function fetchCharts(){
+  for(const [s,iv] of [["BTC","4h"],["ETH","4h"],["SOL","1h"]]){
+    try{const c=new AbortController(),to=setTimeout(()=>c.abort(),8000);
+      const r=await fetch("https://api.binance.com/api/v3/klines?symbol="+PAIR[s]+"&interval="+iv+"&limit=48",{signal:c.signal});clearTimeout(to);
+      const k=await r.json();if(Array.isArray(k)&&k.length>20)CH[s]={k,iv}}catch(_){}}
+  /* attach real charts to some existing discussion posts */
+  let ch=false;postsList.forEach(P=>{if(P.kind==="say"&&!P.media&&Math.random()<.35){const ss=(TM[P.topic]||TM.fear).syms.filter(x=>CH[x]);if(ss.length){const s=pick(ss);P.media={t:"chart",svg:chartSVG(s,CH[s].k,CH[s].iv),sym:s};P.chips=[s];ch=true}}});
+  if(ch&&state.open)render()}
 function artSVG(tm,seed){rs=(seed*104729+5)%2147483647||9;let d="";for(let i=0;i<9;i++)d+=`<circle cx="${rr()*320}" cy="${rr()*150}" r="${6+rr()*30}" fill="#fff" opacity="${.04+rr()*.08}"/>`;
   return`<svg viewBox="0 0 320 150" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g${seed}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${tm.g[0]}"/><stop offset="1" stop-color="${tm.g[1]}"/></linearGradient></defs><rect width="320" height="150" fill="url(#g${seed})"/>${d}<text x="160" y="98" font-size="64" text-anchor="middle">${tm.e}</text></svg>`}
 const ICON={
@@ -310,11 +316,7 @@ function makePost(sc,kind,ts,live){
   const h=msgs[0],p=h.p,C=ctxNow(sc),tm=TM[sc.id]||TM.fear,id=state.nid++;
   const P={id,p,ts,kind,text:tk(human(p,h.t)),media:null,chips:[],tag:null,comments:[],likes:0,reposts:0,views:0,fresh:!!live,topic:sc.id};
   const ropen=kind==="open",r=Math.random();
-  if(ropen&&r<.62){const ht=pick(tm.h)(C);P.media={t:"art",svg:artSVG(tm,id),title:ht}}
-  else if(kind==="say"&&r<.38){const s=pick(tm.syms.filter(x=>PAIR[x]));P.media={t:"chart",svg:chartSVG(s,id),sym:s}}
-  else if(kind==="story"&&r<.7){const s=pick(["BTC","ETH","SOL"]),lng=Math.random()<.65,ng=neg(h.t)?true:Math.random()<.3,a=ri(30,2600)+Math.random(),side=(sc.id==="leverage"&&ng?"Liquidated ":"Closed ")+(lng?"Long":"Short");P.media={t:"trade",pair:PAIR[s],side,pnl:(ng?-1:1)*a}}
-  else if(kind==="chat"&&r<.12){P.media={t:"live",n:ri(60,340)}}
-  if(!P.media&&["say","open","err"].includes(kind)&&Math.random()<.4&&tm.syms.length)P.media={t:"none"};
+  if(kind==="say"&&r<.38){const ss=tm.syms.filter(x=>CH[x]);if(ss.length){const s=pick(ss);P.media={t:"chart",svg:chartSVG(s,CH[s].k,CH[s].iv),sym:s}}}
   const chipSyms=(P.media&&P.media.t==="chart")?[P.media.sym]:(kind==="open"||kind==="say")?tm.syms.slice(0,Math.random()<.5?1:2):[];
   P.chips=chipSyms;
   if(kind==="ask")P.tag="Question";
@@ -331,15 +333,17 @@ const tagCls=t=>t==="Bearish"?"bear":t==="Bullish"?"bull":t==="Question"?"qn":"t
 const txt2=t=>esc(t).replace(/\$[A-Z]{2,6}\b/g,m=>`<span class="tk">${m}</span>`).replace(/@[\w.]+/g,m=>`<span class="at">${m}</span>`);
 function mediaHtml(P){const m=P.media;if(!m||m.t==="none")return"";
   if(m.t==="chart")return`<div class="cmImg">${m.svg}</div>`;
-  if(m.t==="news")return`<a class="cmArt cmNews" href="${esc(m.url)}" target="_blank" rel="noopener noreferrer"><div class="cover">${m.img?`<img src="${esc(m.img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.outerHTML=this.dataset.f" data-f="${esc(m.svg)}">`:m.svg}<span class="lab">${ICON.ar}Article</span></div><div class="ttl">${esc(m.title)}</div><div class="src">${esc(m.src)} · ${ago(m.pub)} ↗</div></a>`;
+  if(m.t==="news"){const cov=m.img?`<div class="cover"><img src="${esc(m.img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.parentNode.remove()"><span class="lab">${ICON.ar}Article</span></div>`:"";
+    return`<a class="cmArt cmNews" href="${esc(m.url)}" target="_blank" rel="noopener noreferrer">${cov}<div class="ttl">${esc(m.title)}</div><div class="src">${esc(m.src)} · ${ago(m.pub)} ↗</div></a>`}
   if(m.t==="art")return`<div class="cmArt"><div class="cover">${m.svg}<span class="lab">${ICON.ar}Article</span></div><div class="ttl">${esc(m.title)}</div></div>`;
   if(m.t==="trade")return`<div class="cmTr"><b>${m.pair}</b><span class="pp">Perp</span><span class="pp sd">${m.side}</span><b class="pnl ${m.pnl>=0?"w":"l"}">${m.pnl>=0?"+":"-"}${Math.abs(m.pnl).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})} USDT</b></div>`;
   if(m.t==="live")return`<div class="cmLive"><span class="lb"><i></i>LIVE</span><span class="lw">👤 ${m.n}</span><div class="lav">${avatar(P.p)}</div></div>`;
   return""}
 function chipsHtml(P){return P.chips.length?`<div class="cmChips">${P.chips.map(s=>{const c=chgS(s);return`<span class="chip" data-s="${s}">${s} <b class="${c>=0?"up":"dn"}">${sg(c)}</b></span>`}).join("")}</div>`:""}
 function commentHtml(c){return`<div class="cmC"><div class="cmA s2">${avatarInner(c.p)}</div><div class="cb"><div><b class="cn" style="color:${c.p.nc}">${esc(c.p.n)}</b><span class="ago" data-ts="${c.ts}">${ago(c.ts)}</span></div><div class="ct">${txt2(c.t)}</div></div></div>`}
-function avatarInner(p){if(p.me)p.num=(window.S&&S.uid)||"me";return `${esc((p.n[0]||"?").toUpperCase())}${p.img?(window.ntImg?window.ntImg(p.num):`<img src="${esc(p.img)}" alt="" onerror="this.remove()">`):""}`}
-function avatar(p,cls){if(p.me)p.num=(window.S&&S.uid)||"me";return `<div class="cmA${cls?" "+cls:""}" style="background:${p.c}">${avatarInner(p)}</div>`}
+const myUid=()=>{try{return S.uid}catch(_){return null}};
+function avatarInner(p){if(p.me){const u=myUid();if(u&&typeof avSvg==="function")return avSvg(u)+(window.ntImg?ntImg(u):"");p.num=u||"me"}return `${esc((p.n[0]||"?").toUpperCase())}${p.img?(window.ntImg?window.ntImg(p.num):`<img src="${esc(p.img)}" alt="" onerror="this.remove()">`):""}`}
+function avatar(p,cls){if(p.me)p.num=myUid()||"me";return `<div class="cmA${cls?" "+cls:""}" style="background:${p.me?"var(--accent,#2f7bff)":p.c}">${avatarInner(p)}</div>`}
 function postInner(P){const p=P.p,open=state.openC[P.id],badge=p.role==="mod"?`<span class="bd">${GEM("#8b5cf6",14)}MOD</span>`:p.role==="vet"?`<span class="vf" title="Verified">${GEM("#f0b90b",15)}</span>`:"";
   const live=P.media&&P.media.t==="live";
   return`<div class="cmRow">${live?`<div class="cmA ph" style="background:${p.c}">${avatarInner(p)}</div>`:avatar(p)}<div class="cmBody"><div class="cmN"><span class="nm">${esc(p.n)}</span>${badge}<span class="dot">•</span><span class="ago" data-ts="${P.ts}">${ago(P.ts)}</span>${P.tag?`<span class="tg ${tagCls(P.tag)}">${esc(P.tag)}</span>`:""}<button class="x" data-a="x" aria-label="Hide post">×</button></div>
@@ -389,7 +393,7 @@ function newsPost(it,live){
   ["say","ask","say","debate","say"].slice(0,ri(3,5)).forEach(k=>{try{beat(sc,k).forEach(m=>ms.push(m))}catch(_){}});
   const author=pick(PEOPLE.filter(p=>p.role==="vet"||p.role==="mod"));
   let img=String(it.imageurl||"");if(!/^https:\/\//.test(img))img="";
-  const P={id:pid,p:author,ts:pub,kind:"news",text:tk(pick(LEAD)),media:{t:"news",img,url:it.url,src:String(it.source_info&&it.source_info.name||it.source||"News").slice(0,30),title,pub,svg:artSVG(tm,pid)},chips:symsFor(title),tag:"News",comments:[],likes:0,reposts:0,views:0,fresh:!!live,topic:id};
+  const P={id:pid,p:author,ts:pub,kind:"news",text:tk(pick(LEAD)),media:{t:"news",img,url:it.url,src:String(it.source_info&&it.source_info.name||it.source||"News").slice(0,30),title,pub},chips:symsFor(title),tag:"News",comments:[],likes:0,reposts:0,views:0,fresh:!!live,topic:id};
   const age=Math.max(0,(Date.now()-pub)/3600000);
   P.likes=Math.floor(ri(8,60)*(1+age*.6));P.reposts=Math.floor(P.likes*rnd(.05,.2));P.views=Math.floor(P.likes*ri(30,90)+age*ri(200,700));
   let t=pub;const seen=[];ms.slice(0,5).forEach(m=>{if(seen.indexOf(m.t)>-1)return;seen.push(m.t);t+=ri(40,420)*1000;P.comments.push({p:m.p,t:tk(human(m.p,m.t)),ts:t,likes:Math.random()<.35?ri(1,9):0})});
@@ -400,7 +404,7 @@ async function fetchNews(){
     const r=await fetch("https://min-api.cryptocompare.com/data/v2/news/?lang=EN",{signal:c.signal});clearTimeout(to);
     const j=await r.json();list=(j&&j.Data)||[]}catch(_){return}
   if(!Array.isArray(list)||!list.length)return;
-  const fresh=list.filter(x=>x&&x.id&&!newsSeen.has(x.id));fresh.forEach(x=>newsSeen.add(x.id));
+  const fresh=list.filter(x=>x&&x.id&&!newsSeen.has(x.id)&&/^https:\/\//.test(x.imageurl||""));fresh.forEach(x=>newsSeen.add(x.id));
   if(!fresh.length)return;
   if(!state.newsInit){state.newsInit=true;
     fresh.slice(0,7).forEach(it=>{const P=newsPost(it,false);if(!P)return;const now=Date.now();P.comments=P.comments.filter(c=>c.ts<now-4000);postsList.push(P)});
@@ -434,7 +438,7 @@ const css=`#cmBtn{display:none!important}
 .cmP{padding:14px 4px 4px;border-bottom:1px solid color-mix(in srgb,var(--line,#282828) 55%,transparent)}.cmP:last-child{border-bottom:0}
 @media(prefers-reduced-motion:no-preference){.cmP.pin{animation:cmpin .45s ease}}@keyframes cmpin{from{opacity:0;transform:translateY(-10px)}}
 .cmRow{display:flex;gap:11px;align-items:flex-start}
-.cmA{flex:none;position:relative;overflow:hidden;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}.cmA img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cmA{flex:none;position:relative;overflow:hidden;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}.cmA svg{width:100%;height:100%;display:block}.cmA img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .cmA.s2{width:28px;height:28px;font-size:11px}.cmA.ph{box-shadow:0 0 0 2px var(--s1,#151515),0 0 0 4px #8b5cf6}
 .cmBody{min-width:0;flex:1}
 .cmN{position:relative;display:flex;align-items:center;flex-wrap:wrap;gap:3px 7px;line-height:1.25;min-height:24px;padding-right:26px}
@@ -475,7 +479,7 @@ const css=`#cmBtn{display:none!important}
 #cmMore{display:none;width:100%;margin:8px 0 4px;padding:12px;border:0;border-radius:24px;background:var(--s2,#202020);color:var(--strong,#fff);font:inherit;font-weight:800;font-size:15px;cursor:pointer}
 #cmLog[data-f="n"] .cmP:not(.kn){display:none}
 @media(min-width:900px){#cmMore{display:none!important}}
-@media(max-width:899px){#loungeSec{height:auto!important;max-height:none!important;min-height:0!important;display:block!important}#cmDlg{display:block}.cmWrap{display:block}#cmLog{overflow:visible!important;height:auto}.cmNew{position:sticky;display:none;margin:0 auto}}
+@media(max-width:899px){#loungeSec{height:auto!important;max-height:none!important;min-height:0!important}#cmDlg{display:block}.cmWrap{display:block}#cmLog{overflow:visible!important;height:auto}.cmNew{position:sticky;display:none;margin:0 auto}}
 `;
 function build(){
   const st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
@@ -506,7 +510,7 @@ function build(){
   setInterval(()=>{document.querySelectorAll("#cmLog .ago[data-ts]").forEach(x=>{x.textContent=ago(+x.dataset.ts)});
     document.querySelectorAll("#cmLog .chip[data-s]").forEach(x=>{const c=chgS(x.dataset.s);x.innerHTML=x.dataset.s+' <b class="'+(c>=0?"up":"dn")+'">'+sg(c)+"</b>"})},30000);
   setInterval(()=>{const now=Date.now();postsList.filter(P=>now-P.ts<25*60000&&Math.random()<.6).slice(0,2).forEach(P=>{P.views+=ri(5,60);if(Math.random()<.5)P.likes++;if(state.open)refresh(P)})},6000)}
-function boot(){seedFeed();build();setTimeout(live,ri(14,28)*1000);fetchNews();setInterval(fetchNews,600000);setTimeout(drainNews,ri(90,180)*1000)}
+function boot(){seedFeed();build();setTimeout(live,ri(14,28)*1000);fetchNews();fetchCharts();setInterval(fetchNews,600000);setInterval(fetchCharts,900000);(function(){let u=null;setInterval(()=>{try{if(myUid()&&myUid()!==u){u=myUid();const m=document.querySelector(".cmComp .cmA");if(m)m.outerHTML=avatar(ME);document.querySelectorAll("#cmLog .cmA").forEach(x=>{})}}catch(_){}},1500)})();setTimeout(drainNews,ri(90,180)*1000)}
 function start(){loadGold();let n=0;(function w(){let ok=false;try{ok=S.mk&&S.mk.BTC&&S.mk.BTC.p>0}catch(e){}if((ok&&gold)||n++>16)boot();else setTimeout(w,250)})()}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
 })();

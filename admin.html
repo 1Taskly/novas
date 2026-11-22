@@ -143,7 +143,17 @@ input,select{background:var(--s2);border:1px solid #303030;border-radius:14px;pa
     <div class="card"><div class="title">Owed to users</div><div id="owed" class="kv">Loading…</div>
       <div class="hint">Your wallets should always hold at least this much of each coin. Buying and selling inside the app does not move coins on the blockchain, so top your wallet up when a number here grows past what you hold.</div>
       <div class="row" style="margin-top:12px"><button class="btn ghost sm" id="scanAll">Scan all deposit addresses now</button></div><div id="scanMsg" class="msg"></div></div>
+    <div class="card"><div class="title">Deposit addresses (same for every user)</div>
+      <div id="adNet" class="hint" style="margin:-6px 0 10px"></div>
+      <label for="adBtc">Bitcoin (BTC) address</label><input id="adBtc" spellcheck="false" autocomplete="off" placeholder="bc1… (leave empty to use a different address per user)">
+      <label for="adEth">Ethereum (ETH) address</label><input id="adEth" spellcheck="false" autocomplete="off" placeholder="0x…">
+      <label for="adUt">USDT on Tron (TRC-20) address</label><input id="adUt" spellcheck="false" autocomplete="off" placeholder="T…">
+      <label for="adUe">USDT on Ethereum (ERC-20) address</label><input id="adUe" spellcheck="false" autocomplete="off" placeholder="0x… (can be the same as your ETH address)">
+      <div class="hint">Every user is shown these addresses. A shared address cannot tell users apart, so deposits to it are NOT credited automatically: when money arrives, credit that user by hand. Leave a box empty and that coin uses a separate automatic address per user instead (needs the public keys below).</div>
+      <div class="row" style="margin-top:12px"><button class="btn" id="adSave">Save deposit addresses</button></div><div id="adMsg" class="msg"></div></div>
     <div class="card"><div class="title">Wallet keys and fees</div>
+      <label for="wNet">Deposit network (separate from the loan network)</label><select id="wNet"><option value="testnet">Test network (coins have no value)</option><option value="mainnet">Real network (real coins)</option></select>
+      <div class="hint">This switch only controls crypto deposits. Loans have their own Network switch in Settings, so deposits can be real while borrowing stays on the test network. Only public keys and addresses are stored here, never private keys or seed phrases.</div>
       <label for="wBtc">Bitcoin public key (xpub / zpub / tpub)</label><input id="wBtc" spellcheck="false" autocomplete="off" placeholder="Public key only. Never paste a seed phrase here.">
       <label for="wEth">Ethereum public key (xpub)</label><input id="wEth" spellcheck="false" autocomplete="off" placeholder="Public key only. Never paste a seed phrase here.">
       <label for="wUsdt">USDT contract on the Ethereum network</label><input id="wUsdt" spellcheck="false" autocomplete="off" placeholder="Leave empty on mainnet to use the official USDT. On the test network, paste a test token or leave empty to switch USDT off.">
@@ -332,6 +342,9 @@ const WC=["BTC","ETH","USDT"];
 async function loadWallet(){
   const {data}=await sb.from("settings").select("key,value");
   const c=((data||[]).find(r=>r.key==="custody")||{}).value||{},f=c.fees||{},m=c.min||{},cf=c.confs||{};
+  window.adOld=c.addresses||{};const ad=c.addresses||{};$("adBtc").value=ad.BTC||"";$("adEth").value=ad.ETH||"";$("adUt").value=ad.USDT_TRON||"";$("adUe").value=ad.USDT_ETH||"";
+  const mainNet=c.net?c.net==="mainnet":(((data||[]).find(r=>r.key==="loan")||{}).value||{}).net==="mainnet";window.adMain=mainNet;$("wNet").value=mainNet?"mainnet":"testnet";
+  const shNet=()=>{const m=$("wNet").value==="mainnet";window.adMain=m;$("adNet").innerHTML=m?"Deposit network: <b>REAL</b>. These must be real addresses you control.":"Deposit network: <b>TEST</b>. Deposits are test coins with no value. Change it in Wallet keys and fees below.";};shNet();$("wNet").onchange=shNet;
   $("wBtc").value=c.btcXpub||"";$("wEth").value=c.ethXpub||"";$("wUsdt").value=c.usdtContract||"";
   $("wcB").value=cf.BTC??2;$("wcE").value=cf.ETH??12;
   $("wfB").value=f.BTC??0.0001;$("wmB").value=m.BTC??0.0005;$("wfE").value=f.ETH??0.002;$("wmE").value=m.ETH??0.01;$("wfU").value=f.USDT??5;$("wmU").value=m.USDT??10;
@@ -342,10 +355,20 @@ $("wSave").onclick=async()=>{
   const v=id=>$(id).value.trim(),n=id=>Number($(id).value),bad=/\s/.test(v("wBtc"))||/\s/.test(v("wEth"));
   if(bad||/^(abandon|[a-z]+ [a-z]+ [a-z]+)/.test(v("wBtc"))||/^[a-z]+ [a-z]+ [a-z]+/.test(v("wEth"))){$("wMsg").className="msg";$("wMsg").textContent="That looks like words, not a public key. Never paste a seed phrase here.";return}
   const value={btcXpub:v("wBtc"),ethXpub:v("wEth"),usdtContract:v("wUsdt"),confs:{BTC:n("wcB"),ETH:n("wcE")},
-    fees:{BTC:n("wfB"),ETH:n("wfE"),USDT:n("wfU")},min:{BTC:n("wmB"),ETH:n("wmE"),USDT:n("wmU")},swapFee:n("wSw")/100};
+    fees:{BTC:n("wfB"),ETH:n("wfE"),USDT:n("wfU")},min:{BTC:n("wmB"),ETH:n("wmE"),USDT:n("wmU")},swapFee:n("wSw")/100,net:$("wNet").value,addresses:(window.adOld||{})};
   const {error}=await sb.from("settings").upsert([{key:"custody",value}],{onConflict:"key"});
   $("wMsg").className=error?"msg":"msg ok";$("wMsg").textContent=error?"Could not save: "+error.message:"Saved.";
 };
+$("adSave").onclick=async()=>{
+  const v=id=>$(id).value.trim(),m=window.adMain,msg=$("adMsg"),bad=t=>{msg.className="msg";msg.textContent=t};
+  const ok={BTC:x=>!x||(m?/^(bc1[a-z0-9]{20,70}|[13][a-km-zA-HJ-NP-Z1-9]{25,34})$/:/^(tb1[a-z0-9]{20,70}|[mn2][a-km-zA-HJ-NP-Z1-9]{25,34})$/).test(x),EVM:x=>!x||/^0x[0-9a-fA-F]{40}$/.test(x),TRX:x=>!x||/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(x)};
+  if(!ok.BTC(v("adBtc")))return bad("That Bitcoin address does not look right for the "+(m?"main":"test")+" network.");
+  if(!ok.EVM(v("adEth"))||!ok.EVM(v("adUe")))return bad("Ethereum addresses start with 0x and have 40 letters or numbers after it.");
+  if(!ok.TRX(v("adUt")))return bad("A Tron address starts with T and is 34 characters long.");
+  const {data}=await sb.from("settings").select("key,value");const c=((data||[]).find(r=>r.key==="custody")||{}).value||{};
+  const addresses={BTC:v("adBtc"),ETH:v("adEth"),USDT_TRON:v("adUt"),USDT_ETH:v("adUe")};
+  window.adOld=addresses;const {error}=await sb.from("settings").upsert([{key:"custody",value:{...c,addresses,net:$("wNet").value}}],{onConflict:"key"});
+  msg.className=error?"msg":"msg ok";msg.textContent=error?"Could not save: "+error.message:"Saved. Users now see these addresses.";};
 $("scanAll").onclick=async()=>{
   $("scanMsg").className="msg";$("scanMsg").textContent="Scanning…";
   try{const {data,error}=await sb.functions.invoke("wallet",{body:{action:"scanall"}});if(error)throw error;
