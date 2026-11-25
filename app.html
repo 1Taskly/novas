@@ -405,18 +405,27 @@ function useCur(code,country){code=String(code||"USD").toUpperCase();CUR.code=co
 // Work out the visitor's country and currency from their IP address (free lookups, remembered for a day)
 const CC2CUR={US:"USD",GH:"GHS",KE:"KES",NG:"NGN",ZA:"ZAR",UG:"UGX",TZ:"TZS",RW:"RWF",ZM:"ZMW",ET:"ETB",EG:"EGP",MA:"MAD",SN:"XOF",CI:"XOF",CM:"XAF",GB:"GBP",IE:"EUR",DE:"EUR",FR:"EUR",ES:"EUR",IT:"EUR",NL:"EUR",PT:"EUR",BE:"EUR",AT:"EUR",FI:"EUR",GR:"EUR",CA:"CAD",AU:"AUD",NZ:"NZD",IN:"INR",PK:"PKR",BD:"BDT",PH:"PHP",ID:"IDR",MY:"MYR",SG:"SGD",TH:"THB",VN:"VND",JP:"JPY",KR:"KRW",CN:"CNY",HK:"HKD",AE:"AED",SA:"SAR",TR:"TRY",BR:"BRL",MX:"MXN",AR:"ARS",CO:"COP",CL:"CLP",PE:"PEN",CH:"CHF",SE:"SEK",NO:"NOK",DK:"DKK",PL:"PLN",CZ:"CZK",RO:"RON",UA:"UAH"};
 // Work out the visitor's country and currency from their IP address. Re-checked on every visit (the saved answer is only used for 5 minutes) so a changed network or VPN is picked up straight away.
-const curReady=(async function(){
+async function detectCur(){
   let hit=null;
-  try{const c=JSON.parse(localStorage.getItem("nt_cur2")||"null");if(c&&c.code&&Date.now()-c.t<3e5)hit=c}catch(e){}
   const ask=async(u,f)=>{const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),4000);try{return f(await (await fetch(u,{signal:ctl.signal,cache:"no-store"})).json())}catch(e){return null}finally{clearTimeout(t)}};
-  if(!hit){
-    hit=await ask("https://ipwho.is/",j=>j&&j.success!==false&&j.country_code?{country:j.country_code,code:(j.currency&&j.currency.code)||CC2CUR[j.country_code]}:null);
-    if(!hit||!hit.code)hit=await ask("https://ipapi.co/json/",j=>j&&j.country_code?{country:j.country_code,code:j.currency||CC2CUR[j.country_code]}:null);
-    if(!hit||!hit.code)hit=await ask("https://api.country.is/",j=>j&&j.country?{country:j.country,code:CC2CUR[j.country]}:null);
-    if(hit&&hit.code){try{localStorage.setItem("nt_cur2",JSON.stringify({country:hit.country,code:hit.code,t:Date.now()}))}catch(e){}}
-  }
+  /* the three lookups run together and the first good answer wins, so a slow one never holds things up */
+  const tries=[ask("https://ipwho.is/",j=>j&&j.success!==false&&j.country_code?{country:j.country_code,code:(j.currency&&j.currency.code)||CC2CUR[j.country_code]}:null),
+    ask("https://ipapi.co/json/",j=>j&&j.country_code?{country:j.country_code,code:j.currency||CC2CUR[j.country_code]}:null),
+    ask("https://api.country.is/",j=>j&&j.country?{country:j.country,code:CC2CUR[j.country]}:null)];
+  hit=await new Promise(res=>{let n=0;tries.forEach(p=>p.then(h=>{if(h&&h.code)res(h);else if(++n===tries.length)res(null)}))});
+  return hit}
+const curReady=(async function(){
+  let hit=await detectCur();
   if(!hit||!hit.code){hit={country:"",code:"USD"}} // if every lookup fails, dollars (never guess cedis from the browser's time zone)
   useCur(hit.code,hit.country)})();
+/* Re-check the country every 15 seconds while the app is open, and the moment it comes back to the front or the network changes, so a VPN switch is picked up quickly */
+let curBusy=false;
+async function recheckCur(){if(curBusy)return;curBusy=true;
+  try{const h=await detectCur();if(h&&h.code&&h.country&&h.country!==CUR.country){useCur(h.code,h.country);await loadFx(true);try{applyRegion()}catch(e){}try{refreshAvail()}catch(e){}}}
+  finally{curBusy=false}}
+setInterval(()=>{if(!document.hidden)recheckCur()},15000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)recheckCur()});
+addEventListener("online",recheckCur);addEventListener("focus",recheckCur);
 async function loadFx(force){
   await curReady;
   if(!force&&okFx&&Date.now()-lastFx<120000)return;
@@ -487,13 +496,13 @@ function paintPchg(){const el=$("pchg");if(!el)return;const pv=pvOf();
 function pvOf(){let pv=W.usd;for(const k in W.h){const d=S.mk[k];if(d)pv+=W.h[k]*d.p}return pv}
 function renderWallet(){const pv=pvOf();
   const ic=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${p}"/></svg>`,
-  A=[["buy","Buy","M12 5v14M5 12h14"],["sell","Sell","M5 12h14"],["swap","Swap","M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"],["receive","Deposit","M12 4v12M6 11l6 6 6-6M5 20h14"],["send","Withdraw","M12 20V8M6 13l6-6 6 6M5 4h14"]];
-  $("demo").innerHTML=`<div class="lbl">Portfolio balance</div><div class="v" id="pv">${bigUsd(pv)}</div><div class="pchg" id="pchg" style="display:none"></div>${frozenUsd()>0.005?`<div class="frz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>${usd(frozenUsd())} frozen until your loan is repaid</div>`:""}<div id="mgBanner"></div><div class="acts">${A.map(x=>`<button class="act" data-a="${x[0]}"><i>${ic(x[2])}</i>${x[1]}</button>`).join("")}</div>`;
-  paintPchg();paintMgBanner();renderMine();
+  A=[["buy","Buy","M12 5v14M5 12h14"],["sell","Sell","M5 12h14"],["swap","Swap","M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"],["receive","Receive","M12 4v12M6 11l6 6 6-6M5 20h14"],["send","Send","M12 20V8M6 13l6-6 6 6M5 4h14"]];
+  $("demo").innerHTML=`<div class="lbl">Portfolio balance</div><div class="v" id="pv">${bigUsd(pv)}</div><div class="pchg" id="pchg" style="display:none"></div>${frozenUsd()>0.005?`<div class="frz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>${usd(frozenUsd())} frozen until your loan is repaid</div>`:""}<div class="addfw"><button class="addf" id="addFunds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Deposit</button><button class="addf g" id="cashOut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Withdraw</button></div><div id="mgBanner"></div><div class="acts">${A.map(x=>`<button class="act" data-a="${x[0]}"><i>${ic(x[2])}</i>${x[1]}</button>`).join("")}</div>`;
+  paintPchg();paintMgBanner();renderMine();$("addFunds").onclick=openFund;$("cashOut").onclick=()=>{S.sym=null;S.back=null;S.step="cashout";drawMk();$("mkDlg").showModal()};
   $("demo").querySelectorAll(".act").forEach(b=>b.onclick=()=>{const a=b.dataset.a;S.sym=null;S.back=null;
     if(a==="buy"||a==="sell"){S.side=a;S.step="pick"}else S.step=a;
     drawMk();$("mkDlg").showModal()})}
-function openFund(){S.sym=null;S.back=null;S.fund=50;S.dep=1;S.step="receive";S.rc=S.rc||"USDT";drawMk();$("mkDlg").showModal()}
+function openFund(){S.sym=null;S.back=null;S.step="fund";S.fund=50;drawMk();$("mkDlg").showModal()}
 function renderMine(){const el=$("myAssets");if(!el)return;
   const mine=MK.filter(m=>(W.h[m[1]]||0)>0);
   const cash=W.usd>0.005?`<div class="asset"><div class="l"><div class="ico" style="background:var(--s2);color:var(--strong);display:grid;place-items:center;font-weight:800;font-size:18px">$</div><div><div class="nm">US Dollar</div><div class="qty">Cash balance${frozenUsd()>0.005?" · "+usd(frozenUsd())+" frozen":""}</div></div></div><div class="r"><div class="nm">${usd(W.usd)}</div></div></div>`:"";
@@ -524,13 +533,12 @@ function bindReceive(){
       const netName=cur[1],buyNet=cur[2];
       const note=sym==="BTC"?"Send Bitcoin (BTC) only.":"Send "+sym+" on the "+netName+" network only. Other networks will be lost.";
       const netSeg=nets.length>1?'<div class="small" style="margin:12px 0 6px">Network</div><div class="seg" id="rcNet">'+nets.map(n=>'<button data-nt="'+n[0]+'" class="'+(n[0]===cur[0]?"on":"")+'">'+esc(n[1])+'</button>').join("")+'</div>'+(cur[0]==="TRON"?'<div class="small" style="margin-top:6px">Recommended: low fees and fast.</div>':''):'<div class="small" style="margin:12px 0 0">Network: <b style="color:var(--strong)">'+netName+'</b></div>';
-      const buyUrl=(CFG.transakEnv==="PRODUCTION"?"https://global.transak.com/":"https://global-stg.transak.com/")+"?"+new URLSearchParams({apiKey:CFG.transakKey,productsAvailed:"BUY",cryptoCurrencyCode:sym,network:buyNet,walletAddress:r.address,disableWalletAddressForm:"true",fiatCurrency:CUR.code,themeColor:"2f7bff"}).toString();
       const L=(u,t)=>'<a href="'+u+'" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700">'+t+'</a>';
-      const where='<details style="margin-top:12px"'+(CFG.transakKey?'':' open')+'><summary style="cursor:pointer;font-weight:700;font-size:14px">Where do I buy '+sym+'?</summary><div class="small" style="margin-top:8px;line-height:1.65">'
+      const where='<details style="margin-top:12px"'+' open'+'><summary style="cursor:pointer;font-weight:700;font-size:14px">Where do I buy '+sym+'?</summary><div class="small" style="margin-top:8px;line-height:1.65">'
         +'<b>Pay another person (P2P):</b> '+L("https://p2p.binance.com","Binance P2P")+', '+L("https://www.bybit.com/fiat/trade/otc/","Bybit P2P")+', '+L("https://www.okx.com/p2p-markets","OKX P2P")+'. Pick a seller in your currency, pay by bank or mobile money, and they release the '+sym+' to you.<br>'
         +'<b>Card or bank in an app:</b> '+L("https://www.coinbase.com","Coinbase")+', '+L("https://www.kraken.com","Kraken")+', '+L("https://www.binance.com","Binance")+', '+L("https://www.bybit.com","Bybit")+'.<br><br>'
         +'Then choose <b>Withdraw</b> or <b>Send</b> in that app, paste the address above and pick the <b>'+netName+'</b> network. Send a small test first if it is your first time.</div></details>';
-      box.innerHTML=netSeg+(CFG.transakKey?'<a class="btn" href="'+esc(buyUrl)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin-top:10px">Buy with card or bank</a>':'')+'<div class="step" style="margin-top:12px"><div class="stepHead"><span>Your '+name+' deposit address</span></div><div class="addr" id="rcAddr">'+esc(r.address)+'</div><button class="btn ghost" id="rcCopy" style="width:100%">Copy address</button></div><div class="small">'+note+' Deposits are added to your balance once the network confirms them (Bitcoin about 20 minutes, Ethereum a few minutes, Tron about a minute).</div><div id="rcStat" class="small" role="status"></div>'+where;
+      box.innerHTML=netSeg+''+'<div class="step" style="margin-top:12px"><div class="stepHead"><span>Your '+name+' deposit address</span></div><div class="addr" id="rcAddr">'+esc(r.address)+'</div><button class="btn ghost" id="rcCopy" style="width:100%">Copy address</button></div><div class="small">'+note+' Deposits are added to your balance once the network confirms them (Bitcoin about 20 minutes, Ethereum a few minutes, Tron about a minute).</div><div id="rcStat" class="small" role="status"></div>'+where;
       box.querySelectorAll("[data-nt]").forEach(b=>b.onclick=()=>{S[nk]=b.dataset.nt;show(sym)});
       $("rcCopy").onclick=async()=>{try{await navigator.clipboard.writeText(r.address);$("rcCopy").textContent="Copied"}catch(e){}}
     }catch(e){box.innerHTML='<div class="msg">'+esc(e.message)+'</div>'}};
@@ -568,8 +576,6 @@ async function bindSend(){
   seg.forEach(b=>b.onclick=()=>{sym=b.dataset.sc;draw()});draw()}
 function bindCashout(){const box=$("cwBody");if(!box)return;
   if(!S.idOk){box.innerHTML='<div class="empty">Verify your identity in the Borrow tab to withdraw funds.</div>';return}
-  if(intl()){const u=(CFG.transakEnv==="PRODUCTION"?"https://global.transak.com/":"https://global-stg.transak.com/")+"?"+new URLSearchParams({apiKey:CFG.transakKey,productsAvailed:"SELL",cryptoCurrencyCode:"USDT",fiatCurrency:CUR.code,themeColor:"2f7bff"}).toString();
-    box.innerHTML='<div class="small" style="margin:0 0 10px">Available '+usd(availCash())+'. Cash out in '+esc(CUR.name)+' through our partner '+esc(CFG.offramp.intl)+'. They pay it to your bank.</div><a class="btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="'+esc(u)+'" target="_blank" rel="noopener">Cash out with '+esc(CFG.offramp.intl)+'</a>';return}
   const fxN=()=>S.px.fx||CFG.fallbackUsdGhs,MIN=0.01;let armed=false;
   box.innerHTML='<div class="small" style="margin:0 0 8px">Available to withdraw '+usd(availCash())+(frozenUsd()>0.005?' ('+usd(frozenUsd())+' is frozen for your loan)':'')+'. Money goes to a mobile money wallet in your own name.</div>'+
     '<input id="cwAmt" type="number" min="0" step="any" inputmode="decimal" placeholder="$0" aria-label="Amount in dollars" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px"><div class="chips" id="cwQ">'+[25,50,100,"Max"].map(v=>'<button data-q="'+v+'">'+(v==="Max"?"Max":"$"+v)+'</button>').join("")+'</div>'+
@@ -638,7 +644,7 @@ function drawMk(){
   else if(st==="cashout"){$("mkT").textContent="Withdraw funds";h='<div id="cwBody"></div>'}
   else{$("mkT").textContent="Deposit funds";
     S.dpm="mm";
-    h=`${intl()?"":`<div class="seg" id="dpMode" role="group" aria-label="How to pay" style="margin:0 0 10px"><button type="button" data-dm="mm" class="${S.dpm==="mm"?"on":""}">Mobile money</button><button type="button" data-dm="crypto">Crypto</button></div>`}<div class="small" id="dpIntro" style="margin:0 0 8px"></div><input id="tAmt" type="number" min="0.01" step="any" inputmode="decimal" placeholder="$0" value="${S.fund||50}" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px">${chips([25,50,100,250])}
+    h=`${""&&`<div class="seg" id="dpMode" role="group" aria-label="How to pay" style="margin:0 0 10px"><button type="button" data-dm="mm" class="${S.dpm==="mm"?"on":""}">Mobile money</button><button type="button" data-dm="crypto">Crypto</button></div>`}<div class="small" id="dpIntro" style="margin:0 0 8px"></div><input id="tAmt" type="number" min="0.01" step="any" inputmode="decimal" placeholder="$0" value="${S.fund||50}" style="font-size:30px;font-weight:750;text-align:center;margin-bottom:10px">${chips([25,50,100,250])}
     <div id="tEst" class="small" style="min-height:18px;text-align:center"></div>
     <div id="dpMM" style="display:grid;gap:9px;margin-top:6px"><select id="dpNet" aria-label="Mobile money network"><option value="">Choose your mobile money network</option><option>MTN Mobile Money</option><option>Telecel Cash</option><option>AirtelTigo Money</option></select><input id="dpNum" placeholder="Mobile money number" inputmode="tel" autocomplete="tel" aria-label="Mobile money number"></div>
     <div id="dpCardNote" style="display:none"></div><div id="dpWait" style="display:none;text-align:center;padding:26px 0 6px"><div class="dpSpin" aria-hidden="true"></div></div><button class="btn" id="tGo" style="width:100%;margin-top:12px">Deposit</button><div id="dpStatus" class="small" role="status"></div><div id="dpOtpBox" style="display:none;margin-top:8px"><div class="row" style="flex-direction:row"><input id="dpOtp" placeholder="Enter the code" inputmode="numeric" autocomplete="one-time-code" aria-label="Verification code"><button class="btn" id="dpOtpBtn">Submit</button></div></div><div id="tMsg" class="msg" role="status"></div>${off}${S.back?bk:""}`}
@@ -670,7 +676,7 @@ function drawMk(){
   q("tGo").onclick=async()=>{const v=+amt.value,msg=q("tMsg");msg.className="msg";
     if(!(v>0)){msg.textContent="Enter an amount.";return}
     if(st==="fund"){if(!(v>0)){msg.textContent="Enter an amount.";return}return payIn(v)}
-    if(buy&&v>availCash()+.005){S.dep=1;S.step="receive";S.fund=Math.max(1,Math.ceil(v-availCash()));S.amt=v;S.back="trade";drawMk();return}
+    if(buy&&v>availCash()+.005){S.step="fund";S.fund=Math.max(1,Math.ceil(v-availCash()));S.amt=v;S.back="trade";drawMk();return}
     q("tGo").disabled=true;
     try{applyW(await callTrade({action:"trade",side:S.side,sym,usd:v}));S.step="view";drawMk();}catch(e){msg.textContent=e.message;q("tGo").disabled=false}};
   if(st==="fund"&&$("dpOtpBtn"))$("dpOtpBtn").onclick=async()=>{const otp=$("dpOtp").value.trim();if(!otp)return;$("dpOtpBtn").disabled=true;
@@ -692,7 +698,7 @@ function dpState(r){const go=$("tGo");
   else{dpUi(r.text||"Approve the payment on your phone\u2026");dpPoll()}}
 function dpPoll(){if(dpTimer)return;let n=0;
   dpTimer=setInterval(async()=>{if(!$("mkDlg").open){dpStop();return}
-    if(++n>40){dpStop();dpBusy(false);dpUi("Still waiting for approval. If you already approved it on your phone, your balance will update shortly. Otherwise try again.");const g=$("tGo");if(g)g.disabled=false;loadWallet();return}
+    if(++n>100){dpStop();dpBusy(false);dpUi("Still waiting for approval. If you already approved it on your phone, your balance will update shortly. Otherwise try again.");const g=$("tGo");if(g)g.disabled=false;loadWallet();return}
     try{const r=await fn({action:"status",reference:dpRef});if(r.ok&&r.state!=="pending")dpState(r)}catch(e){}},3000)}
 async function payIn(v){const msg=$("tMsg"),net=$("dpNet").value,phone=ghNum($("dpNum").value),provider=PROV_CODE[net];msg.className="msg";
   if(!provider||!phone){msg.textContent="Choose your network and enter a valid mobile money number.";return}
@@ -986,12 +992,7 @@ function localFrozen(){try{return orders.filter(o=>!o.repaid).reduce((t,o)=>t+(N
 function frozenUsd(){return W.frozen!=null?Number(W.frozen)||0:localFrozen()}
 function availCash(){return Math.max(0,Math.round((W.usd-frozenUsd())*100)/100)}
 function freezeUsd(){const c=calc();return Math.ceil(c.usd*FZ()-1e-9)/100}
-// Collateral is kept in the same coin that is borrowed (20% of the loan, in that coin).
-const colDec=c=>c==="USDC"?2:c==="BTC"?6:5;
-const colQty=()=>{const c=calc(),q=(c.sol||0)*FZ()/100,f=Math.pow(10,colDec(S.coin));return Math.ceil(q*f-1e-9)/f};
-const colHave=()=>{const k=dn(S.coin);return (W.h[k]||0)+(k==="USDT"?availCash():0)};
-const colTxt=q=>fmt(q,colDec(S.coin))+" "+dn(S.coin);
-const fzOrder=o=>{const k=o.dcoin||"USDC",p=priceOf(k)||1,q=o.fzq||(o.freeze/p);return fmt(q,colDec(k))+" "+dn(k)};
+const fzOrder=o=>usd(o.freeze);
 const fdate=d=>d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
 const er=(k,v)=>`<div class="er"><span>${k}</span><b>${v}</b></div>`;
 const payDest=o=>o.pm==="Crypto transfer"?(o.pbank||"Crypto")+" · "+(String(o.pnum).length>14?String(o.pnum).slice(0,6)+"…"+String(o.pnum).slice(-6):o.pnum):o.pm==="Bank transfer"?(o.pbank||"Bank")+" · "+o.pnum:o.pm+" · "+o.pnum;
@@ -1020,7 +1021,7 @@ function renderEst(){
     $("est").innerHTML=er("You get",fmt(c.sol,S.coin==="USDC"?2:4)+" "+dn(S.coin))+er(isCrypto()?"Paid to you in crypto":"Paid to you in "+CUR.code,ghs(c.val))+er("You repay in total",ghs(c.tot))+schedHtml(c.tot,c.m,Date.now());
     $("agreeTxt").textContent=`I understand the loan is paid ${isCrypto()?"in crypto to the wallet address I entered. Crypto transfers cannot be reversed, so I have checked the address and network":"in "+CUR.name+" to a payout account in my own name"}, and I will repay ${ghs(c.tot)} ${c.m===1?"in 30 days":"over "+c.m+" months"}. I accept the late fee and daily overdue interest.`;
   }
-  $("agree2Txt").textContent=c.sol>0?`I agree that ${colTxt(colQty())} (${FZ()}% of the ${dn(S.coin)} I am borrowing) of my ${dn(S.coin)} balance is locked as collateral until I finish repaying. I cannot withdraw it until then, and if I miss payments or the price falls too far, it can be used to cover what I owe.`:`I agree that ${FZ()}% of the ${dn(S.coin)} I am borrowing, held in my ${dn(S.coin)} balance, is locked as collateral until I finish repaying. I cannot withdraw it until then.`;
+  $("agree2Txt").textContent=c.sol>0?`I agree that ${usd(freezeUsd())} (${FZ()}% of my loan) in my portfolio balance is frozen until I finish repaying. I cannot withdraw it until then.`:`I agree that ${FZ()}% of my loan amount in my portfolio balance is frozen until I finish repaying. I cannot withdraw it until then.`;
   $("freezeNeed").style.display="none";
   validate();
 }
@@ -1072,20 +1073,20 @@ const PROV_CODE={"MTN Mobile Money":"mtn","Telecel Cash":"vod","AirtelTigo Money
 async function fn(body){let tok=SB_KEY;try{const {data}=await sb.auth.getSession();if(data&&data.session)tok=data.session.access_token}catch(e){}
   const r=await fetch(SB_URL+"/functions/v1/paystack",{method:"POST",headers:{"Content-Type":"application/json",apikey:SB_KEY,Authorization:"Bearer "+tok},body:JSON.stringify(body)});return r.json()}
 $("confirm").onclick=async()=>{
-  const c=calc(),fz=freezeUsd(),fq=colQty(),have=colHave(),btn=$("confirm"),note=$("freezeNeed");
-  if(have+1e-9<fq){
-    const need=Math.ceil((fq-have)*Math.pow(10,colDec(S.coin))-1e-9)/Math.pow(10,colDec(S.coin));
-    note.innerHTML=`<b>You need ${colTxt(fq)} in your balance as collateral.</b> That is ${FZ()}% of the ${dn(S.coin)} you are borrowing, and it stays locked until you finish repaying. You have ${colTxt(have)} available. Please deposit at least <b>${colTxt(need)}</b>, then come back.<div style="margin-top:8px">Only ${FZ()}% of your loan (${colTxt(fq)}) is locked. If you hold more ${dn(S.coin)}, the rest stays yours. When you finish repaying, the collateral is released and you can withdraw it again.</div><button type="button" class="btn" id="fzDep" style="margin-top:10px;width:100%">Deposit ${dn(S.coin)}</button>`;
-    note.style.display="";$("fzDep").onclick=()=>{dlg.close();S.rc=dn(S.coin);openFund()};
+  const c=calc(),fz=freezeUsd(),have=availCash(),btn=$("confirm"),note=$("freezeNeed");
+  if(have+.005<fz){
+    const need=Math.max(0.01,Math.ceil((fz-have)*100)/100);
+    note.innerHTML=`<b>You need ${usd(fz)} in your portfolio balance for this loan.</b> That is ${FZ()}% of the loan, and it stays frozen until you finish repaying. Your available balance is ${usd(have)}. Please deposit at least <b>${usd(need)}</b> on the Trade page, then come back.<div style="margin-top:8px">We will freeze only ${FZ()}% of your loan amount (${usd(fz)}) in your portfolio balance until you finish repaying. If your balance is higher, the rest is not frozen. Once you finish repaying, the frozen amount is released and you can withdraw it again.</div><button type="button" class="btn" id="fzDep" style="margin-top:10px;width:100%">Go to the Trade page</button>`;
+    note.style.display="";$("fzDep").onclick=()=>{dlg.close();setTab("trade")};
     note.scrollIntoView({block:"nearest",behavior:"smooth"});return}
   note.style.display="none";btn.disabled=true;btn.textContent="Getting your loan\u2026";
-  const o={id:"NL"+Date.now().toString(36).toUpperCase(),ts:Date.now(),net:CFG.net,sol:c.sol,dcoin:S.coin,usd:c.usd,ghs:c.val,freeze:fz,fzq:fq,tot:c.tot,mo:c.mo,m:c.m,idType:(S.kyc&&S.kyc.id_type)||"",name:S.kyc?(S.kyc.first_name+" "+S.kyc.last_name):"",pm:$("pMethod").value,pbank:isCrypto()?$("pChain").value:(bankName()||""),pname:isCrypto()?kycName():$("pName").value.trim(),pnum:$("pNum").value.trim(),nameOk:nameOk(),phoneOk:!!(S.kyc&&S.kyc.phone&&ghNum($("pNum").value)===S.kyc.phone),status:0};
+  const o={id:"NL"+Date.now().toString(36).toUpperCase(),ts:Date.now(),net:CFG.net,sol:c.sol,dcoin:S.coin,usd:c.usd,ghs:c.val,freeze:fz,tot:c.tot,mo:c.mo,m:c.m,idType:(S.kyc&&S.kyc.id_type)||"",name:S.kyc?(S.kyc.first_name+" "+S.kyc.last_name):"",pm:$("pMethod").value,pbank:isCrypto()?$("pChain").value:(bankName()||""),pname:isCrypto()?kycName():$("pName").value.trim(),pnum:$("pNum").value.trim(),nameOk:nameOk(),phoneOk:!!(S.kyc&&S.kyc.phone&&ghNum($("pNum").value)===S.kyc.phone),status:0};
   // The server records the loan and freezes the amount. In demo mode (CFG.demoLoans) the loan continues on this device if the server cannot do it yet.
-  try{const r=await callTrade({action:"loan_draw",coin:S.coin,col_sym:dn(S.coin),col_qty:fq,usd:c.usd,months:c.m,pm:o.pm,pbank:o.pbank,pname:o.pname,pnum:o.pnum});if(r&&r.loan){o.id=String(r.loan.id);o.ghs=Number(r.loan.ghs);o.tot=Number(r.loan.total_ghs);o.freeze=Number(r.loan.freeze_usd);o.mo=o.tot/o.m}if(r&&r.usd!=null)applyW(r)}
+  try{const r=await callTrade({action:"loan_draw",coin:S.coin,usd:c.usd,months:c.m,pm:o.pm,pbank:o.pbank,pname:o.pname,pnum:o.pnum});if(r&&r.loan){o.id=String(r.loan.id);o.ghs=Number(r.loan.ghs);o.tot=Number(r.loan.total_ghs);o.freeze=Number(r.loan.freeze_usd);o.mo=o.tot/o.m}if(r&&r.usd!=null)applyW(r)}
   catch(e){if(!CFG.demoLoans){const m=$("sellMsg");m.className="msg";m.textContent=e.message||"Could not start your loan. Try again.";btn.textContent="Get loan";validate();return}}
   orders.unshift(o);saveOrders();refreshAvail();renderOrders();renderWallet();
   $("doneAmt").textContent=ghs(o.ghs);
-  $("doneInfo").innerHTML=`Loan ${esc(o.id)}<br>Sending to ${esc(payDest(o))}<br>Status: ${stage0(o)}<br>Locked as collateral: <b style="color:var(--strong)">${o.fzq?fzOrder(o):fzOrder(o)}</b> until you finish repaying<br>Repay ${ghs(o.tot)} in total<br>${schedHtml(o.tot,o.m,o.ts)}`;
+  $("doneInfo").innerHTML=`Loan ${esc(o.id)}<br>Sending to ${esc(payDest(o))}<br>Status: ${stage0(o)}<br>Frozen in your balance: <b style="color:var(--strong)">${usd(o.freeze)}</b> until you finish repaying<br>Repay ${ghs(o.tot)} in total<br>${schedHtml(o.tot,o.m,o.ts)}`;
   $("sellFlow").style.display="none";$("doneView").style.display="";
 };
 
